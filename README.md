@@ -1,5 +1,7 @@
 # Star Courier — Текстовая RPG-игра
 
+[![ORCID](https://img.shields.io/badge/ORCID-0009--0007--7605--539X-green?logo=orcid&logoColor=white)](https://orcid.org/0009-0007-7605-539X)
+
 `Проект «Star Courier»` — это интерактивная текстовая RPG в космической тематике.
 
 Игрок управляет капитаном Максом Веллом и его командой на борту звездолёта «Элея».
