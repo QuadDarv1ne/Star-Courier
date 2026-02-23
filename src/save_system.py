@@ -177,7 +177,7 @@ class SaveManager:
                     "chapter": meta.get("chapter", 1),
                     "scene": meta.get("scene", "Неизвестно"),
                 })
-            except:
+            except (json.JSONDecodeError, IOError, KeyError) as e:
                 saves.append({
                     "filename": file.name,
                     "timestamp": "Ошибка чтения",
