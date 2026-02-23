@@ -182,13 +182,8 @@ class AbilitiesManager:
     
     def get_available_abilities(self) -> List[Ability]:
         """Получить все доступные способности игрока"""
-        available = []
-        for ability in self.abilities.values():
-            if ability.is_available():
-                player_tier = self.player_tiers[ability.ability_type]
-                if ability.tier.value <= player_tier.value:
-                    available.append(ability)
-        return available
+        return [ability for ability in self.abilities.values() 
+                if self.can_use_ability(ability)]
     
     def set_tier(self, ability_type: AbilityType, tier: AbilityTier):
         """Установить уровень владения типом способности"""
