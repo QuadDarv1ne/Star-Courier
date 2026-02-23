@@ -117,11 +117,7 @@ class DialogueManager:
         if not self.current_node:
             return None
         
-        choice = None
-        for c in self.current_node.choices:
-            if c.id == choice_id:
-                choice = c
-                break
+        choice = next((c for c in self.current_node.choices if c.id == choice_id), None)
         
         if not choice:
             return None
