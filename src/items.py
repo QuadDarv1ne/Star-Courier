@@ -246,10 +246,8 @@ class Inventory:
                 if removed >= quantity:
                     break
         
-        # Очищаем пустые стака
-        for i, slot in enumerate(self.slots):
-            if slot and slot.is_empty():
-                self.slots[i] = None
+        # Очищаем пустые стаки
+        self.slots = [slot if slot and not slot.is_empty() else None for slot in self.slots]
         
         return removed >= quantity
     
