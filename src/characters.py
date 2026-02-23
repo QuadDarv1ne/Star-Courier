@@ -40,15 +40,18 @@ class Character:
     is_recruited: bool = True
     is_alive: bool = True
     
-    def increase_relationship(self, amount: int) -> int:
-        """Увеличить отношение на amount, вернуть новое значение"""
+    def change_relationship(self, amount: int) -> int:
+        """Изменить отношение на amount (может быть положительным или отрицательным)"""
         self.relationship = min(100, max(0, self.relationship + amount))
         return self.relationship
     
+    def increase_relationship(self, amount: int) -> int:
+        """Увеличить отношение на amount, вернуть новое значение"""
+        return self.change_relationship(amount)
+    
     def decrease_relationship(self, amount: int) -> int:
         """Уменьшить отношение на amount, вернуть новое значение"""
-        self.relationship = min(100, max(0, self.relationship - amount))
-        return self.relationship
+        return self.change_relationship(-amount)
     
     def get_relationship_status(self) -> str:
         """Получить статус отношений"""
