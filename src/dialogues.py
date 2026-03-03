@@ -142,7 +142,7 @@ class DialogueManager:
         return self.history.copy()
 
 
-# === Примеры диалогов для первой главы ===
+# === Диалоги для первой главы ===
 
 def create_chapter1_dialogues() -> Dict[str, Dialogue]:
     """Создать диалоги для первой главы"""
@@ -161,48 +161,100 @@ def create_chapter1_dialogues() -> Dict[str, Dialogue]:
         text="Доброе утро, капитан. Погода в каюте — комфортная. "
              "Время 06:30 по звездному времени. Сегодня предстоит важный день.",
         choices=[
-            Choice("ask", "Как обстановка?", "ask_status")
+            Choice("ask_status", "Как обстановка на корабле?", "athena_report"),
+            Choice("ask_artifact", "Что с артефактом?", "artifact_status"),
+            Choice("skip", "Пропустить, я в порядке", "alia_enters_direct")
         ]
     ))
 
     morning_briefing.add_node(DialogueNode(
-        id="ask_status",
-        speaker="Макс",
-        text="Спасибо, Афина. Как обстановка на корабле?",
+        id="artifact_status",
+        speaker="Афина",
+        text="Артефакт в защитной камере. Уровень излучения в пределах нормы, "
+             "но зафиксированы кратковременные всплески энергии. "
+             "Ирина Лебедева запросила доступ для дополнительных исследований.",
         choices=[
-            Choice("listen", "Слушаю", "athena_report")
+            Choice("allow_research", "Разрешить исследования", "athena_report",
+                   effect=ChoiceEffect.RELATIONSHIP_UP, effect_value=("irina_lebedeva", 3)),
+            Choice("deny_research", "Отказать, слишком опасно", "athena_report",
+                   effect=ChoiceEffect.RELATIONSHIP_DOWN, effect_value=("irina_lebedeva", -3)),
+            Choice("ask_more", "Что за всплески?", "athena_report")
         ]
     ))
 
     morning_briefing.add_node(DialogueNode(
         id="athena_report",
         speaker="Афина",
-        text="Всё стабильно. Показатели систем в норме, но несколько "
-             "предупреждений по охлаждению в техническом отсеке. "
-             "Пилот Алия'Наар проводит профилактическую проверку.",
+        text="Всё стабильно. Но есть несколько предупреждений по охлаждению "
+             "в техническом отсеке. Пилот Алия'Наар уже проводит проверку.",
         choices=[
-            Choice("wait", "Ждём Алию", "alia_enters")
+            Choice("wait_alia", "Ждём Алию", "alia_enters"),
+            Choice("go_personally", "Пойду сам проверю", "max_goes_tech",
+                   effect=ChoiceEffect.RELATIONSHIP_UP, effect_value=("alia_naar", 2)),
+            Choice("send_security", "Отправить Надежду с командой", "alia_enters",
+                   effect=ChoiceEffect.RELATIONSHIP_UP, effect_value=("nadezhda", 2))
         ]
     ))
 
     morning_briefing.add_node(DialogueNode(
         id="alia_enters",
         speaker="Алия",
-        text="Доброе утро, капитан. Всё под контролем. Да, есть небольшие "
-             "отклонения в системе охлаждения — ничего критичного, "
-             "но нужно уделить внимание.",
+        text="Капитан, извините за беспокойство. В системе охлаждения небольшие "
+             "отклонения — возможно, просто датчики барахлят. Но я бы не рисковала.",
         choices=[
-            Choice("order", "Приказать диагностику", "max_decision"),
-            Choice("trust", "Довериться Алие", "max_decision",
-                   effect=ChoiceEffect.RELATIONSHIP_UP, effect_value=("alia_naar", 5))
+            Choice("trust_alia", "Доверяю тебе, Алия", "max_decision_trust",
+                   effect=ChoiceEffect.RELATIONSHIP_UP, effect_value=("alia_naar", 5)),
+            Choice("order_diagnostics", "Проведите полную диагностику", "max_decision_order"),
+            Choice("ask_opinion", "Что ты думаешь на самом деле?", "alia_honest")
         ]
     ))
 
     morning_briefing.add_node(DialogueNode(
-        id="max_decision",
+        id="alia_enters_direct",
+        speaker="Алия",
+        text="Капитан, кстати, я как раз шла доложить. В системе охлаждения "
+             "небольшие отклонения. Ничего критичного, но лучше проверить.",
+        choices=[
+            Choice("trust_alia", "Доверяю тебе", "max_decision_trust",
+                   effect=ChoiceEffect.RELATIONSHIP_UP, effect_value=("alia_naar", 3)),
+            Choice("order_diagnostics", "Проведите диагностику", "max_decision_order")
+        ]
+    ))
+
+    morning_briefing.add_node(DialogueNode(
+        id="alia_honest",
+        speaker="Алия",
+        text="Честно? Мне не нравится, что сбои начались сразу после того, "
+             "как мы взяли артефакт на борт. Совпадение — возможно. "
+             "Но я бы проверила всё дважды.",
+        choices=[
+            Choice("order_diagnostics", "Проведите полную диагностику", "max_decision_order",
+                   effect=ChoiceEffect.RELATIONSHIP_UP, effect_value=("alia_naar", 3)),
+            Choice("check_artifact", "Проверьте и артефакт тоже", "max_decision_artifact")
+        ]
+    ))
+
+    morning_briefing.add_node(DialogueNode(
+        id="max_decision_trust",
         speaker="Макс",
-        text="Хорошо, пусть инженеры проведут полную диагностику. "
-             "Не хочу сюрпризов в полёте.",
+        text="Хорошо, Алия. Действуй на своё усмотрение. "
+             "Если понадобится помощь — обращайся.",
+        is_end=True
+    ))
+
+    morning_briefing.add_node(DialogueNode(
+        id="max_decision_order",
+        speaker="Макс",
+        text="Не хочу сюрпризов в полёте. Проведите полную диагностику "
+             "всех систем. И доложите о любых аномалиях.",
+        is_end=True
+    ))
+
+    morning_briefing.add_node(DialogueNode(
+        id="max_decision_artifact",
+        speaker="Макс",
+        text="Проверьте и артефакт тоже. Если эти сбои связаны с ним... "
+             "лучше знать заранее.",
         is_end=True
     ))
 
@@ -218,15 +270,44 @@ def create_chapter1_dialogues() -> Dict[str, Dialogue]:
     pirate_contact.add_node(DialogueNode(
         id="start",
         speaker="Селена Ро",
-        text="Капитан Велл, у нас есть общее дело. Ваш артефакт "
-             "заинтересовал многих. Может, обсудим условия, прежде чем станем врагами?",
+        text="Капитан Велл... наконец-то мы на связи. У нас есть общее дело. "
+             "Ваш артефакт заинтересовал многих. Может, обсудим условия, "
+             "прежде чем станем врагами?",
         choices=[
             Choice("refuse", "Отказать", "refuse",
                    effect=ChoiceEffect.RELATIONSHIP_DOWN, effect_value=("selena_ro", -10)),
             Choice("negotiate", "Выслушать предложение", "negotiate"),
             Choice("threaten", "Пригрозить", "selena_threat",
-                   required_stat={"biotics": 1})
+                   required_stat={"biotics": 1}),
+            Choice("stall", "Потянуть время", "stall")
         ]
+    ))
+
+    pirate_contact.add_node(DialogueNode(
+        id="stall",
+        speaker="Макс",
+        text="Селена Ро... имя на слуху. Но мне нужно время на размышление. "
+             "Предлагаю связаться через час.",
+        choices=[
+            Choice("agree_stall", "Хорошо, но не дольше", "selena_stall_agree"),
+            Choice("pressure", "Или мы свяжемся сами", "selena_pressure")
+        ]
+    ))
+
+    pirate_contact.add_node(DialogueNode(
+        id="selena_stall_agree",
+        speaker="Селена Ро",
+        text="Час... не слишком долго. Но я ценю осторожность, капитан. "
+             "Жду вашего решения.",
+        is_end=True
+    ))
+
+    pirate_contact.add_node(DialogueNode(
+        id="selena_pressure",
+        speaker="Селена Ро",
+        text="*смеётся* Вы серьёзно? Мои корабли уже на позиции. "
+             "Но мне нравится ваш стиль. Даю вам 30 минут.",
+        is_end=True
     ))
 
     pirate_contact.add_node(DialogueNode(
@@ -235,8 +316,17 @@ def create_chapter1_dialogues() -> Dict[str, Dialogue]:
         text="Селена, этот груз — под защитой флота. Предлагаю вам "
              "не вмешиваться в наши дела.",
         choices=[
-            Choice("end", "Завершить связь", "selena_retreat")
+            Choice("end_hard", "Завершить связь", "selena_retreat"),
+            Choice("warn", "Предупредить последний раз", "selena_warning")
         ]
+    ))
+
+    pirate_contact.add_node(DialogueNode(
+        id="selena_warning",
+        speaker="Селена Ро",
+        text="Защита флота... как мило. Но здесь, в глубине космоса, "
+             "флот далеко. Подумайте, капитан. Оно того не стоит.",
+        is_end=True
     ))
 
     pirate_contact.add_node(DialogueNode(
@@ -244,15 +334,66 @@ def create_chapter1_dialogues() -> Dict[str, Dialogue]:
         speaker="Макс",
         text="Что вы предлагаете? Я слушаю ваши условия.",
         choices=[
-            Choice("listen", "Слушать", "selena_threat")
+            Choice("listen_offer", "Слушать", "selena_offer"),
+            Choice("interrupt", "Перебить", "selena_interrupt")
         ]
+    ))
+
+    pirate_contact.add_node(DialogueNode(
+        id="selena_offer",
+        speaker="Селена Ро",
+        text="Просто передайте артефакт нам. Вы получите 50 тысяч кредитов "
+             "и безопасный проход. Все останутся живы. Разумно?",
+        choices=[
+            Choice("consider", "Я подумаю", "selena_threat"),
+            Choice("reject_offer", "Отклонить", "refuse"),
+            Choice("counter", "Предложить своё", "max_counter")
+        ]
+    ))
+
+    pirate_contact.add_node(DialogueNode(
+        id="selena_interrupt",
+        speaker="Селена Ро",
+        text="*холодно* Вы перебили меня, капитан. Это невежливо. "
+             "Но я продолжу. Артефакт нам нужен. Цена — 50 тысяч.",
+        choices=[
+            Choice("accept_talk", "Продолжайте", "selena_offer"),
+            Choice("end_call", "Завершить", "selena_retreat")
+        ]
+    ))
+
+    pirate_contact.add_node(DialogueNode(
+        id="max_counter",
+        speaker="Макс",
+        text="А я предлагаю вам уйти добровольно. Без кредита, "
+             "но с целыми кораблями.",
+        choices=[
+            Choice("stand_firm", "Настоять на своём", "selena_laugh"),
+            Choice("soften", "Смягчить тон", "selena_soften")
+        ]
+    ))
+
+    pirate_contact.add_node(DialogueNode(
+        id="selena_laugh",
+        speaker="Селена Ро",
+        text="*смеётся* Вы мне нравитесь, Велл. Жаль, что мы на разных сторонах. "
+             "Но время не на вашей стороне.",
+        is_end=True
+    ))
+
+    pirate_contact.add_node(DialogueNode(
+        id="selena_soften",
+        speaker="Селена Ро",
+        text="Интересное предложение... Но нет. Артефакт слишком важен. "
+             "Думайте, капитан. Время идёт.",
+        is_end=True
     ))
 
     pirate_contact.add_node(DialogueNode(
         id="selena_threat",
         speaker="Селена Ро",
         text="Пока вы не отказались, я считаю, что переговоры возможны. "
-             "Но помните — время не на вашей стороне.",
+             "Но помните — у меня есть время. И терпение.",
         is_end=True
     ))
 
@@ -260,7 +401,7 @@ def create_chapter1_dialogues() -> Dict[str, Dialogue]:
         id="selena_retreat",
         speaker="Селена Ро",
         text="Как хотите, капитан. Но не говорите, что я не предупреждала. "
-             "До встречи в космосе.",
+             "До встречи в космосе... где-нибудь в темноте.",
         is_end=True
     ))
 
@@ -276,52 +417,204 @@ def create_chapter1_dialogues() -> Dict[str, Dialogue]:
     sabotage_discussion.add_node(DialogueNode(
         id="start",
         speaker="Макс",
-        text="Все знают, что на борту серьёзные проблемы. Саботаж. "
-             "Пока без конкретных подозреваемых. Я хочу, чтобы каждый сказал, "
-             "где был последние 12 часов.",
+        text="Все знают, зачем я собрал команду. На борту саботаж. "
+             "Кто-то намеренно выводит из строя системы. Я дам каждому "
+             "возможность объясниться. Начнём по порядку.",
         choices=[
             Choice("ask_rina", "Рина, где ты была?", "rina_explains"),
             Choice("ask_irina", "Ирина, твои действия?", "irina_explains"),
             Choice("ask_nadezhda", "Надежда, доклад", "nadezhda_explains"),
-            Choice("ask_athena", "Афина, данные", "max_decision_sabotage",
-                   required_stat={"psychic": 1})
+            Choice("ask_athena", "Афина, данные сканеров", "athena_data",
+                   required_stat={"psychic": 1}),
+            Choice("accuse", "Обвинить всех", "max_accuse_all")
         ]
     ))
 
     sabotage_discussion.add_node(DialogueNode(
         id="rina_explains",
         speaker="Рина",
-        text="Я была в рубке, анализировала разведданные и планировала маршрут. "
-             "У меня чистая совесть.",
+        text="Я в рубке была весь цикл. Маршрут к Орбису прокладывала, "
+             "с патрулём флота согласовывала. Вот логи навигации — "
+             "можете проверить. *подаёт планшет*",
+        choices=[
+            Choice("check_logs", "Проверить логи", "rina_checked"),
+            Choice("trust_rina", "Поверить на слово", "irina_explains",
+                   effect=ChoiceEffect.RELATIONSHIP_UP, effect_value=("rina_mirai", 3)),
+            Choice("press_rina", "Давить", "rina_defensive")
+        ]
+    ))
+
+    sabotage_discussion.add_node(DialogueNode(
+        id="rina_checked",
+        speaker="Макс",
+        text="*изучает данные* Логи чистые. Время совпадает. "
+             "Хорошо, Рина. Продолжим.",
         choices=[
             Choice("next", "Следующий", "irina_explains")
         ]
     ))
 
     sabotage_discussion.add_node(DialogueNode(
+        id="rina_defensive",
+        speaker="Рина",
+        text="*сжимает кулаки* Капитан, я служу флоту десять лет. "
+             "Если не доверяете — проверьте. Но оскорблять не советую.",
+        choices=[
+            Choice("apologize", "Извиниться", "irina_explains",
+                   effect=ChoiceEffect.RELATIONSHIP_UP, effect_value=("rina_mirai", 2)),
+            Choice("continue", "Продолжить допрос", "irina_explains",
+                   effect=ChoiceEffect.RELATIONSHIP_DOWN, effect_value=("rina_mirai", -3))
+        ]
+    ))
+
+    sabotage_discussion.add_node(DialogueNode(
         id="irina_explains",
         speaker="Ирина",
-        text="Я была в лаборатории, изучала артефакт. Доступа к техническим "
-             "системам у меня не было.",
+        text="Я в лаборатории работала. Артефакт... он нестабилен. "
+             "Энергетические всплески фиксирую каждые 20 минут. "
+             "Если это саботаж — то артефакт слишком удобная причина.",
         choices=[
-            Choice("next", "Следующий", "nadezhda_explains")
+            Choice("ask_artifact", "Что за всплески?", "irina_artifact"),
+            Choice("suspect_irina", "Намекнуть на причастность", "irina_hurt"),
+            Choice("trust_irina", "Поверить", "nadezhda_explains",
+                   effect=ChoiceEffect.RELATIONSHIP_UP, effect_value=("irina_lebedeva", 3))
+        ]
+    ))
+
+    sabotage_discussion.add_node(DialogueNode(
+        id="irina_artifact",
+        speaker="Ирина",
+        text="Пики энергии. Короткие, мощные. Как будто... "
+             "кто-то намеренно их вызывает. Но я не знаю как. "
+             "Нужно больше данных, капитан.",
+        choices=[
+            Choice("order_research", "Продолжить исследования", "nadezhda_explains",
+                   effect=ChoiceEffect.RELATIONSHIP_UP, effect_value=("irina_lebedeva", 2)),
+            Choice("deny_research", "Прекратить, опасно", "nadezhda_explains",
+                   effect=ChoiceEffect.RELATIONSHIP_DOWN, effect_value=("irina_lebedeva", -2))
+        ]
+    ))
+
+    sabotage_discussion.add_node(DialogueNode(
+        id="irina_hurt",
+        speaker="Ирина",
+        text="*отводит взгляд* Понятно. Я... просто учёный, капитан. "
+             "Если думаете, что я способна на саботаж — "
+             "заберите доступ к лаборатории.",
+        choices=[
+            Choice("soften", "Смягчить тон", "nadezhda_explains",
+                   effect=ChoiceEffect.RELATIONSHIP_UP, effect_value=("irina_lebedeva", 2)),
+            Choice("stay_firm", "Оставить предупреждение", "nadezhda_explains")
         ]
     ))
 
     sabotage_discussion.add_node(DialogueNode(
         id="nadezhda_explains",
         speaker="Надежда",
-        text="Я патрулировала отсек безопасности, всё было нормально. "
-             "Если кто-то и виноват, то умело скрывается.",
+        text="Патрулировала отсек безопасности. Обходила весь корабль. "
+             "Две камеры не работали — старые, ещё с прошлой миссии. "
+             "Совпадение? Возможно. Но меня это беспокоит.",
         choices=[
-            Choice("end", "Приказать Афине проверить", "max_decision_sabotage")
+            Choice("ask_cameras", "Какие камеры?", "nadezhda_cameras"),
+            Choice("trust_nadezhda", "Поверить", "max_decision_sabotage",
+                   effect=ChoiceEffect.RELATIONSHIP_UP, effect_value=("nadezhda", 3)),
+            Choice("blame_security", "Обвинить службу безопасности", "nadezhda_angry")
         ]
+    ))
+
+    sabotage_discussion.add_node(DialogueNode(
+        id="nadezhda_cameras",
+        speaker="Надежда",
+        text="Технический отсек, коридор Б-7. И рядом с камерой хранения. "
+             "Я уже отправила запрос на замену. Но время странное — "
+             "обе вышли из строя за минуту до начала сбоев.",
+        choices=[
+            Choice("investigate", "Приказать расследование", "max_decision_investigate",
+                   effect=ChoiceEffect.RELATIONSHIP_UP, effect_value=("nadezhda", 2)),
+            Choice("move_on", "Продолжить", "max_decision_sabotage")
+        ]
+    ))
+
+    sabotage_discussion.add_node(DialogueNode(
+        id="nadezhda_angry",
+        speaker="Надежда",
+        text="*холодно* Моя команда три раза за цикл обходила корабль. "
+             "Если у вас есть доказательства — предъявите. "
+             "Если нет — извинитесь.",
+        choices=[
+            Choice("apologize", "Извиниться", "max_decision_sabotage",
+                   effect=ChoiceEffect.RELATIONSHIP_UP, effect_value=("nadezhda", 2)),
+            Choice("stand_firm", "Настоять", "max_decision_sabotage",
+                   effect=ChoiceEffect.RELATIONSHIP_DOWN, effect_value=("nadezhda", -5))
+        ]
+    ))
+
+    sabotage_discussion.add_node(DialogueNode(
+        id="athena_data",
+        speaker="Афина",
+        text="Капитан, я анализировала данные. Есть аномалия: "
+             "доступ в технический отсек зафиксирован в 03:47. "
+             "Карта доступа... заблокирована в журнале.",
+        choices=[
+            Choice("who_access", "Кто использовал карту?", "athena_unknown"),
+            Choice("check_all", "Проверить всех", "max_decision_check_all")
+        ]
+    ))
+
+    sabotage_discussion.add_node(DialogueNode(
+        id="athena_unknown",
+        speaker="Афина",
+        text="Идентификатор повреждён. Я могу восстановить только часть: "
+             "префикс соответствует старшему офицеру. "
+             "Больше данных нет.",
+        choices=[
+            Choice("think", "Обдумать", "max_decision_sabotage"),
+            Choice("press_athena", "Требовать больше", "athena_try")
+        ]
+    ))
+
+    sabotage_discussion.add_node(DialogueNode(
+        id="athena_try",
+        speaker="Афина",
+        text="Капитан, я делаю что могу. Данные физически повреждены. "
+             "Мне нужно время на восстановление.",
+        choices=[
+            Choice("give_time", "Дать время", "max_decision_sabotage",
+                   effect=ChoiceEffect.RELATIONSHIP_UP, effect_value=("athena", 3)),
+            Choice("rush", "Торопить", "max_decision_sabotage")
+        ]
+    ))
+
+    sabotage_discussion.add_node(DialogueNode(
+        id="max_accuse_all",
+        speaker="Макс",
+        text="Хватит. Кто-то из вас лжёт. Пока не узнаю кто — "
+             "никаких индивидуальных доступов. Все под наблюдением.",
+        is_end=True
     ))
 
     sabotage_discussion.add_node(DialogueNode(
         id="max_decision_sabotage",
         speaker="Макс",
-        text="Хорошо. Афина, проверь биометрические данные и видеозаписи.",
+        text="Хорошо. На этом всё. Афина, продолжай мониторинг. "
+             "Надежда — удвой патрули. И помните: я найду виновного.",
+        is_end=True
+    ))
+
+    sabotage_discussion.add_node(DialogueNode(
+        id="max_decision_investigate",
+        speaker="Макс",
+        text="Надежда, расследуй камеры. Ирина — проверь артефакт на следы "
+             "вмешательства. Рина — координируй с флотом. "
+             "Доклад через 6 часов.",
+        is_end=True
+    ))
+
+    sabotage_discussion.add_node(DialogueNode(
+        id="max_decision_check_all",
+        speaker="Макс",
+        text="Афина, проверь все карты доступа за последние 24 часа. "
+             "Сравним с журналами перемещений. Кто-то оставил след.",
         is_end=True
     ))
 
