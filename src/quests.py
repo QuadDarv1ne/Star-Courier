@@ -78,6 +78,8 @@ class Objective:
     
     @classmethod
     def from_dict(cls, data: dict) -> "Objective":
+        data = data.copy()
+        data["type"] = ObjectiveType(data["type"])
         return cls(**data)
 
 
@@ -183,37 +185,20 @@ class Quest:
     
     @classmethod
     def from_dict(cls, data: dict) -> "Quest":
-        quest = cls(
-            id=data["id"],
-            title=data["title"],
-            description=data["description"],
-            quest_type=QuestType(data["quest_type"]),
-            state=QuestState(data["state"]),
-            giver=data.get("giver", ""),
-            level_requirement=data.get("level_requirement", 0),
-            time_limit=data.get("time_limit", 0),
-            prerequisites=data.get("prerequisites", []),
-            journal_entry=data.get("journal_entry", ""),
-            completion_text=data.get("completion_text", ""),
-            date_accepted=data.get("date_accepted"),
-            date_completed=data.get("date_completed"),
-        )
-        
-        # Цели
-        for obj_data in data.get("objectives", []):
+        data = data.copy()
+        data["quest_type"] = QuestType(data["quest_type"])
+        data["state"] = QuestState(data["state"])
+
+        objectives_data = data.pop("objectives", [])
+        reward_data = data.pop("reward", {})
+
+        quest = cls(**data)
+
+        for obj_data in objectives_data:
             quest.objectives.append(Objective.from_dict(obj_data))
-        
-        # Награда
-        reward_data = data.get("reward", {})
-        quest.reward = QuestReward(
-            credits=reward_data.get("credits", 0),
-            experience=reward_data.get("experience", 0),
-            items=reward_data.get("items", []),
-            relationship_changes=reward_data.get("relationship_changes", {}),
-            unlocks=reward_data.get("unlocks", []),
-            achievements=reward_data.get("achievements", []),
-        )
-        
+
+        quest.reward = QuestReward(**reward_data)
+
         return quest
 
 
@@ -504,10 +489,9 @@ class QuestManager:
         quest = self.active_quests.get(quest_id)
         if not quest:
             return None
-        
         completed, total = quest.get_progress()
         return f"{completed}/{total}"
-    
+
     def to_dict(self) -> dict:
         """Сериализация"""
         return {
