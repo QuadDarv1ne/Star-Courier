@@ -4,6 +4,7 @@
 
 import json
 import os
+from dataclasses import dataclass, field
 from datetime import datetime
 from typing import Dict, Any, Optional, List
 from pathlib import Path
@@ -18,89 +19,55 @@ except ImportError:
     from abilities import AbilitiesManager, AbilityType, AbilityTier
 
 
+@dataclass
 class SaveData:
     """Данные сохранения"""
-    
-    def __init__(self):
-        # Метаданные
-        self.timestamp: str = ""
-        self.game_version: str = VERSION
-        self.chapter: int = 1
-        self.scene: str = "start"
-        
-        # Статистика игрока
-        self.stats: Dict[str, int] = {
-            "alchemy": 0,
-            "biotics": 0,
-            "psychic": 0,
-        }
-        
-        # Ресурсы
-        self.credits: int = 0
-        self.inventory: list = []
-        
-        # Отношения с персонажами
-        self.relationships: Dict[str, int] = {}
-        
-        # Прогресс сюжета
-        self.flags: Dict[str, bool] = {}  # Флаги событий
-        self.completed_quests: list = []
-        self.active_quests: list = []
-        
-        # История выборов
-        self.choices_history: list = []
-    
+    timestamp: str = ""
+    game_version: str = VERSION
+    chapter: int = 1
+    scene: str = "start"
+    stats: Dict[str, int] = field(default_factory=lambda: {"alchemy": 0, "biotics": 0, "psychic": 0})
+    credits: int = 0
+    inventory: list = field(default_factory=list)
+    relationships: Dict[str, int] = field(default_factory=dict)
+    flags: Dict[str, bool] = field(default_factory=dict)
+    completed_quests: list = field(default_factory=list)
+    active_quests: list = field(default_factory=list)
+    choices_history: list = field(default_factory=list)
+
     def to_dict(self) -> Dict[str, Any]:
         """Сериализовать в словарь"""
         return {
-            "meta": {
-                "timestamp": self.timestamp,
-                "game_version": self.game_version,
-                "chapter": self.chapter,
-                "scene": self.scene,
-            },
-            "player": {
-                "stats": self.stats,
-                "credits": self.credits,
-                "inventory": self.inventory,
-            },
+            "meta": {"timestamp": self.timestamp, "game_version": self.game_version,
+                     "chapter": self.chapter, "scene": self.scene},
+            "player": {"stats": self.stats, "credits": self.credits, "inventory": self.inventory},
             "relationships": self.relationships,
-            "progress": {
-                "flags": self.flags,
-                "completed_quests": self.completed_quests,
-                "active_quests": self.active_quests,
-            },
-            "history": {
-                "choices": self.choices_history,
-            }
+            "progress": {"flags": self.flags, "completed_quests": self.completed_quests,
+                         "active_quests": self.active_quests},
+            "history": {"choices": self.choices_history},
         }
-    
+
     @classmethod
     def from_dict(cls, data: Dict[str, Any]) -> "SaveData":
         """Десериализовать из словаря"""
         save = cls()
-        
         meta = data.get("meta", {})
+        player = data.get("player", {})
+        progress = data.get("progress", {})
+        history = data.get("history", {})
+
         save.timestamp = meta.get("timestamp", "")
         save.game_version = meta.get("game_version", VERSION)
         save.chapter = meta.get("chapter", 1)
         save.scene = meta.get("scene", "start")
-        
-        player = data.get("player", {})
         save.stats = player.get("stats", save.stats)
         save.credits = player.get("credits", 0)
         save.inventory = player.get("inventory", [])
-        
         save.relationships = data.get("relationships", {})
-        
-        progress = data.get("progress", {})
         save.flags = progress.get("flags", {})
         save.completed_quests = progress.get("completed_quests", [])
         save.active_quests = progress.get("active_quests", [])
-        
-        history = data.get("history", {})
         save.choices_history = history.get("choices", [])
-        
         return save
 
 
