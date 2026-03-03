@@ -92,24 +92,11 @@ class Item:
     @classmethod
     def from_dict(cls, data: dict) -> "Item":
         """Десериализация из словаря"""
-        effects = [
-            ItemEffect(**e) for e in data.get("effects", [])
-        ]
-        return cls(
-            id=data["id"],
-            name=data["name"],
-            description=data["description"],
-            item_type=ItemType(data["item_type"]),
-            rarity=Rarity(data["rarity"]),
-            value=data["value"],
-            weight=data["weight"],
-            effects=effects,
-            is_consumable=data.get("is_consumable", False),
-            is_stackable=data.get("is_stackable", True),
-            max_stack=data.get("max_stack", 99),
-            icon=data.get("icon", "📦"),
-            lore=data.get("lore", ""),
-        )
+        data = data.copy()
+        data["item_type"] = ItemType(data["item_type"])
+        data["rarity"] = Rarity(data["rarity"])
+        data["effects"] = [ItemEffect(**e) for e in data.get("effects", [])]
+        return cls(**data)
 
 
 @dataclass
@@ -159,13 +146,10 @@ class ItemStack:
         Возвращает количество не поместившихся.
         """
         space = self.item.max_stack - self.quantity
-        if amount <= space:
-            self.quantity += amount
-            return 0
-        else:
-            self.quantity = self.item.max_stack
-            return amount - space
-    
+        added = min(amount, space)
+        self.quantity += added
+        return amount - added
+
     def remove(self, amount: int) -> int:
         """
         Удалить предметы.
