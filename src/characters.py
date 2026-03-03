@@ -174,7 +174,8 @@ class CrewManager:
     
     def get_highest_relationship(self) -> Optional[Character]:
         """Получить персонажа с наивысшими отношениями"""
-        crew_without_player = [c for c in self.crew.values() if c.role != Role.CAPTAIN]
-        if not crew_without_player:
-            return None
-        return max(crew_without_player, key=lambda c: c.relationship)
+        return max(
+            (c for c in self.crew.values() if c.role != Role.CAPTAIN),
+            key=lambda c: c.relationship,
+            default=None
+        )
