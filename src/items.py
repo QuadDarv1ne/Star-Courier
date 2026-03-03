@@ -238,17 +238,20 @@ class Inventory:
         Удалить предмет из инвентаря.
         Возвращает True если успешно.
         """
+        if quantity <= 0:
+            return True
+            
         removed = 0
-        
+
         for slot in self.slots:
             if slot and slot.item.id == item_id:
                 removed += slot.remove(quantity - removed)
                 if removed >= quantity:
                     break
-        
+
         # Очищаем пустые стаки
         self.slots = [slot if slot and not slot.is_empty() else None for slot in self.slots]
-        
+
         return removed >= quantity
     
     def has_item(self, item_id: str, quantity: int = 1) -> bool:

@@ -214,27 +214,40 @@ def create_chapter1_dialogues() -> Dict[str, Dialogue]:
         title="Первый контакт с пиратами",
         start_node="start"
     )
-    
+
     pirate_contact.add_node(DialogueNode(
         id="start",
         speaker="Селена Ро",
         text="Капитан Велл, у нас есть общее дело. Ваш артефакт "
-             "заинтересовал многих. Может, обсудим условия, прежде чем станем врагами?"
+             "заинтересовал многих. Может, обсудим условия, прежде чем станем врагами?",
+        choices=[
+            Choice("refuse", "Отказать", "refuse",
+                   effect=ChoiceEffect.RELATIONSHIP_DOWN, effect_value=("selena_ro", -10)),
+            Choice("negotiate", "Выслушать предложение", "negotiate"),
+            Choice("threaten", "Пригрозить", "selena_threat",
+                   required_stat={"biotics": 1})
+        ]
     ))
-    
+
     pirate_contact.add_node(DialogueNode(
         id="refuse",
         speaker="Макс",
         text="Селена, этот груз — под защитой флота. Предлагаю вам "
-             "не вмешиваться в наши дела."
+             "не вмешиваться в наши дела.",
+        choices=[
+            Choice("end", "Завершить связь", "selena_retreat")
+        ]
     ))
-    
+
     pirate_contact.add_node(DialogueNode(
         id="negotiate",
         speaker="Макс",
-        text="Что вы предлагаете? Я слушаю ваши условия."
+        text="Что вы предлагаете? Я слушаю ваши условия.",
+        choices=[
+            Choice("listen", "Слушать", "selena_threat")
+        ]
     ))
-    
+
     pirate_contact.add_node(DialogueNode(
         id="selena_threat",
         speaker="Селена Ро",
@@ -242,7 +255,7 @@ def create_chapter1_dialogues() -> Dict[str, Dialogue]:
              "Но помните — время не на вашей стороне.",
         is_end=True
     ))
-    
+
     pirate_contact.add_node(DialogueNode(
         id="selena_retreat",
         speaker="Селена Ро",
@@ -250,21 +263,7 @@ def create_chapter1_dialogues() -> Dict[str, Dialogue]:
              "До встречи в космосе.",
         is_end=True
     ))
-    
-    pirate_contact.nodes["start"].choices = [
-        Choice("refuse", "Отказать", "refuse", 
-               effect=ChoiceEffect.RELATIONSHIP_DOWN, effect_value=("selena_ro", -10)),
-        Choice("negotiate", "Выслушать предложение", "negotiate"),
-        Choice("threaten", "Пригрозить", "selena_threat",
-               required_stat={"biotics": 1})
-    ]
-    pirate_contact.nodes["refuse"].choices = [
-        Choice("end", "Завершить связь", "selena_retreat")
-    ]
-    pirate_contact.nodes["negotiate"].choices = [
-        Choice("listen", "Слушать", "selena_threat")
-    ]
-    
+
     dialogues["pirate_contact"] = pirate_contact
     
     # === Диалог: Обсуждение саботажа ===
@@ -273,60 +272,59 @@ def create_chapter1_dialogues() -> Dict[str, Dialogue]:
         title="Обсуждение саботажа",
         start_node="start"
     )
-    
+
     sabotage_discussion.add_node(DialogueNode(
         id="start",
         speaker="Макс",
         text="Все знают, что на борту серьёзные проблемы. Саботаж. "
              "Пока без конкретных подозреваемых. Я хочу, чтобы каждый сказал, "
-             "где был последние 12 часов."
+             "где был последние 12 часов.",
+        choices=[
+            Choice("ask_rina", "Рина, где ты была?", "rina_explains"),
+            Choice("ask_irina", "Ирина, твои действия?", "irina_explains"),
+            Choice("ask_nadezhda", "Надежда, доклад", "nadezhda_explains"),
+            Choice("ask_athena", "Афина, данные", "max_decision_sabotage",
+                   required_stat={"psychic": 1})
+        ]
     ))
-    
+
     sabotage_discussion.add_node(DialogueNode(
         id="rina_explains",
         speaker="Рина",
         text="Я была в рубке, анализировала разведданные и планировала маршрут. "
-             "У меня чистая совесть."
+             "У меня чистая совесть.",
+        choices=[
+            Choice("next", "Следующий", "irina_explains")
+        ]
     ))
-    
+
     sabotage_discussion.add_node(DialogueNode(
         id="irina_explains",
         speaker="Ирина",
         text="Я была в лаборатории, изучала артефакт. Доступа к техническим "
-             "системам у меня не было."
+             "системам у меня не было.",
+        choices=[
+            Choice("next", "Следующий", "nadezhda_explains")
+        ]
     ))
-    
+
     sabotage_discussion.add_node(DialogueNode(
         id="nadezhda_explains",
         speaker="Надежда",
         text="Я патрулировала отсек безопасности, всё было нормально. "
-             "Если кто-то и виноват, то умело скрывается."
+             "Если кто-то и виноват, то умело скрывается.",
+        choices=[
+            Choice("end", "Приказать Афине проверить", "max_decision_sabotage")
+        ]
     ))
-    
+
     sabotage_discussion.add_node(DialogueNode(
         id="max_decision_sabotage",
         speaker="Макс",
         text="Хорошо. Афина, проверь биометрические данные и видеозаписи.",
         is_end=True
     ))
-    
-    sabotage_discussion.nodes["start"].choices = [
-        Choice("ask_rina", "Рина, где ты была?", "rina_explains"),
-        Choice("ask_irina", "Ирина, твои действия?", "irina_explains"),
-        Choice("ask_nadezhda", "Надежда, доклад", "nadezhda_explains"),
-        Choice("ask_athena", "Афина, данные", "max_decision_sabotage",
-               required_stat={"psychic": 1})
-    ]
-    sabotage_discussion.nodes["rina_explains"].choices = [
-        Choice("next", "Следующий", "irina_explains")
-    ]
-    sabotage_discussion.nodes["irina_explains"].choices = [
-        Choice("next", "Следующий", "nadezhda_explains")
-    ]
-    sabotage_discussion.nodes["nadezhda_explains"].choices = [
-        Choice("end", "Приказать Афине проверить", "max_decision_sabotage")
-    ]
-    
+
     dialogues["sabotage_discussion"] = sabotage_discussion
     
     return dialogues

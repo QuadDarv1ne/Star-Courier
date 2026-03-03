@@ -303,29 +303,37 @@ class Game:
     
     def run_dialogue(self):
         """Запустить текущий диалог"""
+        if not self.dialogue_manager.current_dialogue:
+            return
+            
         while not self.dialogue_manager.is_finished():
-            text = self.dialogue_manager.get_current_text()
-            if text:
-                print(f"\n  {text}\n")
-            
-            choices = self.dialogue_manager.get_available_choices(
-                self.game_state.save_data.stats if self.game_state.save_data else {},
-                self.game_state.save_data.inventory if self.game_state.save_data else []
-            )
-            
-            if not choices:
+            try:
+                text = self.dialogue_manager.get_current_text()
+                if text:
+                    print(f"\n  {text}\n")
+
+                choices = self.dialogue_manager.get_available_choices(
+                    self.game_state.save_data.stats if self.game_state.save_data else {},
+                    self.game_state.save_data.inventory if self.game_state.save_data else []
+                )
+
+                if not choices:
+                    break
+
+                choice_texts = [c.text for c in choices]
+                idx = get_choice("Ваш выбор:", choice_texts)
+
+                selected_choice = choices[idx]
+                self.dialogue_manager.make_choice(selected_choice.id)
+
+                # Применение эффектов
+                if selected_choice.effect_value and selected_choice.effect.name.startswith("RELATIONSHIP"):
+                    char_id, amount = selected_choice.effect_value
+                    self.game_state.change_relationship(char_id, amount)
+                    
+            except (IndexError, KeyError, TypeError) as e:
+                print(f"\n  [Ошибка диалога: {e}]")
                 break
-            
-            choice_texts = [c.text for c in choices]
-            idx = get_choice("Ваш выбор:", choice_texts)
-            
-            selected_choice = choices[idx]
-            self.dialogue_manager.make_choice(selected_choice.id)
-            
-            # Применение эффектов
-            if selected_choice.effect_value and selected_choice.effect.name.startswith("RELATIONSHIP"):
-                char_id, amount = selected_choice.effect_value
-                self.game_state.change_relationship(char_id, amount)
     
     def chapter_end(self):
         """Конец главы"""
