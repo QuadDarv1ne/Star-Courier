@@ -218,10 +218,7 @@ class CombatSystem:
         self.turn: int = 1
     
     def use_ability(self, ability: Ability) -> dict:
-        """
-        Использовать способность.
-        Возвращает результат использования.
-        """
+        """Использовать способность. Возвращает результат."""
         if not ability or not self.abilities.can_use_ability(ability):
             return {"success": False, "message": "Способность недоступна"}
 
@@ -232,29 +229,23 @@ class CombatSystem:
             return {"success": False, "message": "Недостаточно энергии"}
 
         self.player_energy -= ability.energy_cost
-        
-        result = {
-            "success": True,
-            "ability": ability.name,
-            "energy_cost": ability.energy_cost,
-            "effect": "",
-            "message": ""
+
+        effect_handlers = {
+            AlchemyAbility: lambda a: (a.effect, f"Вы использовали {a.name}: {a.effect}"),
+            BioticAbility: lambda a: (f"{a.field_type} поле на {a.duration} ход(а)",
+                                       f"Вы создали {a.field_type} поле"),
+            PsychicAbility: lambda a: (f"Влияние на {a.target_type} цель",
+                                        f"Вы использовали психическую способность на {a.target_type}"),
         }
-        
-        # Применение эффекта в зависимости от типа
-        if isinstance(ability, AlchemyAbility):
-            result["effect"] = ability.effect
-            result["message"] = f"Вы использовали {ability.name}: {ability.effect}"
-        
-        elif isinstance(ability, BioticAbility):
-            result["effect"] = f"{ability.field_type} поле на {ability.duration} ход(а)"
-            result["message"] = f"Вы создали {ability.field_type} поле"
-        
-        elif isinstance(ability, PsychicAbility):
-            result["effect"] = f"Влияние на {ability.target_type} цель"
-            result["message"] = f"Вы использовали психическую способность на {ability.target_type}"
-        
-        return result
+
+        for ability_class, handler in effect_handlers.items():
+            if isinstance(ability, ability_class):
+                effect, message = handler(ability)
+                return {"success": True, "ability": ability.name, "energy_cost": ability.energy_cost,
+                        "effect": effect, "message": message}
+
+        return {"success": True, "ability": ability.name, "energy_cost": ability.energy_cost,
+                "effect": "", "message": ""}
     
     def restore_energy(self, amount: int):
         """Восстановить энергию"""
