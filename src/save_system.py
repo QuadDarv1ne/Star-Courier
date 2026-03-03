@@ -302,4 +302,4 @@ class GameState:
         """Изменить отношение с персонажем"""
         char = self.crew_manager.get_character(char_id)
         if char:
-            char.increase_relationship(amount) if amount > 0 else char.decrease_relationship(abs(amount))
+            char.change_relationship(amount)

@@ -147,43 +147,57 @@ class DialogueManager:
 def create_chapter1_dialogues() -> Dict[str, Dialogue]:
     """Создать диалоги для первой главы"""
     dialogues = {}
-    
+
     # === Диалог: Утренний брифинг ===
     morning_briefing = Dialogue(
         id="morning_briefing",
         title="Утренний брифинг",
         start_node="start"
     )
-    
+
     morning_briefing.add_node(DialogueNode(
         id="start",
         speaker="Афина",
         text="Доброе утро, капитан. Погода в каюте — комфортная. "
-             "Время 06:30 по звездному времени. Сегодня предстоит важный день."
+             "Время 06:30 по звездному времени. Сегодня предстоит важный день.",
+        choices=[
+            Choice("ask", "Как обстановка?", "ask_status")
+        ]
     ))
-    
+
     morning_briefing.add_node(DialogueNode(
         id="ask_status",
         speaker="Макс",
-        text="Спасибо, Афина. Как обстановка на корабле?"
+        text="Спасибо, Афина. Как обстановка на корабле?",
+        choices=[
+            Choice("listen", "Слушаю", "athena_report")
+        ]
     ))
-    
+
     morning_briefing.add_node(DialogueNode(
         id="athena_report",
         speaker="Афина",
         text="Всё стабильно. Показатели систем в норме, но несколько "
              "предупреждений по охлаждению в техническом отсеке. "
-             "Пилот Алия'Наар проводит профилактическую проверку."
+             "Пилот Алия'Наар проводит профилактическую проверку.",
+        choices=[
+            Choice("wait", "Ждём Алию", "alia_enters")
+        ]
     ))
-    
+
     morning_briefing.add_node(DialogueNode(
         id="alia_enters",
         speaker="Алия",
         text="Доброе утро, капитан. Всё под контролем. Да, есть небольшие "
              "отклонения в системе охлаждения — ничего критичного, "
-             "но нужно уделить внимание."
+             "но нужно уделить внимание.",
+        choices=[
+            Choice("order", "Приказать диагностику", "max_decision"),
+            Choice("trust", "Довериться Алие", "max_decision",
+                   effect=ChoiceEffect.RELATIONSHIP_UP, effect_value=("alia_naar", 5))
+        ]
     ))
-    
+
     morning_briefing.add_node(DialogueNode(
         id="max_decision",
         speaker="Макс",
@@ -191,23 +205,7 @@ def create_chapter1_dialogues() -> Dict[str, Dialogue]:
              "Не хочу сюрпризов в полёте.",
         is_end=True
     ))
-    
-    # Связи между узлами
-    morning_briefing.nodes["start"].choices = [
-        Choice("ask", "Как обстановка?", "ask_status")
-    ]
-    morning_briefing.nodes["ask_status"].choices = [
-        Choice("listen", "Слушаю", "athena_report")
-    ]
-    morning_briefing.nodes["athena_report"].choices = [
-        Choice("wait", "Ждём Алию", "alia_enters")
-    ]
-    morning_briefing.nodes["alia_enters"].choices = [
-        Choice("order", "Приказать диагностику", "max_decision"),
-        Choice("trust", "Довериться Алие", "max_decision", 
-               effect=ChoiceEffect.RELATIONSHIP_UP, effect_value=("alia_naar", 5))
-    ]
-    
+
     dialogues["morning_briefing"] = morning_briefing
     
     # === Диалог: Первый контакт с пиратами ===
