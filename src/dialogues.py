@@ -619,5 +619,112 @@ def create_chapter1_dialogues() -> Dict[str, Dialogue]:
     ))
 
     dialogues["sabotage_discussion"] = sabotage_discussion
-    
+
+    # === Диалог: Конфронтация с Алией ===
+    alia_confrontation = Dialogue(
+        id="alia_confrontation",
+        title="Конфронтация с Алией",
+        start_node="start"
+    )
+
+    alia_confrontation.add_node(DialogueNode(
+        id="start",
+        speaker="Макс",
+        text="Алия, нам нужно поговорить. Наедине. Ты была в техническом "
+             "отсеке когда начались сбои. Объяснись.",
+        choices=[
+            Choice("accuse", "Обвинить напрямую", "accuse_direct"),
+            Choice("ask", "Спросить мягко", "ask_softly"),
+            Choice("show_chip", "Показать чип", "show_evidence")
+        ]
+    ))
+
+    alia_confrontation.add_node(DialogueNode(
+        id="accuse_direct",
+        speaker="Алия",
+        text="*холодно* Ты думаешь это я? После всего времени вместе? "
+             "Капитан, ты знаешь меня лучше.",
+        choices=[
+            Choice("apologize", "Извиниться", "alia_forgive",
+                   effect=ChoiceEffect.RELATIONSHIP_UP, effect_value=("alia_naar", 5)),
+            Choice("insist", "Настоять", "alia_hurt",
+                   effect=ChoiceEffect.RELATIONSHIP_DOWN, effect_value=("alia_naar", -10))
+        ]
+    ))
+
+    alia_confrontation.add_node(DialogueNode(
+        id="ask_softly",
+        speaker="Алия",
+        text="*вздыхает* Я понимаю твои подозрения. Но я бы никогда "
+             "не поставила под угрозу корабль. Клянусь.",
+        choices=[
+            Choice("trust", "Поверить", "alia_trust",
+                   effect=ChoiceEffect.RELATIONSHIP_UP, effect_value=("alia_naar", 8)),
+            Choice("doubt", "Остаться в сомнениях", "alia_doubt")
+        ]
+    ))
+
+    alia_confrontation.add_node(DialogueNode(
+        id="show_evidence",
+        speaker="Алия",
+        text="*берёт чип, изучает* «НейроТех»... Подожди. Этот чип — "
+             "из системы безопасности. Его мог достать только кто-то "
+             "с доступом к складам. Например, Екатерина.",
+        choices=[
+            Choice("suspect_kate", "Заподозрить Екатерину", "alia_kate"),
+            Choice("think", "Обдумать", "alia_think")
+        ]
+    ))
+
+    alia_confrontation.add_node(DialogueNode(
+        id="alia_forgive",
+        speaker="Алия",
+        text="Ладно. Я не сержусь. Стресс, давление... Я бы на твоём "
+             "месте тоже подозревала всех. Но мы найдём настоящего "
+             "виновного. Вместе.",
+        is_end=True
+    ))
+
+    alia_confrontation.add_node(DialogueNode(
+        id="alia_hurt",
+        speaker="Алия",
+        text="*отворачивается* Вон. Выйди из моего отсека. "
+             "Когда придёшь в себя — поговорим.",
+        is_end=True
+    ))
+
+    alia_confrontation.add_node(DialogueNode(
+        id="alia_trust",
+        speaker="Алия",
+        text="*кивает* Спасибо, капитан. Я не подведу. Найду того, "
+             "кто это сделал. Обещаю.",
+        is_end=True
+    ))
+
+    alia_confrontation.add_node(DialogueNode(
+        id="alia_doubt",
+        speaker="Алия",
+        text="*грустно* Понятно. Что ж, продолжай искать. "
+             "Но помни — время идёт, а температура растёт.",
+        is_end=True
+    ))
+
+    alia_confrontation.add_node(DialogueNode(
+        id="alia_kate",
+        speaker="Алия",
+        text="Она тихая, но знает все системы. И у неё был доступ "
+             "к складам после последнего рейса. Проверь её.",
+        is_end=True
+    ))
+
+    alia_confrontation.add_node(DialogueNode(
+        id="alia_think",
+        speaker="Алия",
+        text="Подумай, капитан. Кто мог выиграть от саботажа? "
+             "Пираты? Конкуренты? Или кто-то внутри?",
+        is_end=True
+    ))
+
+    dialogues["alia_confrontation"] = alia_confrontation
+
     return dialogues

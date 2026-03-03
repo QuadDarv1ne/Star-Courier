@@ -173,29 +173,30 @@ class Game:
         """Глава 1: Нежданная встреча"""
         clear_screen()
         print_header("ГЛАВА 1: НЕЖДАННАЯ ВСТРЕЧА", TEXT_WIDTH + 4)
-        
-        # Сцена 1: Утро на Элее
+        print("\n  Станция Орбис-9. 2187 год.")
+        print("  Корабль «Элея» с ценным грузом на борту.")
+        input("\n  [Нажмите Enter для начала...]")
+
         self.scene_morning()
-        
         if not self.running:
             return
-        
-        # Сцена 2: Мостик
+
         self.scene_bridge()
-        
         if not self.running:
             return
-        
-        # Сцена 3: Контакт с пиратами
+
         self.scene_pirate_contact()
-        
         if not self.running:
             return
-        
-        # Сцена 4: Саботаж
+
         self.scene_sabotage()
-        
-        # Конец главы
+        if not self.running:
+            return
+
+        self.scene_discovery()
+        if not self.running:
+            return
+
         self.chapter_end()
     
     def scene_morning(self):
@@ -220,6 +221,7 @@ class Game:
         print("  > 06:30 по звездному времени")
         print("  > Температура: 22°C")
         print("  > Следующая остановка: станция Орбис-9")
+        print("  > Статус груза: в норме")
         print()
         input("  [Нажмите Enter...]")
 
@@ -232,7 +234,7 @@ class Game:
     def scene_bridge(self):
         """Сцена: Мостик"""
         clear_screen()
-        print("\n  [Мостик]")
+        print("\n  [МОСТИК]")
         print_separator("—")
         print()
 
@@ -247,6 +249,9 @@ class Game:
   Ирина Лебедева повернулась от своего терминала:
   — Артефакт стабильно хранится в защитной камере. Я продолжаю
     изучать его свойства.
+
+  Она помолчала, затем добавила тише:
+  — Но там что-то есть, капитан. Что-то... живое.
         """
         print(text)
         print()
@@ -256,21 +261,23 @@ class Game:
             ["Продолжай исследования", "Будь осторожна", "Нужна помощь?"]
         )
 
-        if choice == 1:
+        if choice == 0:
             self.game_state.change_relationship("irina_lebedeva", 5)
             print("\n  Ирина кивнула, не скрывая удовлетворения.")
-        elif choice == 2:
+            print("  — Обязательно. Я близка к открытию.")
+        elif choice == 1:
             self.game_state.change_relationship("irina_lebedeva", 3)
             print("\n  — Буду, капитан. Обещаю.")
         else:
             print("\n  — Спасибо, но пока всё под контролем.")
+            print("  Хотя... если найдёте время, загляните в лабораторию.")
 
         input("\n  [Нажмите Enter...]")
     
     def scene_pirate_contact(self):
         """Сцена: Контакт с пиратами"""
         clear_screen()
-        print("\n  [НЕОЖИДАННЫЙ КОНТАКТ]")
+        print("\n  [ТРЕВОГА!]")
         print_separator("—")
         print()
 
@@ -283,6 +290,8 @@ class Game:
   — Капитан Велл... наконец-то мы на связи. У нас есть общее дело.
     Ваш артефакт заинтересовал многих. Может, обсудим условия,
     прежде чем станем врагами?
+
+  На заднем плане виднелись силуэты вооружённых людей.
         """
         print(text)
         print()
@@ -295,7 +304,7 @@ class Game:
     def scene_sabotage(self):
         """Сцена: Саботаж на корабле"""
         clear_screen()
-        print("\n  [ПРОБЛЕМЫ С СИСТЕМОЙ]")
+        print("\n  [СБОЙ СИСТЕМ]")
         print_separator("—")
         print()
 
@@ -308,6 +317,9 @@ class Game:
 
   На экране появились данные: температура в техническом отсеке
   росла. Быстрее, чем должна была.
+
+  Рина обернулась:
+  — До станции 4 часа. Если температура продолжит расти...
         """
         print(text)
         print()
@@ -316,6 +328,48 @@ class Game:
         self.run_dialogue()
 
         self.game_state.set_flag("sabotage_discovered", True)
+
+    def scene_discovery(self):
+        """Сцена: Находка в техническом отсеке"""
+        clear_screen()
+        print("\n  [ТЕХНИЧЕСКИЙ ОТСЕК]")
+        print_separator("—")
+        print()
+
+        text = """
+  Температура в отсеке выросла до 45°C. Аварийное освещение мигало
+  красным, отбрасывая длинные тени на металлические стены.
+
+  Алия стояла у открытой панели, её лицо было серьёзным.
+
+  — Капитан, смотрите. Кто-то отключил предохранители вручную.
+    И вот это... — она протянула обгоревший чип.
+        """
+        print(text)
+        print()
+
+        choice = get_choice(
+            "Ваши действия?",
+            ["Взять чип", "Осмотреть панель", "Поговорить с Алией"]
+        )
+
+        if choice == 0:
+            print("\n  Чип был повреждён, но на нём виден логотип:")
+            print("  «НейроТех Индастриз» — производитель систем безопасности.")
+            self.game_state.set_flag("found_chip", True)
+        elif choice == 1:
+            print("\n  На панели — следы вскрытия. Профессиональная работа.")
+            self.game_state.set_flag("examined_panel", True)
+        else:
+            print("\n  — Я такого раньше не видела, — Алия нахмурилась.")
+            print("  — Но кто-то знал, где искать.")
+            # Запуск диалога конфронтации
+            self.dialogue_manager.start_dialogue("alia_confrontation")
+            self.run_dialogue()
+            self.game_state.change_relationship("alia_naar", 2)
+
+        self.game_state.set_flag("discovery_complete", True)
+        input("\n  [Нажмите Enter...]")
     
     def run_dialogue(self):
         """Запустить текущий диалог"""
@@ -355,16 +409,33 @@ class Game:
 
         print("\n  Вы успешно завершили первую главу!")
         print("\n  Статистика:")
-        print("    • Найдено улик саботажа: 1")
-        print("    • Отношения с экипажем:")
 
+        # Показываем найденные улики
+        clues_found = sum([
+            self.game_state.get_flag("found_chip", False),
+            self.game_state.get_flag("examined_panel", False),
+        ])
+        print(f"    • Найдено улик: {clues_found}/2")
+
+        # Отношения
+        print("    • Отношения с экипажем:")
         for name, status in self.game_state.get_crew_relationships():
             print(f"      — {name}: {status}")
+
+        # Последствия выборов
+        print("\n  Последствия ваших решений:")
+        if self.game_state.get_flag("pirate_contact_made", False):
+            print("    • Пираты знают о вас. Селена Ро запомнила встречу.")
+        if self.game_state.get_flag("discovery_complete", False):
+            print("    • Саботаж расследуется. Команда ждёт ваших приказов.")
 
         print()
         self.game_state.save_game("autosave.json")
         print("  Игра автоматически сохранена.")
-        print("\n  Продолжение следует...")
+        print("\n  ═══════════════════════════════════════")
+        print("  ГЛАВА 2: СЛЕД В ПУСТОТЕ")
+        print("  Скоро доступна...")
+        print("  ═══════════════════════════════════════")
         input("\n  Нажмите Enter для возврата в меню...")
     
     def save_game(self):
