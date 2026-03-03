@@ -16,7 +16,7 @@ from src.utils import (
     print_menu, get_choice, confirm
 )
 from src.save_system import GameState, SaveManager
-from src.characters import CrewManager, Role
+from src.characters import CrewManager
 from src.dialogues import DialogueManager, create_chapter1_dialogues
 from src.abilities import AbilitiesManager, AbilityType, AbilityTier
 
@@ -321,7 +321,7 @@ class Game:
         """Запустить текущий диалог"""
         if not self.dialogue_manager.current_dialogue:
             return
-            
+
         while not self.dialogue_manager.is_finished():
             try:
                 text = self.dialogue_manager.get_current_text()
@@ -336,17 +336,14 @@ class Game:
                 if not choices:
                     break
 
-                choice_texts = [c.text for c in choices]
-                idx = get_choice("Ваш выбор:", choice_texts)
-
+                idx = get_choice("Ваш выбор:", [c.text for c in choices])
                 selected_choice = choices[idx]
                 self.dialogue_manager.make_choice(selected_choice.id)
 
-                # Применение эффектов
                 if selected_choice.effect_value and selected_choice.effect.name.startswith("RELATIONSHIP"):
                     char_id, amount = selected_choice.effect_value
                     self.game_state.change_relationship(char_id, amount)
-                    
+
             except (IndexError, KeyError, TypeError) as e:
                 print(f"\n  [Ошибка диалога: {e}]")
                 break
@@ -355,22 +352,18 @@ class Game:
         """Конец главы"""
         clear_screen()
         print_header("ГЛАВА 1 ЗАВЕРШЕНА", TEXT_WIDTH + 4)
-        
+
         print("\n  Вы успешно завершили первую главу!")
         print("\n  Статистика:")
-        print(f"    • Найдено улик саботажа: 1")
-        print(f"    • Отношения с экипажем:")
-        
-        for char in self.game_state.crew_manager.get_all_crew():
-            if char.role != Role.CAPTAIN and char.relationship > 0:
-                print(f"      — {char.name}: {char.get_relationship_status()}")
-        
+        print("    • Найдено улик саботажа: 1")
+        print("    • Отношения с экипажем:")
+
+        for name, status in self.game_state.get_crew_relationships():
+            print(f"      — {name}: {status}")
+
         print()
-        
-        # Автосохранение
         self.game_state.save_game("autosave.json")
         print("  Игра автоматически сохранена.")
-        
         print("\n  Продолжение следует...")
         input("\n  Нажмите Enter для возврата в меню...")
     
