@@ -5,7 +5,7 @@
 import json
 import os
 from datetime import datetime
-from typing import Dict, Any, Optional
+from typing import Dict, Any, Optional, List
 from pathlib import Path
 
 try:
@@ -296,3 +296,11 @@ class GameState:
         char = self.crew_manager.get_character(char_id)
         if char:
             char.change_relationship(amount)
+
+    def get_crew_relationships(self) -> List[tuple]:
+        """Получить список отношений с экипажем (name, status)"""
+        return [
+            (char.name, char.get_relationship_status())
+            for char in self.crew_manager.get_all_crew()
+            if char.role != Role.CAPTAIN and char.relationship > 0
+        ]
