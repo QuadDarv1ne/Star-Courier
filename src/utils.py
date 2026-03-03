@@ -117,19 +117,19 @@ def print_separator(char: str = "—", length: int = 60):
 def print_header(text: str, width: int = 60):
     """
     Вывести заголовок в рамке.
-    
+
     Args:
         text: Текст заголовка
         width: Ширина рамки
     """
-    print("+" + "-" * (width - 2) + "+")
-    
-    # Центрирование текста
-    padding = (width - 2 - len(text)) // 2
-    line = "|" + " " * padding + text + " " * (width - 2 - padding - len(text)) + "|"
-    print(line)
-    
-    print("+" + "-" * (width - 2) + "+")
+    border = "+" + "-" * (width - 2) + "+"
+    print(border)
+
+    padding_left = (width - 2 - len(text)) // 2
+    padding_right = width - 2 - padding_left - len(text)
+    print(f"|{' ' * padding_left}{text}{' ' * padding_right}|")
+
+    print(border)
     print()
 
 
@@ -172,32 +172,29 @@ def print_menu(title: str, options: List[str]) -> int:
 def wrap_text(text: str, width: int = 80) -> List[str]:
     """
     Разбить текст на строки заданной ширины.
-    
+
     Args:
         text: Текст
         width: Максимальная ширина строки
-    
+
     Returns:
         Список строк
     """
     words = text.split()
     lines = []
     current_line = ""
-    
+
     for word in words:
         if len(current_line) + len(word) + 1 > width:
             if current_line:
                 lines.append(current_line)
             current_line = word
         else:
-            if current_line:
-                current_line += " " + word
-            else:
-                current_line = word
-    
+            current_line = f"{current_line} {word}".strip()
+
     if current_line:
         lines.append(current_line)
-    
+
     return lines
 
 
