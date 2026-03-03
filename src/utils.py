@@ -15,33 +15,35 @@ def clear_screen():
 
 def print_slow(text: str, delay: float = 0.02, width: int = 80):
     """
-    Вывод текста с задержкой между символами.
-    
+    Вывод текста с задержкой между словами.
+
     Args:
         text: Текст для вывода
-        delay: Задержка между символами (сек)
+        delay: Задержка между словами (сек)
         width: Ширина строки
     """
     import time
-    
+
     words = text.split()
     line = ""
-    
+    output_buffer = []
+
     for word in words:
         if len(line) + len(word) + 1 > width:
-            print(line)
-            line = word + " "
+            if line:
+                output_buffer.append(line)
+            line = word
         else:
-            line += word + " "
-        
-        # Печатаем слово целиком для производительности
-        print(word, end=" ", flush=True)
-        time.sleep(delay * len(word))  # Задержка зависит от длины слова
-    
+            line = f"{line} {word}".strip()
+
     if line:
-        print(line)
-    
-    print()  # Пустая строка в конце
+        output_buffer.append(line)
+
+    for line in output_buffer:
+        print(line, flush=True)
+        time.sleep(delay)
+
+    print()
 
 
 def print_typewriter(text: str, delay: float = 0.03):

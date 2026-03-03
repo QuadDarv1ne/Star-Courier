@@ -255,14 +255,20 @@ class CombatSystem:
     
     def restore_energy(self, amount: int):
         """Восстановить энергию"""
+        if amount <= 0:
+            return
         self.player_energy = min(self.player_max_energy, self.player_energy + amount)
-    
+
     def heal(self, amount: int):
         """Восстановить здоровье"""
+        if amount <= 0:
+            return
         self.player_hp = min(self.player_max_hp, self.player_hp + amount)
-    
-    def take_damage(self, amount: int):
+
+    def take_damage(self, amount: int) -> bool:
         """Получить урон"""
+        if amount <= 0:
+            return self.player_hp > 0
         self.player_hp = max(0, self.player_hp - amount)
         return self.player_hp > 0
     
