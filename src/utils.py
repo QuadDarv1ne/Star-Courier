@@ -4,6 +4,7 @@
 
 import os
 import sys
+import time
 from typing import List, Optional
 from pathlib import Path
 
@@ -22,8 +23,6 @@ def print_slow(text: str, delay: float = 0.02, width: int = 80):
         delay: Задержка между словами (сек)
         width: Ширина строки
     """
-    import time
-
     words = text.split()
     line = ""
     output_buffer = []
@@ -49,50 +48,57 @@ def print_slow(text: str, delay: float = 0.02, width: int = 80):
 def print_typewriter(text: str, delay: float = 0.03):
     """
     Эффект печатной машинки — посимвольный вывод.
-    
+
     Args:
         text: Текст для вывода
         delay: Задержка между символами (сек)
     """
-    import time
-    
     for char in text:
         print(char, end="", flush=True)
         time.sleep(delay)
     print()
 
 
+def _get_int_input(prompt: str, min_val: int = None, max_val: int = None) -> Optional[int]:
+    """Вспомогательная функция для получения целого числа"""
+    try:
+        choice = input(prompt).strip()
+        if not choice:
+            return None
+        idx = int(choice) - 1
+        if min_val is not None and idx < min_val:
+            return None
+        if max_val is not None and idx > max_val:
+            return None
+        return idx
+    except ValueError:
+        return None
+    except KeyboardInterrupt:
+        print("\n")
+        raise
+
+
 def get_choice(prompt: str, options: List[str]) -> int:
     """
     Получить выбор от пользователя.
-    
+
     Args:
         prompt: Текст запроса
         options: Список вариантов
-    
+
     Returns:
         Индекс выбранного варианта (0-based)
     """
     print(f"\n{prompt}\n")
-    
+
     for i, option in enumerate(options, 1):
         print(f"  [{i}] {option}")
-    
+
     while True:
-        try:
-            choice = input("\nВаш выбор: ").strip()
-            if not choice:
-                print("Введите число")
-                continue
-            idx = int(choice) - 1
-            if 0 <= idx < len(options):
-                return idx
-            print(f"Введите число от 1 до {len(options)}")
-        except ValueError:
-            print("Введите число")
-        except KeyboardInterrupt:
-            print("\n")
-            raise
+        idx = _get_int_input("\nВаш выбор: ", 0, len(options) - 1)
+        if idx is not None:
+            return idx
+        print(f"Введите число от 1 до {len(options)}")
 
 
 def confirm(prompt: str = "Вы уверены?") -> bool:
@@ -136,37 +142,27 @@ def print_header(text: str, width: int = 60):
 def print_menu(title: str, options: List[str]) -> int:
     """
     Вывести меню и получить выбор.
-    
+
     Args:
         title: Заголовок меню
         options: Список опций
-    
+
     Returns:
         Индекс выбранной опции (0-based)
     """
     clear_screen()
     print_header(title)
-    
+
     for i, option in enumerate(options, 1):
         print(f"  {i}. {option}")
-    
+
     print()
-    
+
     while True:
-        try:
-            choice = input("Выберите пункт: ").strip()
-            if not choice:
-                print("Введите число")
-                continue
-            idx = int(choice) - 1
-            if 0 <= idx < len(options):
-                return idx
-            print(f"Введите число от 1 до {len(options)}")
-        except ValueError:
-            print("Введите число")
-        except KeyboardInterrupt:
-            print("\n")
-            raise
+        idx = _get_int_input("Выберите пункт: ", 0, len(options) - 1)
+        if idx is not None:
+            return idx
+        print(f"Введите число от 1 до {len(options)}")
 
 
 def wrap_text(text: str, width: int = 80) -> List[str]:
