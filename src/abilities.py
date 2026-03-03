@@ -222,12 +222,15 @@ class CombatSystem:
         Использовать способность.
         Возвращает результат использования.
         """
-        if not self.abilities.can_use_ability(ability):
+        if not ability or not self.abilities.can_use_ability(ability):
             return {"success": False, "message": "Способность недоступна"}
-        
+
+        if ability.energy_cost < 0:
+            return {"success": False, "message": "Некорректная стоимость энергии"}
+
         if self.player_energy < ability.energy_cost:
             return {"success": False, "message": "Недостаточно энергии"}
-        
+
         self.player_energy -= ability.energy_cost
         
         result = {

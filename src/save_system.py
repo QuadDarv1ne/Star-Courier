@@ -251,26 +251,19 @@ class GameState:
         """Синхронизировать данные сохранения с состоянием"""
         if not self.save_data:
             return
-        
-        # Статистика -> способности
+
         stats = self.save_data.stats
-        if stats.get("alchemy", 0) > 0:
-            self.abilities_manager.set_tier(
-                AbilityType.ALCHEMY, 
-                AbilityTier(stats["alchemy"])
-            )
-        if stats.get("biotics", 0) > 0:
-            self.abilities_manager.set_tier(
-                AbilityType.BIOTICS,
-                AbilityTier(stats["biotics"])
-            )
-        if stats.get("psychic", 0) > 0:
-            self.abilities_manager.set_tier(
-                AbilityType.PSYCHIC,
-                AbilityTier(stats["psychic"])
-            )
-        
-        # Отношения
+        tier_mapping = {
+            "alchemy": AbilityType.ALCHEMY,
+            "biotics": AbilityType.BIOTICS,
+            "psychic": AbilityType.PSYCHIC,
+        }
+
+        for stat_key, ability_type in tier_mapping.items():
+            tier_value = stats.get(stat_key, 0)
+            if tier_value > 0:
+                self.abilities_manager.set_tier(ability_type, AbilityTier(tier_value))
+
         for char_id, value in self.save_data.relationships.items():
             char = self.crew_manager.get_character(char_id)
             if char:
