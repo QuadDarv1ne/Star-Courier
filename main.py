@@ -78,20 +78,22 @@ class Game:
 
             saves = self.game_state.save_manager.list_saves()
 
-            options = ["Новая игра", "Загрузить игру", "Об игре", "Выход"]
+            options = ["Новая игра", "Загрузить игру", "Инвентарь", "Об игре", "Выход"]
 
             list_saves_menu(saves)
             print()
 
             choice = print_menu("Меню", options)
-            
+
             if choice == 0:
                 self.new_game()
             elif choice == 1:
                 self.load_game_menu()
             elif choice == 2:
-                self.about_screen()
+                self.inventory_screen()
             elif choice == 3:
+                self.about_screen()
+            elif choice == 4:
                 self.quit_game()
     
     def new_game(self):
@@ -186,7 +188,48 @@ class Game:
         
         print(about_text)
         input("\n  Нажмите Enter для возврата в меню...")
-    
+
+    def inventory_screen(self):
+        """Экран инвентаря"""
+        clear_screen()
+        print_header("ИНВЕНТАРЬ", TEXT_WIDTH + 4)
+
+        items = self.gameplay.get_item_display_list()
+
+        if not items:
+            print("\n  Инвентарь пуст.")
+        else:
+            print(f"  Предметы ({len(items)}):")
+            print("  " + "-" * 60)
+            for i, item in enumerate(items, 1):
+                icon = item.get("icon", "📦")
+                name = item["name"]
+                qty = item.get("quantity", 1)
+                desc = item.get("description", "")
+                qty_str = f" x{qty}" if qty > 1 else ""
+                print(f"  {i}. {icon} {name}{qty_str}")
+                print(f"     {desc}")
+            print()
+
+        print(f"  💰 Кредиты: {self.gameplay.inventory.credits}")
+        print("\n  0. Назад")
+        print("  [Введите номер предмета для использования]")
+
+        try:
+            choice = int(input("\n  Выбор: ").strip())
+            if choice == 0:
+                return
+            if 1 <= choice <= len(items):
+                item_id = items[choice - 1]["id"]
+                result = self.gameplay.use_item(item_id)
+                if result and result.get("success"):
+                    print(f"\n  ✓ {result.get('item_name')}: {result.get('effects', ['Использовано'])[0]}")
+                else:
+                    print("\n  Нельзя использовать этот предмет.")
+                input("\n  Нажмите Enter...")
+        except ValueError:
+            pass
+
     def quit_game(self):
         """Выход из игры"""
         if confirm("Выйти из игры?"):
