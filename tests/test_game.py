@@ -650,5 +650,39 @@ class TestColors(unittest.TestCase):
         self.assertIsInstance(result, bool)
 
 
+class TestDialogueTrust(unittest.TestCase):
+    """Тесты выборов с доверием"""
+
+    def test_choice_with_trust_requirement(self):
+        choice = Choice(
+            id="trust_choice",
+            text="Требует доверия",
+            next_node="next",
+            required_trust=50,
+            effect_value=("athena", 10)
+        )
+        
+        crew_trust = {"athena": 40}
+        self.assertFalse(choice.is_available({}, [], crew_trust, {}))
+        
+        crew_trust = {"athena": 60}
+        self.assertTrue(choice.is_available({}, [], crew_trust, {}))
+
+    def test_choice_with_relationship_requirement(self):
+        choice = Choice(
+            id="rel_choice",
+            text="Требует отношений",
+            next_node="next",
+            required_relationship=30,
+            effect_value=("athena", 10)
+        )
+        
+        crew_rel = {"athena": 20}
+        self.assertFalse(choice.is_available({}, [], {}, crew_rel))
+        
+        crew_rel = {"athena": 40}
+        self.assertTrue(choice.is_available({}, [], {}, crew_rel))
+
+
 if __name__ == "__main__":
     unittest.main(verbosity=2)
