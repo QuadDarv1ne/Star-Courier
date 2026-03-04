@@ -155,6 +155,9 @@ class Game:
                 if self.game_state.load_game(filename):
                     print("\n  Игра загружена!")
                     self.loaded_scene = self.game_state.save_data.scene if self.game_state.save_data else None
+                    # Реинициализация gameplay после загрузки
+                    self.gameplay.set_crew_manager(self.game_state.crew_manager)
+                    self.gameplay.set_game_state(self.game_state)
                     input("Нажмите Enter...")
                     self.play_chapter_1()
                 else:
@@ -872,12 +875,38 @@ class Game:
         print("\n  [КОМАНДА]")
         print("  " + "-" * 40)
         crew = self.game_state.crew_manager.get_all_crew()
-        for char in crew[:5]:  # Показываем до 5 персонажей
+        for char in crew[:5]:
             rel_status = char.get_relationship_status()
             print(f"  {char.name}: {rel_status}")
 
+        print("\n  [0] Назад")
+        print("  [S] Сохранить игру")
         print("\n  Нажмите Enter для возврата...")
-        input()
+
+        choice = input("  Выбор: ").strip().lower()
+        if choice == 's':
+            self.save_game_menu()
+
+    def save_game_menu(self):
+        """Меню сохранения игры"""
+        clear_screen()
+        print_header("СОХРАНЕНИЕ ИГРЫ", TEXT_WIDTH + 4)
+
+        filename = input("  Введите имя файла (например, save1): ").strip()
+        if not filename:
+            print("\n  Отменено.")
+            input("Нажмите Enter...")
+            return
+
+        if not filename.endswith(".json"):
+            filename = filename + ".json"
+
+        print(f"\n  Сохранение в {filename}...")
+        if self.game_state.save_game(filename):
+            print("  ✓ Игра сохранена успешно!")
+        else:
+            print("  ✗ Ошибка сохранения!")
+        input("\n  Нажмите Enter...")
 
     def chapter_end(self):
         """Конец главы"""
