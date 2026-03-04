@@ -388,6 +388,13 @@ class Game:
         if not self.dialogue_manager.current_dialogue:
             return
 
+        # Получаем данные о доверии и отношениях для выборов
+        crew_trust = {}
+        crew_relationship = {}
+        if self.game_state.save_data:
+            crew_trust = self.game_state.save_data.trust_values
+            crew_relationship = self.game_state.save_data.relationships
+
         while not self.dialogue_manager.is_finished():
             try:
                 text = self.dialogue_manager.get_current_text()
@@ -408,7 +415,9 @@ class Game:
 
                 choices = self.dialogue_manager.get_available_choices(
                     self.game_state.save_data.stats if self.game_state.save_data else {},
-                    self.game_state.save_data.inventory if self.game_state.save_data else []
+                    self.game_state.save_data.inventory if self.game_state.save_data else [],
+                    crew_trust,
+                    crew_relationship
                 )
 
                 if not choices:
@@ -418,9 +427,14 @@ class Game:
                 selected_choice = choices[idx]
                 self.dialogue_manager.make_choice(selected_choice.id)
 
-                if selected_choice.effect_value and selected_choice.effect.name.startswith("RELATIONSHIP"):
+                if selected_choice.effect_value and isinstance(selected_choice.effect_value, tuple):
                     char_id, amount = selected_choice.effect_value
-                    self.game_state.change_relationship(char_id, amount)
+                    effect_name = selected_choice.effect.name
+                    
+                    if effect_name.startswith("RELATIONSHIP"):
+                        self.game_state.change_relationship(char_id, amount)
+                    elif effect_name.startswith("TRUST"):
+                        self.game_state.change_trust(char_id, amount)
 
             except (IndexError, KeyError, TypeError) as e:
                 logger.debug(f"Ошибка диалога: {e}")

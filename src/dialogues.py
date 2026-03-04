@@ -15,10 +15,13 @@ class ChoiceEffect(Enum):
     NONE = "none"
     RELATIONSHIP_UP = "relationship_up"
     RELATIONSHIP_DOWN = "relationship_down"
+    TRUST_UP = "trust_up"
+    TRUST_DOWN = "trust_down"
     STAT_CHANGE = "stat_change"
     STORY_BRANCH = "story_branch"
     ITEM_GAIN = "item_gain"
     QUEST_COMPLETE = "quest_complete"
+    QUEST_START = "quest_start"
 
 
 @dataclass
@@ -31,8 +34,11 @@ class Choice:
     effect_value: Any = None
     required_stat: Optional[Dict[str, int]] = None
     required_item: Optional[str] = None
-    
-    def is_available(self, player_stats: dict, player_items: list) -> bool:
+    required_trust: int = 0
+    required_relationship: int = 0
+
+    def is_available(self, player_stats: dict, player_items: list, 
+                     crew_trust: dict = None, crew_relationship: dict = None) -> bool:
         """Проверить, доступен ли выбор"""
         if self.required_stat:
             for stat, value in self.required_stat.items():
@@ -40,6 +46,14 @@ class Choice:
                     return False
         if self.required_item and self.required_item not in player_items:
             return False
+        if self.required_trust and crew_trust:
+            char_id = self.effect_value[0] if isinstance(self.effect_value, tuple) else None
+            if char_id and crew_trust.get(char_id, 0) < self.required_trust:
+                return False
+        if self.required_relationship and crew_relationship:
+            char_id = self.effect_value[0] if isinstance(self.effect_value, tuple) else None
+            if char_id and crew_relationship.get(char_id, 0) < self.required_relationship:
+                return False
         return True
 
 
@@ -109,17 +123,21 @@ class DialogueManager:
             return None
         return f"{self.current_node.speaker}: {self.current_node.text}"
     
-    def get_available_choices(self, player_stats: dict = None, 
-                               player_items: list = None) -> List[Choice]:
+    def get_available_choices(self, player_stats: dict = None,
+                               player_items: list = None,
+                               crew_trust: dict = None,
+                               crew_relationship: dict = None) -> List[Choice]:
         """Получить доступные выборы"""
         if not self.current_node:
             return []
-        
+
         player_stats = player_stats or {}
         player_items = player_items or []
-        
-        return [c for c in self.current_node.choices 
-                if c.is_available(player_stats, player_items)]
+        crew_trust = crew_trust or {}
+        crew_relationship = crew_relationship or {}
+
+        return [c for c in self.current_node.choices
+                if c.is_available(player_stats, player_items, crew_trust, crew_relationship)]
     
     def make_choice(self, choice_id: str) -> Optional[DialogueNode]:
         """Сделать выбор"""
