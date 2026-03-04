@@ -57,17 +57,17 @@ class TestCharacters(unittest.TestCase):
             name="Тест",
             role=Role.ENGINEER
         )
-        new_value = char.increase_relationship(10)
+        new_value = char.change_relationship(10)
         self.assertEqual(new_value, 10)
         self.assertEqual(char.relationship, 10)
-    
+
     def test_relationship_cap(self):
         char = Character(
             id="test_char",
             name="Тест",
             role=Role.PILOT
         )
-        char.increase_relationship(150)
+        char.change_relationship(150)
         self.assertEqual(char.relationship, 100)
     
     def test_relationship_status(self):
