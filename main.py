@@ -271,10 +271,15 @@ class Game:
         print("  — Капитан! Я как раз хотела вам доложить...")
         print()
 
-        choice = get_choice(
-            "Что спросить?",
-            ["Что с артефактом?", "Есть опасность?", "Нужна помощь?"]
-        )
+        # Проверяем отношения с Ириной
+        irina_rel = self.game_state.crew_manager.get_character("irina_lebedeva").relationship
+
+        if irina_rel >= 40:
+            options = ["Что с артефактом?", "Есть опасность?", "Ты сегодня прекрасно выглядишь", "Нужна помощь?"]
+        else:
+            options = ["Что с артефактом?", "Есть опасность?", "Нужна помощь?"]
+
+        choice = get_choice("Что спросить?", options)
 
         if choice == 0:
             print("\n  — Энергетические всплески участились. Это... необычно.")
@@ -285,7 +290,15 @@ class Game:
             print("\n  — Пока нет. Но я продолжаю мониторинг.")
             print("  — Если что-то изменится — вы узнаете первым.")
             self.game_state.change_trust("irina_lebedeva", 5)
+        elif choice == 2 and irina_rel >= 40:
+            print("\n  Ирина слегка покраснела:")
+            print("  — Ох, капитан... вы всегда находите нужные слова.")
+            print("  — Но спасибо. Мне... приятно.")
+            self.game_state.change_relationship("irina_lebedeva", 12)
+            self.game_state.change_trust("irina_lebedeva", 5)
+            self.game_state.set_flag("irina_flirted", True)
         else:
+            idx = 2 if irina_rel >= 40 else 1
             print("\n  — Да, собственно... можете передать Афии, что нужны")
             print("    дополнительные данные по фоновому излучению.")
             self.game_state.change_relationship("irina_lebedeva", 2)
@@ -348,10 +361,14 @@ class Game:
 
         # Взаимодействие с Риной
         print("\n  Рина повернулась:")
-        rina_choice = get_choice(
-            "Что сказать Рине?",
-            ["Доложи обстановку", "Есть проблемы?", "Хорошая работа"]
-        )
+        
+        rina_rel = self.game_state.crew_manager.get_character("rina_mirai").relationship
+        if rina_rel >= 30:
+            rina_options = ["Доложи обстановку", "Есть проблемы?", "Ты сегодня особенно хороша", "Хорошая работа"]
+        else:
+            rina_options = ["Доложи обстановку", "Есть проблемы?", "Хорошая работа"]
+        
+        rina_choice = get_choice("Что сказать Рине?", rina_options)
 
         if rina_choice == 0:
             print("\n  — Патруль флота на орбите. Пропуск получен.")
@@ -361,7 +378,15 @@ class Game:
             print("\n  — Пока нет. Но я слежу за аномалиями в секторе.")
             print("  — Лучше перестраховаться.")
             self.game_state.change_relationship("rina_mirai", 3)
+        elif rina_choice == 2 and rina_rel >= 30:
+            print("\n  Рина подняла бровь, улыбаясь:")
+            print("  — Капитан, вы отвлекаете меня от работы комплиментами?")
+            print("  — Но... спасибо. Мне приятно.")
+            self.game_state.change_relationship("rina_mirai", 10)
+            self.game_state.change_trust("rina_mirai", 3)
+            self.game_state.set_flag("rina_flirted", True)
         else:
+            idx = 2 if rina_rel >= 30 else 1
             print("\n  Рина улыбнулась:")
             print("  — Стараюсь, капитан.")
             self.game_state.change_relationship("rina_mirai", 5)
@@ -507,6 +532,10 @@ class Game:
         print(text)
         print()
 
+        # Проверяем отношения с Алией
+        alia_rel = self.game_state.crew_manager.get_character("alia_naar").relationship
+        alia_trust = self.game_state.crew_manager.get_character("alia_naar").trust
+
         choice = get_choice(
             "Ваши действия?",
             ["Взять чип", "Осмотреть панель", "Поговорить с Алией"]
@@ -520,12 +549,24 @@ class Game:
             print("\n  На панели — следы вскрытия. Профессиональная работа.")
             self.game_state.set_flag("examined_panel", True)
         else:
-            print("\n  — Я такого раньше не видела, — Алия нахмурилась.")
-            print("  — Но кто-то знал, где искать.")
-            # Запуск диалога конфронтации
-            self.dialogue_manager.start_dialogue("alia_confrontation")
-            self.run_dialogue()
-            self.game_state.change_relationship("alia_naar", 2)
+            # Разговор с Алией
+            if alia_trust < 30 and alia_rel < 30:
+                print("\n  — Я такого раньше не видела, — Алия нахмурилась.")
+                print("  — Но кто-то знал, где искать.")
+                self.game_state.change_relationship("alia_naar", 2)
+            elif alia_rel >= 50:
+                print("\n  Алия вздохнула, вытирая пот со лба:")
+                print("  — Знаешь, капитан... в такие моменты я рада, что ты рядом.")
+                print("  — Мы справимся. Вместе.")
+                self.game_state.change_relationship("alia_naar", 8)
+                self.game_state.change_trust("alia_naar", 5)
+                self.game_state.set_flag("alia_moment", True)
+            else:
+                print("\n  — Я такого раньше не видела, — Алия нахмурилась.")
+                print("  — Но кто-то знал, где искать.")
+                self.dialogue_manager.start_dialogue("alia_confrontation")
+                self.run_dialogue()
+                self.game_state.change_relationship("alia_naar", 2)
 
         self.game_state.set_flag("discovery_complete", True)
         input("\n  [Нажмите Enter...]")
@@ -546,10 +587,14 @@ class Game:
         print(text)
         print()
 
-        choice = get_choice(
-            "Ваши действия?",
-            ["Осмотреть ближе", "Сканировать", "Поговорить с Ириной"]
-        )
+        irina_rel = self.game_state.crew_manager.get_character("irina_lebedeva").relationship
+
+        if irina_rel >= 60:
+            options = ["Осмотреть ближе", "Сканировать", "Позвать Ирину", "Пригласить Ирину"]
+        else:
+            options = ["Осмотреть ближе", "Сканировать", "Позвать Ирину"]
+
+        choice = get_choice("Ваши действия?", options)
 
         if choice == 0:
             print("\n  Макс приблизился к камере.")
@@ -565,7 +610,34 @@ class Game:
             print("  > Психический фон: обнаружен")
             self.game_state.set_flag("artifact_scanned", True)
             self.game_state.change_relationship("irina_lebedeva", 3)
+        elif choice == 2 and irina_rel >= 60:
+            print("\n  Ирина пришла быстро, в лабораторном халате.")
+            print("  — Вы звали, капитан?")
+            print()
+            subchoice = get_choice(
+                "Что сказать?",
+                ["Посмотреть вместе", "Ты нужна мне... для исследований", "Просто хотел видеть тебя"]
+            )
+            if subchoice == 0:
+                print("\n  — Конечно. Давайте изучим это вместе.")
+                print("  Ирина встала рядом, плечом к плечу.")
+                self.game_state.change_trust("irina_lebedeva", 10)
+                self.game_state.set_flag("irina_artifact_confirmed", True)
+            elif subchoice == 1:
+                print("\n  Ирина улыбнулась:")
+                print("  — Для исследований? Ну что ж... я к вашим услугам.")
+                self.game_state.change_relationship("irina_lebedeva", 12)
+                self.game_state.change_trust("irina_lebedeva", 5)
+                self.game_state.set_flag("irina_flirted_research", True)
+            else:
+                print("\n  Ирина слегка покраснела:")
+                print("  — Ох, капитан... вы заставили меня прийти.")
+                print("  — Но... мне приятно.")
+                self.game_state.change_relationship("irina_lebedeva", 15)
+                self.game_state.change_trust("irina_lebedeva", 8)
+                self.game_state.set_flag("irina_personal_moment", True)
         else:
+            idx = 2 if irina_rel >= 60 else 1
             print("\n  Ирина прибыла через несколько минут.")
             print("  — Я тоже это чувствую, капитан.")
             print("  — Он... живой. Или был когда-то.")
