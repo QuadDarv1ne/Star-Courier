@@ -363,6 +363,17 @@ class GameState:
             if char.role != Role.CAPTAIN and char.relationship > 0
         ]
 
+    def get_top_relationship(self) -> Optional[tuple]:
+        """Получить персонажа с наивысшими отношениями (name, status)"""
+        crew = [
+            char for char in self.crew_manager.get_all_crew()
+            if char.role != Role.CAPTAIN and char.relationship > 0
+        ]
+        if not crew:
+            return None
+        top = max(crew, key=lambda c: c.relationship)
+        return (top.name, f"{top.relationship}% ({top.get_relationship_status()})")
+
     def get_quest_manager(self) -> QuestManager:
         """Получить менеджер квестов"""
         return self.quest_manager

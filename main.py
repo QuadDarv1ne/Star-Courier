@@ -842,8 +842,248 @@ class Game:
         print("  Игра автоматически сохранена.")
         print("\n  ═══════════════════════════════════════")
         print("  ГЛАВА 2: СЛЕД В ПУСТОТЕ")
-        print("  Скоро доступна...")
+        print("  Доступно сейчас...")
         print("  ═══════════════════════════════════════")
+        input("\n  Нажмите Enter для продолжения...")
+        
+        self.play_chapter_2()
+
+    def play_chapter_2(self):
+        """Глава 2: След в пустоте"""
+        clear_screen()
+        print_header("ГЛАВА 2: СЛЕД В ПУСТОТЕ", TEXT_WIDTH + 4)
+        print("\n  «Элея» в глубоком космосе. 2187 год.")
+        input("\n  [Нажмите Enter для начала...]")
+
+        self.scene_ch2_morning()
+        if not self.running:
+            return
+
+        self.scene_ch2_lab()
+        if not self.running:
+            return
+
+        self.scene_ch2_rec_room()
+        if not self.running:
+            return
+
+        self.scene_ch2_security()
+        if not self.running:
+            return
+
+        self.scene_ch2_bridge()
+        if not self.running:
+            return
+
+        self.chapter_2_end()
+
+    def scene_ch2_morning(self):
+        """Сцена: Утро и выбор романтической линии"""
+        clear_screen()
+        print("\n  [Глава 2: След в пустоте]")
+        print_separator("-")
+        print("\n  [Личное время]")
+        print()
+
+        text = """
+  После событий на станции «Элея» вышла на орбиту глубокого космоса.
+  У экипажа появилось немного времени на отдых. Макс стоит перед выбором —
+  как провести свободный час?
+        """
+        print(text)
+        print()
+
+        choice = get_choice(
+            "Кого навестить?",
+            ["Алия (рубка)", "Ирина (лаборатория)", "Рина (комната отдыха)", 
+             "Надежда (охрана)", "Афина (частный канал)"]
+        )
+
+        if choice == 0:
+            self.dialogue_manager.start_dialogue("alia_evening")
+            self.run_dialogue()
+        elif choice == 1:
+            self.dialogue_manager.start_dialogue("irina_lab")
+            self.run_dialogue()
+        elif choice == 2:
+            self.dialogue_manager.start_dialogue("rina_rec_room")
+            self.run_dialogue()
+        elif choice == 3:
+            self.dialogue_manager.start_dialogue("nadezhda_security")
+            self.run_dialogue()
+        else:
+            self.dialogue_manager.start_dialogue("athena_private")
+            self.run_dialogue()
+
+        self.game_state.set_flag("ch2_romance_started", True)
+        input("\n  [Нажмите Enter...]")
+
+    def scene_ch2_lab(self):
+        """Сцена: Лаборатория - исследование артефакта"""
+        clear_screen()
+        print("\n  [ЛАБОРАТОРИЯ]")
+        print_separator("-")
+        print()
+
+        text = """
+  Ирина работает с артефактом. Голографические дисплеи показывают
+  сложные энергетические паттерны.
+
+  — Капитан, у меня есть данные. Артефакт... он реагирует на что-то.
+    На внешние сигналы.
+        """
+        print(text)
+        print()
+
+        choice = get_choice(
+            "Что спросить?",
+            ["Какие сигналы?", "Это опасно?", "Нужна помощь?"]
+        )
+
+        if choice == 0:
+            print("\n  — Не знаю. Но они исходят из глубины космоса.")
+            self.game_state.set_flag("ch2_signal_discovered", True)
+        elif choice == 1:
+            print("\n  — Пока не могу сказать. Но я продолжаю мониторинг.")
+            self.game_state.change_relationship("irina_lebedeva", 3)
+        else:
+            print("\n  — Спасибо, капитан. Но пока всё под контролем.")
+            self.game_state.change_relationship("irina_lebedeva", 5)
+
+        input("\n  [Нажмите Enter...]")
+
+    def scene_ch2_rec_room(self):
+        """Сцена: Комната отдыха - разговор с командой"""
+        clear_screen()
+        print("\n  [КОМНАТА ОТДЫХА]")
+        print_separator("-")
+        print()
+
+        text = """
+  Рина и Алия обсуждают тактику у симулятора. Они замолкают,
+  когда входит Макс.
+
+  — Капитан, как раз вовремя. У нас есть идея по улучшению маршрута.
+        """
+        print(text)
+        print()
+
+        choice = get_choice(
+            "Ответить",
+            ["Слушаю", "Позже", "Присоединиться к разговору"]
+        )
+
+        if choice == 0:
+            print("\n  Рина показывает новый маршрут на голограмме.")
+            self.game_state.change_relationship("rina_mirai", 3)
+        elif choice == 1:
+            print("\n  — Поняли, капитан. Будем ждать.")
+        else:
+            print("\n  Начинается оживлённая дискуссия о тактике.")
+            self.game_state.change_relationship("alia_naar", 3)
+            self.game_state.change_relationship("rina_mirai", 3)
+
+        input("\n  [Нажмите Enter...]")
+
+    def scene_ch2_security(self):
+        """Сцена: Оружейная - доклад по безопасности"""
+        clear_screen()
+        print("\n  [ОРУЖЕЙНАЯ]")
+        print_separator("-")
+        print()
+
+        text = """
+  Надежда проверяет оружие. Она кивает Максу.
+
+  — После саботажа я усилила протоколы. Доступ к критическим
+    системам только по биометрии.
+        """
+        print(text)
+        print()
+
+        choice = get_choice(
+            "Ответить",
+            ["Отлично работаешь", "Есть новости?", "Нужна помощь?"]
+        )
+
+        if choice == 0:
+            print("\n  — Спасибо, капитан. Это моя работа.")
+            self.game_state.change_relationship("nadezhda", 5)
+        elif choice == 1:
+            print("\n  — Камеры в техническом отсеке заменены.")
+            self.game_state.set_flag("ch2_cameras_replaced", True)
+        else:
+            print("\n  — Нет, но спасибо за предложение.")
+
+        input("\n  [Нажмите Enter...]")
+
+    def scene_ch2_bridge(self):
+        """Сцена: Мостик - приближение к аномалии"""
+        clear_screen()
+        print_alert("\n  [ОБНАРУЖЕНА АНОМАЛИЯ]")
+        print_separator("-")
+        print()
+
+        text = """
+  Тревога звучит мягко. На главном экране — искажение пространства.
+
+  Рина:
+  — Гравитационная аномалия впереди. Никогда не видела такой.
+
+  Алия:
+  — Корабль цел, но лучше обойти.
+        """
+        print(text)
+        print()
+
+        choice = get_choice(
+            "Решение",
+            ["Обойти аномалию", "Исследовать", "Спросить Ирину"]
+        )
+
+        if choice == 0:
+            print("\n  — Прокладываю обходной маршрут, — говорит Алия.")
+            self.game_state.set_flag("ch2_avoid_anomaly", True)
+        elif choice == 1:
+            print("\n  — Рискнём. Алия, медленно вперёд.")
+            self.game_state.set_flag("ch2_enter_anomaly", True)
+        else:
+            print("\n  Ирина изучает данные:")
+            print("  — Это не природная аномалия. Кто-то её создал.")
+            self.game_state.set_flag("ch2_anomaly_artificial", True)
+
+        input("\n  [Нажмите Enter...]")
+
+    def chapter_2_end(self):
+        """Конец второй главы"""
+        clear_screen()
+        print_header("ГЛАВА 2 ЗАВЕРШЕНА", TEXT_WIDTH + 4)
+
+        print("\n  Вы завершили вторую главу!")
+        print("\n  Статистика:")
+
+        # Отношения
+        print("    • Отношения с экипажем:")
+        for name, status in self.game_state.get_crew_relationships():
+            print(f"      — {name}: {status}")
+
+        # Найденные улики
+        clues = sum([
+            self.game_state.get_flag("ch2_signal_discovered", False),
+            self.game_state.get_flag("ch2_cameras_replaced", False),
+            self.game_state.get_flag("ch2_anomaly_artificial", False),
+        ])
+        print(f"\n    • Найдено улик: {clues}/3")
+
+        # Романтическая линия
+        print("\n  Романтическая линия:")
+        top_char = self.game_state.get_top_relationship()
+        if top_char:
+            print(f"    • {top_char[0]}: {top_char[1]}")
+
+        print()
+        self.game_state.save_game("autosave_ch2.json")
+        print("  Игра автоматически сохранена.")
         input("\n  Нажмите Enter для возврата в меню...")
     
     def save_game(self):
