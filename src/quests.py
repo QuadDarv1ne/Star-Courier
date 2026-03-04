@@ -408,8 +408,11 @@ class QuestManager:
     
     def add_quest(self, quest: Quest):
         """Добавить квест"""
+        if quest.id in self.quests:
+            return False  # Квест уже существует
         self.quests[quest.id] = quest
-    
+        return True
+
     def get_quest(self, quest_id: str) -> Optional[Quest]:
         """Получить квест по ID"""
         return self.quests.get(quest_id)

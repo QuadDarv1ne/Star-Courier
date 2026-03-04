@@ -55,18 +55,27 @@ class Item:
     rarity: Rarity = Rarity.COMMON
     value: int = 0      # Стоимость в кредитах
     weight: float = 0.0 # Вес
-    
+
     # Эффекты
     effects: List[ItemEffect] = field(default_factory=list)
-    
+
     # Использование
     is_consumable: bool = False
     is_stackable: bool = True
     max_stack: int = 99
-    
+
     # Мета
     icon: str = "📦"
     lore: str = ""  # Описание в лоре
+
+    def __post_init__(self):
+        """Валидация после инициализации"""
+        if self.value < 0:
+            self.value = 0
+        if self.weight < 0:
+            self.weight = 0.0
+        if self.max_stack < 1:
+            self.max_stack = 1
     
     def to_dict(self) -> dict:
         """Сериализация в словарь"""
@@ -224,7 +233,7 @@ class Inventory:
         """
         if quantity <= 0:
             return True
-            
+
         removed = 0
 
         for slot in self.slots:
@@ -237,6 +246,15 @@ class Inventory:
         self.slots = [slot if slot and not slot.is_empty() else None for slot in self.slots]
 
         return removed >= quantity
+
+    def remove_all_items(self, item_id: str) -> int:
+        """Удалить все предметы с данным ID. Возвращает количество удалённых."""
+        total_removed = 0
+        for i, slot in enumerate(self.slots):
+            if slot and slot.item.id == item_id:
+                total_removed += slot.quantity
+                self.slots[i] = None
+        return total_removed
     
     def has_item(self, item_id: str, quantity: int = 1) -> bool:
         """Проверить наличие предмета"""

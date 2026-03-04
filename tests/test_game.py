@@ -20,6 +20,12 @@ from dialogues import (
     Dialogue, DialogueNode, Choice, ChoiceEffect, DialogueManager
 )
 from save_system import SaveData, SaveManager, GameState
+from items import (
+    Item, ItemType, Rarity, Inventory, ItemStack, ItemDatabase, ItemEffect
+)
+from quests import (
+    Quest, QuestType, QuestState, Objective, ObjectiveType, QuestManager, QuestReward
+)
 
 
 class TestConfig(unittest.TestCase):
@@ -327,10 +333,188 @@ class TestSaveSystem(unittest.TestCase):
         state.change_relationship("athena", 10)
         athena = state.crew_manager.get_character("athena")
         self.assertEqual(athena.relationship, 10)
-        
+
         # Установка флага
         state.set_flag("test_flag", True)
         self.assertTrue(state.get_flag("test_flag"))
+
+
+class TestItems(unittest.TestCase):
+    """Тесты системы предметов"""
+
+    def test_item_creation(self):
+        item = Item(
+            id="test_item",
+            name="Тестовый предмет",
+            description="Тест",
+            item_type=ItemType.MATERIAL,
+            value=100,
+            weight=0.5
+        )
+        self.assertEqual(item.name, "Тестовый предмет")
+        self.assertEqual(item.value, 100)
+        self.assertEqual(item.weight, 0.5)
+
+    def test_item_validation(self):
+        item = Item(
+            id="test_item",
+            name="Тест",
+            description="Тест",
+            item_type=ItemType.MATERIAL,
+            value=-100,
+            weight=-0.5,
+            max_stack=0
+        )
+        self.assertEqual(item.value, 0)
+        self.assertEqual(item.weight, 0.0)
+        self.assertEqual(item.max_stack, 1)
+
+    def test_inventory_add_remove(self):
+        inv = Inventory(max_slots=5)
+        db = ItemDatabase()
+
+        item = db.get_item("healing_potion")
+        self.assertIsNotNone(item)
+
+        result = inv.add_item(item, 3)
+        self.assertTrue(result)
+        self.assertTrue(inv.has_item("healing_potion", 3))
+
+        result = inv.remove_item("healing_potion", 2)
+        self.assertTrue(result)
+        self.assertTrue(inv.has_item("healing_potion", 1))
+
+    def test_inventory_full(self):
+        inv = Inventory(max_slots=2)
+        db = ItemDatabase()
+
+        item1 = db.get_item("healing_potion")
+        item2 = db.get_item("energy_cell")
+        item3 = db.get_item("biotic_stim")
+
+        inv.add_item(item1, 99)
+        inv.add_item(item2, 99)
+        
+        result = inv.add_item(item3, 1)
+        self.assertFalse(result)
+
+    def test_item_stack(self):
+        db = ItemDatabase()
+        item = db.get_item("healing_potion")
+        stack = ItemStack(item, 50)
+
+        self.assertFalse(stack.is_full())
+        self.assertEqual(stack.quantity, 50)
+
+        remaining = stack.add(49)
+        self.assertEqual(remaining, 0)
+        self.assertTrue(stack.is_full())
+
+        remaining = stack.add(10)
+        self.assertEqual(remaining, 10)
+
+        removed = stack.remove(30)
+        self.assertEqual(removed, 30)
+        self.assertEqual(stack.quantity, 69)
+
+
+class TestQuests(unittest.TestCase):
+    """Тесты системы квестов"""
+
+    def test_quest_creation(self):
+        quest = Quest(
+            id="test_quest",
+            title="Тестовый квест",
+            description="Тест",
+            quest_type=QuestType.SIDE
+        )
+        self.assertEqual(quest.title, "Тестовый квест")
+        self.assertEqual(quest.state, QuestState.AVAILABLE)
+
+    def test_quest_objectives(self):
+        quest = Quest(
+            id="test_quest",
+            title="Тест",
+            description="Тест",
+            quest_type=QuestType.MAIN
+        )
+        quest.add_objective(Objective(
+            id="obj1",
+            type=ObjectiveType.KILL,
+            description="Убить врага",
+            required=5
+        ))
+
+        quest.update_objective("obj1", 3)
+        self.assertEqual(quest.objectives[0].current, 3)
+        self.assertFalse(quest.objectives[0].is_completed)
+
+        quest.update_objective("obj1", 2)
+        self.assertTrue(quest.objectives[0].is_completed)
+
+    def test_quest_availability(self):
+        quest = Quest(
+            id="test_quest",
+            title="Тест",
+            description="Тест",
+            quest_type=QuestType.SIDE,
+            prerequisites=["prereq_quest"]
+        )
+
+        self.assertFalse(quest.is_available([], 0))
+        self.assertTrue(quest.is_available(["prereq_quest"], 0))
+
+    def test_quest_manager(self):
+        manager = QuestManager()
+
+        quests = manager.get_active_quests()
+        self.assertGreater(len(quests), 0)
+
+        quest = manager.get_quest("main_001")
+        self.assertIsNotNone(quest)
+        self.assertEqual(quest.quest_type, QuestType.MAIN)
+
+    def test_quest_accept_complete(self):
+        manager = QuestManager()
+        initial_count = len(manager.get_active_quests())
+
+        side_quest = Quest(
+            id="side_test",
+            title="Тест",
+            description="Тест",
+            quest_type=QuestType.SIDE
+        )
+        side_quest.add_objective(Objective(
+            id="obj",
+            type=ObjectiveType.COLLECT,
+            description="Собрать",
+            required=1
+        ))
+        manager.add_quest(side_quest)
+
+        result = manager.accept_quest("side_test")
+        self.assertTrue(result)
+        self.assertEqual(len(manager.get_active_quests()), initial_count + 1)
+
+        manager.update_objective("side_test", "obj", 1)
+        reward = manager.complete_quest("side_test")
+        self.assertIsNotNone(reward)
+        self.assertTrue(manager.has_completed("side_test"))
+
+    def test_quest_duplicate_prevention(self):
+        manager = QuestManager()
+        quest = Quest(
+            id="duplicate_test",
+            title="Тест",
+            description="Тест",
+            quest_type=QuestType.SIDE
+        )
+
+        result1 = manager.add_quest(quest)
+        result2 = manager.add_quest(quest)
+
+        self.assertTrue(result1)
+        self.assertFalse(result2)
 
 
 if __name__ == "__main__":
