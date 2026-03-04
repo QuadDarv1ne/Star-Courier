@@ -40,11 +40,11 @@ class Game:
     def show_title_screen(self):
         """Показать заглавный экран"""
         print()
-        print_header(f"★ {GAME_TITLE} ★", TEXT_WIDTH + 4)
+        print_header(f"* {GAME_TITLE} *", TEXT_WIDTH + 4)
         print(f"\n  Версия: {VERSION}")
         print("\n  Интерактивная текстовая RPG в космической тематике")
         print()
-        print_separator("—", TEXT_WIDTH + 4)
+        print_separator("-", TEXT_WIDTH + 4)
         print()
         input("Нажмите Enter для продолжения...")
     

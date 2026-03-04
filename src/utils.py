@@ -133,7 +133,9 @@ def print_header(text: str, width: int = 60):
 
     padding_left = (width - 2 - len(text)) // 2
     padding_right = width - 2 - padding_left - len(text)
-    print(f"|{' ' * padding_left}{text}{' ' * padding_right}|")
+    # Заменяем Unicode-символы на ASCII для совместимости с Windows
+    safe_text = text.replace("\u2605", "*").replace("\u2550", "=").replace("\u2501", "-")
+    print(f"|{' ' * padding_left}{safe_text}{' ' * padding_right}|")
 
     print(border)
     print()
