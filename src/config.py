@@ -5,10 +5,13 @@
 # Настройки игры
 GAME_TITLE = "Star Courier"
 VERSION = "0.1.0"
+MAX_SAVE_SLOTS = 10
 
-# Путь к сохранениям
+# Пути к данным
 SAVE_DIR = "saves"
 DEFAULT_SAVE = "save.json"
+CHAPTERS_DIR = "chapters"
+CHARACTERS_DIR = "characters"
 
 # Параметры отображения
 TEXT_WIDTH = 80
@@ -20,6 +23,13 @@ DEFAULT_STATS = {
     "biotics": 0,      # биотика
     "psychic": 0,      # психика
 }
+DEFAULT_HP = 100
+DEFAULT_ENERGY = 100
 
-# Максимальный уровень отношений
+# Отношения
 MAX_RELATIONSHIP = 100
+MIN_RELATIONSHIP = 0
+
+# Баланс
+STARTING_CREDITS = 100
+MAX_INVENTORY_SLOTS = 20

@@ -10,7 +10,7 @@ from pathlib import Path
 # Добавляем src в путь импорта
 sys.path.insert(0, str(Path(__file__).parent))
 
-from src.config import GAME_TITLE, VERSION, TEXT_WIDTH
+from src.config import GAME_TITLE, VERSION, TEXT_WIDTH, DEFAULT_HP, DEFAULT_ENERGY
 from src.utils import (
     clear_screen, print_header, print_separator,
     print_menu, get_choice, confirm
@@ -23,13 +23,14 @@ from src.abilities import AbilitiesManager, AbilityType, AbilityTier
 
 class Game:
     """Основной класс игры"""
-    
+
     def __init__(self):
         self.game_state = GameState()
         self.dialogue_manager = DialogueManager()
         self.current_chapter = 1
         self.current_scene = "start"
         self.running = True
+        self.loaded_scene = None  # Сцена для загрузки из сохранения
     
     def start(self):
         """Запуск игры"""
@@ -129,8 +130,10 @@ class Game:
                 filename = saves[choice - 1]["filename"]
                 if self.game_state.load_game(filename):
                     print("\n  Игра загружена!")
+                    # Сохраняем сцену для продолжения
+                    self.loaded_scene = self.game_state.save_data.scene if self.game_state.save_data else None
                     input("Нажмите Enter...")
-                    self.play_chapter_1()  # TODO: продолжить с нужной сцены
+                    self.play_chapter_1()
                 else:
                     print("\n  Ошибка загрузки!")
                     input("Нажмите Enter...")

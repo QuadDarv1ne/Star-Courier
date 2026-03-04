@@ -5,8 +5,11 @@
 import os
 import sys
 import time
+import logging
 from typing import List, Optional
 from pathlib import Path
+
+logger = logging.getLogger('utils')
 
 
 def clear_screen():
@@ -199,21 +202,21 @@ def wrap_text(text: str, width: int = 80) -> List[str]:
 def extract_text_from_docx(filepath: str) -> Optional[str]:
     """
     Извлечь текст из .docx файла.
-    
+
     Args:
         filepath: Путь к файлу
-    
+
     Returns:
         Текст или None при ошибке
     """
     try:
         from docx import Document
-        
+
         doc = Document(filepath)
         paragraphs = [p.text for p in doc.paragraphs if p.text.strip()]
         return "\n\n".join(paragraphs)
     except Exception as e:
-        print(f"Ошибка чтения {filepath}: {e}")
+        logger.error(f"Ошибка чтения {filepath}: {e}")
         return None
 
 
