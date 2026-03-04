@@ -6,6 +6,11 @@ from dataclasses import dataclass, field
 from typing import Dict, Optional
 from enum import Enum
 
+try:
+    from .config import MAX_RELATIONSHIP, MIN_RELATIONSHIP
+except ImportError:
+    from config import MAX_RELATIONSHIP, MIN_RELATIONSHIP
+
 
 class Role(Enum):
     """Роли персонажей в экипаже"""
@@ -42,7 +47,7 @@ class Character:
     
     def change_relationship(self, amount: int) -> int:
         """Изменить отношение на amount (может быть положительным или отрицательным)"""
-        self.relationship = min(100, max(0, self.relationship + amount))
+        self.relationship = min(MAX_RELATIONSHIP, max(MIN_RELATIONSHIP, self.relationship + amount))
         return self.relationship
     
     def get_relationship_status(self) -> str:

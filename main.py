@@ -206,7 +206,7 @@ class Game:
         """Сцена: Утро в каюте"""
         clear_screen()
         print("\n  [Глава 1: Нежданная встреча]")
-        print_separator("—")
+        print_separator("-")
         print("\n  [Утро на «Элее»]")
         print()
 
@@ -238,7 +238,7 @@ class Game:
         """Сцена: Мостик"""
         clear_screen()
         print("\n  [МОСТИК]")
-        print_separator("—")
+        print_separator("-")
         print()
 
         text = """
@@ -281,7 +281,7 @@ class Game:
         """Сцена: Контакт с пиратами"""
         clear_screen()
         print("\n  [ТРЕВОГА!]")
-        print_separator("—")
+        print_separator("-")
         print()
 
         text = """
@@ -308,7 +308,7 @@ class Game:
         """Сцена: Саботаж на корабле"""
         clear_screen()
         print("\n  [СБОЙ СИСТЕМ]")
-        print_separator("—")
+        print_separator("-")
         print()
 
         text = """
@@ -336,7 +336,7 @@ class Game:
         """Сцена: Находка в техническом отсеке"""
         clear_screen()
         print("\n  [ТЕХНИЧЕСКИЙ ОТСЕК]")
-        print_separator("—")
+        print_separator("-")
         print()
 
         text = """
