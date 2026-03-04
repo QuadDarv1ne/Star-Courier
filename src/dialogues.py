@@ -75,15 +75,17 @@ class Dialogue:
 
 class DialogueManager:
     """Менеджер диалогов"""
-    
+
     def __init__(self):
         self.dialogues: Dict[str, Dialogue] = {}
         self.current_dialogue: Optional[Dialogue] = None
         self.current_node: Optional[DialogueNode] = None
-        self.history: List[str] = []  # История выборов
-    
+        self.history: List[str] = []
+
     def add_dialogue(self, dialogue: Dialogue):
         """Добавить диалог"""
+        if dialogue.id in self.dialogues:
+            logger.warning(f"Диалог уже существует: {dialogue.id}")
         self.dialogues[dialogue.id] = dialogue
     
     def start_dialogue(self, dialogue_id: str) -> bool:
