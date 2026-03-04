@@ -469,10 +469,11 @@ class Game:
         ])
         print(f"    • Найдено улик: {clues_found}/2")
 
-        # Отношения
-        print("    • Отношения с экипажем:")
-        for name, status in self.game_state.get_crew_relationships():
-            print(f"      — {name}: {status}")
+        # Отношения и доверие
+        print("\n    • Экипаж:")
+        for char in self.game_state.crew_manager.get_all_crew():
+            if char.role.value != "Капитан":
+                print(f"      — {char.name}: {char.get_relationship_status()} (доверие: {char.get_trust_level()})")
 
         # Последствия выборов
         print("\n  Последствия ваших решений:")
@@ -480,6 +481,13 @@ class Game:
             print("    • Пираты знают о вас. Селена Ро запомнила встречу.")
         if self.game_state.get_flag("discovery_complete", False):
             print("    • Саботаж расследуется. Команда ждёт ваших приказов.")
+        
+        # Проверка на потенциальных предателей
+        traitors = self.game_state.crew_manager.get_potential_traitors()
+        if traitors:
+            print("\n  ⚠  Внимание:")
+            for traitor in traitors:
+                print(f"    • {traitor.name} может предать вас...")
 
         print()
         self.game_state.save_game("autosave.json")

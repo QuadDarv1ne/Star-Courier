@@ -103,6 +103,10 @@ class Character:
         elif self.trust >= 20:
             return "Низкое"
         return "Отсутствует"
+    
+    def get_summary(self) -> str:
+        """Получить краткую сводку о персонаже"""
+        return f"{self.name} ({self.role.value}): {self.get_relationship_status()}, доверие: {self.get_trust_level()}"
 
 
 class CrewManager:
