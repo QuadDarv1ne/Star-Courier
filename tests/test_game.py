@@ -10,7 +10,7 @@ from pathlib import Path
 src_path = Path(__file__).parent.parent / "src"
 sys.path.insert(0, str(src_path))
 
-from config import GAME_TITLE, VERSION, DEFAULT_STATS
+from config import GAME_TITLE, VERSION, DEFAULT_STATS, DEFAULT_HP, DEFAULT_ENERGY, MAX_RELATIONSHIP
 from characters import Character, Role, CrewManager
 from abilities import (
     AbilitiesManager, AbilityType, AbilityTier,
@@ -515,6 +515,19 @@ class TestQuests(unittest.TestCase):
 
         self.assertTrue(result1)
         self.assertFalse(result2)
+
+
+class TestConfig(unittest.TestCase):
+    """Дополнительные тесты конфигурации"""
+
+    def test_default_hp(self):
+        self.assertEqual(DEFAULT_HP, 100)
+
+    def test_default_energy(self):
+        self.assertEqual(DEFAULT_ENERGY, 100)
+
+    def test_max_relationship(self):
+        self.assertEqual(MAX_RELATIONSHIP, 100)
 
 
 if __name__ == "__main__":

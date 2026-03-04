@@ -3,11 +3,22 @@
 """
 
 import json
+import logging
 import os
 from dataclasses import dataclass, field
 from datetime import datetime
 from typing import Dict, Any, Optional, List
 from pathlib import Path
+
+# Настройка логгирования
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+    handlers=[
+        logging.FileHandler('game.log', encoding='utf-8', mode='a'),
+    ]
+)
+logger = logging.getLogger('save_system')
 
 try:
     from .config import SAVE_DIR, DEFAULT_SAVE, GAME_TITLE, VERSION
@@ -95,44 +106,48 @@ class SaveManager:
     def save_game(self, filename: str = None) -> bool:
         """Сохранить игру"""
         if not self.current_save:
+            logger.warning("Попытка сохранения без активного сохранения")
             return False
-        
+
         if not filename:
             filename = DEFAULT_SAVE
-        
+
         filepath = self.save_dir / filename
         if not filepath.suffix:
             filepath = filepath.with_suffix(".json")
-        
+
         try:
             with open(filepath, "w", encoding="utf-8") as f:
-                json.dump(self.current_save.to_dict(), f, 
+                json.dump(self.current_save.to_dict(), f,
                          ensure_ascii=False, indent=2)
+            logger.info(f"Игра сохранена в {filepath}")
             return True
         except Exception as e:
-            print(f"Ошибка сохранения: {e}")
+            logger.error(f"Ошибка сохранения: {e}")
             return False
     
     def load_game(self, filename: str = None) -> Optional[SaveData]:
         """Загрузить игру"""
         if not filename:
             filename = DEFAULT_SAVE
-        
+
         filepath = self.save_dir / filename
         if not filepath.exists():
             filepath = filepath.with_suffix(".json")
-        
+
         if not filepath.exists():
+            logger.warning(f"Файл сохранения не найден: {filepath}")
             return None
-        
+
         try:
             with open(filepath, "r", encoding="utf-8") as f:
                 data = json.load(f)
-            
+
             self.current_save = SaveData.from_dict(data)
+            logger.info(f"Игра загружена из {filepath}")
             return self.current_save
         except Exception as e:
-            print(f"Ошибка загрузки: {e}")
+            logger.error(f"Ошибка загрузки: {e}")
             return None
     
     def list_saves(self) -> list:
@@ -142,7 +157,7 @@ class SaveManager:
             try:
                 with open(file, "r", encoding="utf-8") as f:
                     data = json.load(f)
-                
+
                 meta = data.get("meta", {})
                 saves.append({
                     "filename": file.name,
@@ -151,13 +166,14 @@ class SaveManager:
                     "scene": meta.get("scene", "Неизвестно"),
                 })
             except (json.JSONDecodeError, IOError, KeyError) as e:
+                logger.warning(f"Ошибка чтения сохранения {file}: {e}")
                 saves.append({
                     "filename": file.name,
                     "timestamp": "Ошибка чтения",
                     "chapter": "?",
                     "scene": "?",
                 })
-        
+
         return sorted(saves, key=lambda x: x["timestamp"], reverse=True)
     
     def delete_save(self, filename: str) -> bool:
@@ -344,4 +360,9 @@ class GameState:
                     self.add_item(item_id, qty)
             for char_id, amount in reward.relationship_changes.items():
                 self.change_relationship(char_id, amount)
+            logger.info(f"Квест {quest_id} завершён, награда: {reward.credits} кредитов")
         return reward
+
+    def update_objective(self, quest_id: str, objective_id: str, amount: int = 1):
+        """Обновить цель квеста"""
+        self.quest_manager.update_objective(quest_id, objective_id, amount)
