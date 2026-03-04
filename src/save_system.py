@@ -13,10 +13,14 @@ try:
     from .config import SAVE_DIR, DEFAULT_SAVE, GAME_TITLE, VERSION
     from .characters import CrewManager, Character, Role
     from .abilities import AbilitiesManager, AbilityType, AbilityTier
+    from .items import Inventory, ItemDatabase
+    from .quests import QuestManager
 except ImportError:
     from config import SAVE_DIR, DEFAULT_SAVE, GAME_TITLE, VERSION
     from characters import CrewManager, Character, Role
     from abilities import AbilitiesManager, AbilityType, AbilityTier
+    from items import Inventory, ItemDatabase
+    from quests import QuestManager
 
 
 @dataclass
@@ -34,6 +38,7 @@ class SaveData:
     completed_quests: list = field(default_factory=list)
     active_quests: list = field(default_factory=list)
     choices_history: list = field(default_factory=list)
+    quest_data: Dict[str, Any] = field(default_factory=dict)
 
     def to_dict(self) -> Dict[str, Any]:
         """Сериализовать в словарь"""
@@ -43,7 +48,7 @@ class SaveData:
             "player": {"stats": self.stats, "credits": self.credits, "inventory": self.inventory},
             "relationships": self.relationships,
             "progress": {"flags": self.flags, "completed_quests": self.completed_quests,
-                         "active_quests": self.active_quests},
+                         "active_quests": self.active_quests, "quest_data": self.quest_data},
             "history": {"choices": self.choices_history},
         }
 
@@ -67,6 +72,7 @@ class SaveData:
         save.flags = progress.get("flags", {})
         save.completed_quests = progress.get("completed_quests", [])
         save.active_quests = progress.get("active_quests", [])
+        save.quest_data = progress.get("quest_data", {})
         save.choices_history = history.get("choices", [])
         return save
 
@@ -169,11 +175,14 @@ class SaveManager:
 
 class GameState:
     """Состояние игры — объединяет все системы"""
-    
+
     def __init__(self):
         self.save_manager = SaveManager()
         self.crew_manager = CrewManager()
         self.abilities_manager = AbilitiesManager()
+        self.inventory = Inventory()
+        self.item_db = ItemDatabase()
+        self.quest_manager = QuestManager()
         self.save_data: Optional[SaveData] = None
     
     def new_game(self):
@@ -199,7 +208,7 @@ class GameState:
         """Синхронизировать состояние с данными сохранения"""
         if not self.save_data:
             return
-        
+
         # Статистика
         self.save_data.stats["alchemy"] = \
             self.abilities_manager.get_tier(AbilityType.ALCHEMY).value
@@ -207,12 +216,23 @@ class GameState:
             self.abilities_manager.get_tier(AbilityType.BIOTICS).value
         self.save_data.stats["psychic"] = \
             self.abilities_manager.get_tier(AbilityType.PSYCHIC).value
-        
+
         # Отношения
         self.save_data.relationships = {}
         for char in self.crew_manager.get_all_crew():
             if char.role != Role.CAPTAIN:
                 self.save_data.relationships[char.id] = char.relationship
+
+        # Инвентарь
+        self.save_data.inventory = self.inventory.to_dict()
+
+        # Кредиты
+        self.save_data.credits = self.inventory.credits
+
+        # Квесты
+        self.save_data.quest_data = self.quest_manager.to_dict()
+        self.save_data.completed_quests = self.quest_manager.completed_quests
+        self.save_data.active_quests = list(self.quest_manager.active_quests.keys())
     
     def _sync_from_save(self):
         """Синхронизировать данные сохранения с состоянием"""
@@ -235,6 +255,17 @@ class GameState:
             char = self.crew_manager.get_character(char_id)
             if char:
                 char.relationship = value
+
+        # Инвентарь
+        if self.save_data.inventory:
+            self.inventory = Inventory.from_dict(self.save_data.inventory)
+        
+        # Кредиты
+        self.inventory.credits = self.save_data.credits
+
+        # Квесты
+        if self.save_data.quest_data:
+            self.quest_manager = QuestManager.from_dict(self.save_data.quest_data)
     
     def set_flag(self, flag: str, value: bool = True):
         """Установить флаг сюжета"""
@@ -247,16 +278,36 @@ class GameState:
             return self.save_data.flags.get(flag, default)
         return default
     
-    def add_item(self, item: str):
+    def add_item(self, item_id: str, quantity: int = 1) -> bool:
         """Добавить предмет в инвентарь"""
-        if self.save_data and item not in self.save_data.inventory:
-            self.save_data.inventory.append(item)
-    
-    def has_item(self, item: str) -> bool:
-        """Проверить наличие предмета"""
-        if self.save_data:
-            return item in self.save_data.inventory
+        item = self.item_db.get_item(item_id)
+        if item and self.inventory.add_item(item, quantity):
+            return True
         return False
+
+    def has_item(self, item_id: str, quantity: int = 1) -> bool:
+        """Проверить наличие предмета"""
+        return self.inventory.has_item(item_id, quantity)
+
+    def remove_item(self, item_id: str, quantity: int = 1) -> bool:
+        """Удалить предмет из инвентаря"""
+        return self.inventory.remove_item(item_id, quantity)
+
+    def get_inventory(self) -> Inventory:
+        """Получить инвентарь"""
+        return self.inventory
+
+    def add_credits(self, amount: int):
+        """Добавить кредиты"""
+        if amount > 0:
+            self.inventory.credits += amount
+
+    def spend_credits(self, amount: int) -> bool:
+        """Потратить кредиты"""
+        if amount <= 0 or self.inventory.credits < amount:
+            return False
+        self.inventory.credits -= amount
+        return True
     
     def change_relationship(self, char_id: str, amount: int):
         """Изменить отношение с персонажем"""
@@ -271,3 +322,26 @@ class GameState:
             for char in self.crew_manager.get_all_crew()
             if char.role != Role.CAPTAIN and char.relationship > 0
         ]
+
+    def get_quest_manager(self) -> QuestManager:
+        """Получить менеджер квестов"""
+        return self.quest_manager
+
+    def accept_quest(self, quest_id: str) -> bool:
+        """Принять квест"""
+        return self.quest_manager.accept_quest(quest_id)
+
+    def complete_quest(self, quest_id: str):
+        """
+        Завершить квест и выдать награду.
+        Возвращает награду если успешно.
+        """
+        reward = self.quest_manager.complete_quest(quest_id)
+        if reward:
+            self.add_credits(reward.credits)
+            for item_data in reward.items:
+                for item_id, qty in item_data.items():
+                    self.add_item(item_id, qty)
+            for char_id, amount in reward.relationship_changes.items():
+                self.change_relationship(char_id, amount)
+        return reward

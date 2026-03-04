@@ -116,19 +116,27 @@ class DialogueManager:
         """Сделать выбор"""
         if not self.current_node:
             return None
-        
+
         choice = next((c for c in self.current_node.choices if c.id == choice_id), None)
-        
+
         if not choice:
-            return None
-        
+            # Выбор не найден — возвращаем текущий узел
+            return self.current_node
+
         self.history.append(choice_id)
-        self.current_node = self.current_dialogue.get_node(choice.next_node)
+        next_node = self.current_dialogue.get_node(choice.next_node)
         
+        if not next_node:
+            # Следующий узел не найден — завершаем диалог
+            self.current_node.is_end = True
+            return self.current_node
+        
+        self.current_node = next_node
+
         # Выполнить эффект при входе
         if self.current_node and self.current_node.on_enter:
             self.current_node.on_enter()
-        
+
         return self.current_node
     
     def is_finished(self) -> bool:
