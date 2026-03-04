@@ -30,7 +30,7 @@ from src.colors import Colors, colorize, get_character_color, print_alert
 from src.ascii_art import print_art
 from src.save_system import GameState, SaveManager
 from src.characters import CrewManager
-from src.dialogues import DialogueManager, create_chapter1_dialogues
+from src.dialogues import DialogueManager, create_chapter1_dialogues, create_chapter2_dialogues
 from src.abilities import AbilitiesManager, AbilityType, AbilityTier
 
 
@@ -102,12 +102,17 @@ class Game:
             pass
         
         self.game_state.new_game()
-        
+
         # Инициализация диалогов первой главы
         dialogues = create_chapter1_dialogues()
         for dialogue in dialogues.values():
             self.dialogue_manager.add_dialogue(dialogue)
         
+        # Инициализация диалогов второй главы
+        dialogues_ch2 = create_chapter2_dialogues()
+        for dialogue in dialogues_ch2.values():
+            self.dialogue_manager.add_dialogue(dialogue)
+
         print("\n  Начало новой миссии...")
         print("\n  Вы — капитан Макс Велл, командир звездолёта «Элея».")
         print("  Вам предстоит доставить загадочный артефакт и раскрыть его тайны.")
@@ -723,74 +728,362 @@ class Game:
         print_header("ГЛАВА 1 ЗАВЕРШЕНА", TEXT_WIDTH + 4)
 
         print("\n  Вы успешно завершили первую главу!")
-        print("\n  Статистика:")
+        print("\n  ═══════════════════════════════════════")
+        print("  СТАТИСТИКА")
+        print("  ═══════════════════════════════════════")
 
         # Показываем найденные улики
         clues_found = sum([
             self.game_state.get_flag("found_chip", False),
             self.game_state.get_flag("examined_panel", False),
         ])
-        print(f"    • Найдено улик: {clues_found}/2")
+        print(f"\n  [Улики] Найдено улик: {clues_found}/2")
 
         # Исследование артефакта
         artifact_knowledge = sum([
             self.game_state.get_flag("lab_artifact_discussed", False),
             self.game_state.get_flag("artifact_scanned", False),
-            self.game_state.get_flag("irina_artifact_confirmed", True),
+            self.game_state.get_flag("irina_artifact_confirmed", False),
         ])
-        print(f"    • Изучение артефакта: {artifact_knowledge}/3")
+        print(f"  [Артефакт] Изучение: {artifact_knowledge}/3")
 
         # Психическая связь
         if self.game_state.get_flag("psychic_connection", False):
-            print("    • ⚠ Психическая связь с артефактом")
+            print("  [Связь] ⚠ Психическая связь с артефактом")
 
         # Реакция на саботаж
+        print("\n  [Саботаж]:")
         if self.game_state.get_flag("alia_accused", False):
-            print("    • ⚠ Алия обвинена — доверие потеряно")
+            print("    ⚠ Алия обвинена — доверие потеряно")
         elif self.game_state.get_flag("personally_checked_sabotage", False):
-            print("    • Личная проверка саботажа")
+            print("    ✓ Личная проверка саботажа")
+        else:
+            print("    ✓ Расследование продолжается")
+
+        # Романтические моменты
+        flirt_count = sum([
+            self.game_state.get_flag("irina_flirted", False),
+            self.game_state.get_flag("rina_flirted", False),
+            self.game_state.get_flag("alia_moment", False),
+            self.game_state.get_flag("irina_flirted_research", False),
+            self.game_state.get_flag("irina_personal_moment", False),
+        ])
+        if flirt_count > 0:
+            print(f"\n  [Отношения] Романтических моментов: {flirt_count}")
+            if self.game_state.get_flag("irina_flirted", False):
+                print("    • Флирт с Ириной в лаборатории")
+            if self.game_state.get_flag("rina_flirted", False):
+                print("    • Флирт с Риной на мостике")
+            if self.game_state.get_flag("alia_moment", False):
+                print("    • Особый момент с Алией")
+            if self.game_state.get_flag("irina_flirted_research", False):
+                print("    • \"Исследования\" с Ириной")
+            if self.game_state.get_flag("irina_personal_moment", False):
+                print("    • Личный момент с Ириной")
 
         # Отношения и доверие
-        print("\n    • Экипаж:")
+        print("\n  ═══════════════════════════════════════")
+        print("  ЭКИПАЖ")
+        print("  ═══════════════════════════════════════")
         for char in self.game_state.crew_manager.get_all_crew():
             if char.role.value != "Капитан":
-                print(f"      — {char.name}: {char.get_relationship_status()} (доверие: {char.get_trust_level()})")
+                rel = char.relationship
+                trust = char.trust
+                bar_len = rel // 5
+                bar = "█" * bar_len + "░" * (20 - bar_len)
+                print(f"\n  {char.name}:")
+                print(f"    Отношения: [{bar}] {rel}%")
+                print(f"    Доверие: {char.get_trust_level()}")
 
         # Последствия выборов
-        print("\n  Последствия ваших решений:")
+        print("\n  ═══════════════════════════════════════")
+        print("  ПОСЛЕДСТВИЯ")
+        print("  ═══════════════════════════════════════")
         if self.game_state.get_flag("pirate_contact_made", False):
-            print("    • Пираты знают о вас. Селена Ро запомнила встречу.")
+            print("  • Пираты знают о вас. Селена Ро запомнила встречу.")
         if self.game_state.get_flag("discovery_complete", False):
-            print("    • Саботаж расследуется. Команда ждёт ваших приказов.")
+            print("  • Саботаж расследуется. Команда ждёт ваших приказов.")
         if self.game_state.get_flag("psychic_connection", False):
-            print("    • Вы чувствуете... что-то в глубине сознания.")
+            print("  • Вы чувствуете... что-то в глубине сознания.")
         if self.game_state.get_flag("bridge_artifact_confirmed", False):
-            print("    • Ирина доверяет вам в вопросе артефакта.")
+            print("  • Ирина доверяет вам в вопросе артефакта.")
         
         # Проверка на потенциальных предателей
         traitors = self.game_state.crew_manager.get_potential_traitors()
         if traitors:
-            print("\n  ⚠  Внимание:")
+            print("\n  ═══════════════════════════════════════")
+            print("  ⚠  ПРЕДУПРЕЖДЕНИЕ")
+            print("  ═══════════════════════════════════════")
             for traitor in traitors:
-                print(f"    • {traitor.name} может предать вас...")
+                print(f"  • {traitor.name} может предать вас...")
 
         # Бонусы за исследования
+        print("\n  ═══════════════════════════════════════")
+        print("  БОНУСЫ")
+        print("  ═══════════════════════════════════════")
         if artifact_knowledge >= 3:
-            print("\n  🎯 Бонус: Глубокое понимание артефакта")
+            print("  🎯 Глубокое понимание артефакта")
             print("     +10 к психике в следующей главе")
         
         # Проверка на идеальное прохождение
         if clues_found == 2 and artifact_knowledge >= 2 and not traitors:
-            print("\n  🏆 Идеальное прохождение главы 1!")
+            print("  🏆 Идеальное прохождение главы 1!")
             print("     Все улики найдены, экипаж loyal")
+        
+        if clues_found == 0:
+            print("  ⚠ Улики не найдены — расследование затруднено")
+        
+        if flirt_count >= 3:
+            print("  💕 Романтик главы 1")
+            print("     Экипаж особенно предан вам")
 
         print()
         self.game_state.save_game("autosave.json")
         print("  Игра автоматически сохранена.")
         print("\n  ═══════════════════════════════════════")
         print("  ГЛАВА 2: СЛЕД В ПУСТОТЕ")
-        print("  Скоро доступна...")
+        print("  Доступно сейчас...")
         print("  ═══════════════════════════════════════")
+        input("\n  Нажмите Enter для продолжения...")
+        
+        self.play_chapter_2()
+
+    def play_chapter_2(self):
+        """Глава 2: След в пустоте"""
+        clear_screen()
+        print_header("ГЛАВА 2: СЛЕД В ПУСТОТЕ", TEXT_WIDTH + 4)
+        print("\n  «Элея» в глубоком космосе. 2187 год.")
+        input("\n  [Нажмите Enter для начала...]")
+
+        self.scene_ch2_morning()
+        if not self.running:
+            return
+
+        self.scene_ch2_lab()
+        if not self.running:
+            return
+
+        self.scene_ch2_rec_room()
+        if not self.running:
+            return
+
+        self.scene_ch2_security()
+        if not self.running:
+            return
+
+        self.scene_ch2_bridge()
+        if not self.running:
+            return
+
+        self.chapter_2_end()
+
+    def scene_ch2_morning(self):
+        """Сцена: Утро и выбор романтической линии"""
+        clear_screen()
+        print("\n  [Глава 2: След в пустоте]")
+        print_separator("-")
+        print("\n  [Личное время]")
+        print()
+
+        text = """
+  После событий на станции «Элея» вышла на орбиту глубокого космоса.
+  У экипажа появилось немного времени на отдых. Макс стоит перед выбором —
+  как провести свободный час?
+        """
+        print(text)
+        print()
+
+        choice = get_choice(
+            "Кого навестить?",
+            ["Алия (рубка)", "Ирина (лаборатория)", "Рина (комната отдыха)", 
+             "Надежда (охрана)", "Афина (частный канал)"]
+        )
+
+        if choice == 0:
+            self.dialogue_manager.start_dialogue("alia_evening")
+            self.run_dialogue()
+        elif choice == 1:
+            self.dialogue_manager.start_dialogue("irina_lab")
+            self.run_dialogue()
+        elif choice == 2:
+            self.dialogue_manager.start_dialogue("rina_rec_room")
+            self.run_dialogue()
+        elif choice == 3:
+            self.dialogue_manager.start_dialogue("nadezhda_security")
+            self.run_dialogue()
+        else:
+            self.dialogue_manager.start_dialogue("athena_private")
+            self.run_dialogue()
+
+        self.game_state.set_flag("ch2_romance_started", True)
+        input("\n  [Нажмите Enter...]")
+
+    def scene_ch2_lab(self):
+        """Сцена: Лаборатория - исследование артефакта"""
+        clear_screen()
+        print("\n  [ЛАБОРАТОРИЯ]")
+        print_separator("-")
+        print()
+
+        text = """
+  Ирина работает с артефактом. Голографические дисплеи показывают
+  сложные энергетические паттерны.
+
+  — Капитан, у меня есть данные. Артефакт... он реагирует на что-то.
+    На внешние сигналы.
+        """
+        print(text)
+        print()
+
+        choice = get_choice(
+            "Что спросить?",
+            ["Какие сигналы?", "Это опасно?", "Нужна помощь?"]
+        )
+
+        if choice == 0:
+            print("\n  — Не знаю. Но они исходят из глубины космоса.")
+            self.game_state.set_flag("ch2_signal_discovered", True)
+        elif choice == 1:
+            print("\n  — Пока не могу сказать. Но я продолжаю мониторинг.")
+            self.game_state.change_relationship("irina_lebedeva", 3)
+        else:
+            print("\n  — Спасибо, капитан. Но пока всё под контролем.")
+            self.game_state.change_relationship("irina_lebedeva", 5)
+
+        input("\n  [Нажмите Enter...]")
+
+    def scene_ch2_rec_room(self):
+        """Сцена: Комната отдыха - разговор с командой"""
+        clear_screen()
+        print("\n  [КОМНАТА ОТДЫХА]")
+        print_separator("-")
+        print()
+
+        text = """
+  Рина и Алия обсуждают тактику у симулятора. Они замолкают,
+  когда входит Макс.
+
+  — Капитан, как раз вовремя. У нас есть идея по улучшению маршрута.
+        """
+        print(text)
+        print()
+
+        choice = get_choice(
+            "Ответить",
+            ["Слушаю", "Позже", "Присоединиться к разговору"]
+        )
+
+        if choice == 0:
+            print("\n  Рина показывает новый маршрут на голограмме.")
+            self.game_state.change_relationship("rina_mirai", 3)
+        elif choice == 1:
+            print("\n  — Поняли, капитан. Будем ждать.")
+        else:
+            print("\n  Начинается оживлённая дискуссия о тактике.")
+            self.game_state.change_relationship("alia_naar", 3)
+            self.game_state.change_relationship("rina_mirai", 3)
+
+        input("\n  [Нажмите Enter...]")
+
+    def scene_ch2_security(self):
+        """Сцена: Оружейная - доклад по безопасности"""
+        clear_screen()
+        print("\n  [ОРУЖЕЙНАЯ]")
+        print_separator("-")
+        print()
+
+        text = """
+  Надежда проверяет оружие. Она кивает Максу.
+
+  — После саботажа я усилила протоколы. Доступ к критическим
+    системам только по биометрии.
+        """
+        print(text)
+        print()
+
+        choice = get_choice(
+            "Ответить",
+            ["Отлично работаешь", "Есть новости?", "Нужна помощь?"]
+        )
+
+        if choice == 0:
+            print("\n  — Спасибо, капитан. Это моя работа.")
+            self.game_state.change_relationship("nadezhda", 5)
+        elif choice == 1:
+            print("\n  — Камеры в техническом отсеке заменены.")
+            self.game_state.set_flag("ch2_cameras_replaced", True)
+        else:
+            print("\n  — Нет, но спасибо за предложение.")
+
+        input("\n  [Нажмите Enter...]")
+
+    def scene_ch2_bridge(self):
+        """Сцена: Мостик - приближение к аномалии"""
+        clear_screen()
+        print_alert("\n  [ОБНАРУЖЕНА АНОМАЛИЯ]")
+        print_separator("-")
+        print()
+
+        text = """
+  Тревога звучит мягко. На главном экране — искажение пространства.
+
+  Рина:
+  — Гравитационная аномалия впереди. Никогда не видела такой.
+
+  Алия:
+  — Корабль цел, но лучше обойти.
+        """
+        print(text)
+        print()
+
+        choice = get_choice(
+            "Решение",
+            ["Обойти аномалию", "Исследовать", "Спросить Ирину"]
+        )
+
+        if choice == 0:
+            print("\n  — Прокладываю обходной маршрут, — говорит Алия.")
+            self.game_state.set_flag("ch2_avoid_anomaly", True)
+        elif choice == 1:
+            print("\n  — Рискнём. Алия, медленно вперёд.")
+            self.game_state.set_flag("ch2_enter_anomaly", True)
+        else:
+            print("\n  Ирина изучает данные:")
+            print("  — Это не природная аномалия. Кто-то её создал.")
+            self.game_state.set_flag("ch2_anomaly_artificial", True)
+
+        input("\n  [Нажмите Enter...]")
+
+    def chapter_2_end(self):
+        """Конец второй главы"""
+        clear_screen()
+        print_header("ГЛАВА 2 ЗАВЕРШЕНА", TEXT_WIDTH + 4)
+
+        print("\n  Вы завершили вторую главу!")
+        print("\n  Статистика:")
+
+        # Отношения
+        print("    • Отношения с экипажем:")
+        for name, status in self.game_state.get_crew_relationships():
+            print(f"      — {name}: {status}")
+
+        # Найденные улики
+        clues = sum([
+            self.game_state.get_flag("ch2_signal_discovered", False),
+            self.game_state.get_flag("ch2_cameras_replaced", False),
+            self.game_state.get_flag("ch2_anomaly_artificial", False),
+        ])
+        print(f"\n    • Найдено улик: {clues}/3")
+
+        # Романтическая линия
+        print("\n  Романтическая линия:")
+        top_char = self.game_state.get_top_relationship()
+        if top_char:
+            print(f"    • {top_char[0]}: {top_char[1]}")
+
+        print()
+        self.game_state.save_game("autosave_ch2.json")
+        print("  Игра автоматически сохранена.")
         input("\n  Нажмите Enter для возврата в меню...")
     
     def save_game(self):
