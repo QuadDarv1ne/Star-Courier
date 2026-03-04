@@ -2,9 +2,12 @@
 Диалоговая система с выборами и развилками сюжета
 """
 
+import logging
 from dataclasses import dataclass, field
-from typing import Dict, List, Optional, Callable
+from typing import Dict, List, Optional, Callable, Any
 from enum import Enum
+
+logger = logging.getLogger('dialogues')
 
 
 class ChoiceEffect(Enum):
@@ -25,9 +28,9 @@ class Choice:
     text: str
     next_node: str
     effect: ChoiceEffect = ChoiceEffect.NONE
-    effect_value: any = None
-    required_stat: Optional[Dict[str, int]] = None  # Требуемые статы
-    required_item: Optional[str] = None  # Требуемый предмет
+    effect_value: Any = None
+    required_stat: Optional[Dict[str, int]] = None
+    required_item: Optional[str] = None
     
     def is_available(self, player_stats: dict, player_items: list) -> bool:
         """Проверить, доступен ли выбор"""
@@ -87,10 +90,14 @@ class DialogueManager:
         """Начать диалог"""
         dialogue = self.dialogues.get(dialogue_id)
         if not dialogue:
+            logger.warning(f"Диалог не найден: {dialogue_id}")
             return False
-        
+
         self.current_dialogue = dialogue
         self.current_node = dialogue.get_node(dialogue.start_node)
+        if not self.current_node:
+            logger.warning(f"Начальный узел не найден в диалоге {dialogue_id}")
+            return False
         self.history = []
         return True
     
@@ -115,25 +122,25 @@ class DialogueManager:
     def make_choice(self, choice_id: str) -> Optional[DialogueNode]:
         """Сделать выбор"""
         if not self.current_node:
+            logger.warning("Попытка выбора без активного диалога")
             return None
 
         choice = next((c for c in self.current_node.choices if c.id == choice_id), None)
 
         if not choice:
-            # Выбор не найден — возвращаем текущий узел
+            logger.warning(f"Выбор не найден: {choice_id} в узле {self.current_node.id}")
             return self.current_node
 
         self.history.append(choice_id)
         next_node = self.current_dialogue.get_node(choice.next_node)
-        
+
         if not next_node:
-            # Следующий узел не найден — завершаем диалог
+            logger.warning(f"Узел не найден: {choice.next_node}")
             self.current_node.is_end = True
             return self.current_node
-        
+
         self.current_node = next_node
 
-        # Выполнить эффект при входе
         if self.current_node and self.current_node.on_enter:
             self.current_node.on_enter()
 

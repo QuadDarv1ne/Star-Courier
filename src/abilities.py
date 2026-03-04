@@ -2,9 +2,12 @@
 Система способностей: алхимия, биотика, психика
 """
 
+import logging
 from dataclasses import dataclass, field
 from enum import Enum
 from typing import Dict, List, Optional
+
+logger = logging.getLogger('abilities')
 
 
 class AbilityType(Enum):
@@ -220,15 +223,19 @@ class CombatSystem:
     def use_ability(self, ability: Ability) -> dict:
         """Использовать способность. Возвращает результат."""
         if not ability or not self.abilities.can_use_ability(ability):
+            logger.warning(f"Попытка использования недоступной способности: {ability}")
             return {"success": False, "message": "Способность недоступна"}
 
         if ability.energy_cost < 0:
+            logger.error(f"Некорректная стоимость энергии: {ability.energy_cost}")
             return {"success": False, "message": "Некорректная стоимость энергии"}
 
         if self.player_energy < ability.energy_cost:
+            logger.warning(f"Недостаточно энергии: {self.player_energy} < {ability.energy_cost}")
             return {"success": False, "message": "Недостаточно энергии"}
 
         self.player_energy -= ability.energy_cost
+        logger.info(f"Использована способность {ability.name}, энергия: {ability.energy_cost}")
 
         effect_handlers = {
             AlchemyAbility: lambda a: (a.effect, f"Вы использовали {a.name}: {a.effect}"),
