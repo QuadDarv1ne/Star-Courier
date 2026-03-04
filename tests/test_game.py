@@ -26,6 +26,7 @@ from items import (
 from quests import (
     Quest, QuestType, QuestState, Objective, ObjectiveType, QuestManager, QuestReward
 )
+from abilities import AbilitiesManager, AbilityType, AbilityTier, CombatSystem
 
 
 class TestConfig(unittest.TestCase):
@@ -528,6 +529,46 @@ class TestConfig(unittest.TestCase):
 
     def test_max_relationship(self):
         self.assertEqual(MAX_RELATIONSHIP, 100)
+
+
+class TestDialogueLogging(unittest.TestCase):
+    """Тесты логгирования диалогов"""
+
+    def test_dialogue_not_found(self):
+        manager = DialogueManager()
+        result = manager.start_dialogue("nonexistent")
+        self.assertFalse(result)
+
+    def test_choice_without_dialogue(self):
+        manager = DialogueManager()
+        result = manager.make_choice("any")
+        self.assertIsNone(result)
+
+
+class TestAbilitiesLogging(unittest.TestCase):
+    """Тесты логгирования способностей"""
+
+    def test_use_unavailable_ability(self):
+        manager = AbilitiesManager()
+        combat = CombatSystem(manager)
+
+        healing = manager.get_ability("healing_potion")
+        result = combat.use_ability(healing)
+
+        self.assertFalse(result["success"])
+        self.assertEqual(result["message"], "Способность недоступна")
+
+    def test_not_enough_energy(self):
+        manager = AbilitiesManager()
+        manager.set_tier(AbilityType.ALCHEMY, AbilityTier.BASIC)
+        combat = CombatSystem(manager)
+        combat.player_energy = 5
+
+        healing = manager.get_ability("healing_potion")
+        result = combat.use_ability(healing)
+
+        self.assertFalse(result["success"])
+        self.assertEqual(result["message"], "Недостаточно энергии")
 
 
 if __name__ == "__main__":
