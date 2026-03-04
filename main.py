@@ -26,6 +26,8 @@ from src.utils import (
     clear_screen, print_header, print_separator,
     print_menu, get_choice, confirm, list_saves_menu
 )
+from src.colors import Colors, colorize, get_character_color, print_alert
+from src.ascii_art import print_art
 from src.save_system import GameState, SaveManager
 from src.characters import CrewManager
 from src.dialogues import DialogueManager, create_chapter1_dialogues
@@ -46,11 +48,18 @@ class Game:
     def start(self):
         """Запуск игры"""
         clear_screen()
+        
+        # Проверка поддержки цвета
+        if not Colors.supports_color():
+            Colors.disable()
+        
         self.show_title_screen()
         self.main_menu()
     
     def show_title_screen(self):
         """Показать заглавный экран"""
+        print()
+        print_art("eleia")
         print()
         print_header(f"* {GAME_TITLE} *", TEXT_WIDTH + 4)
         print(f"\n  Версия: {VERSION}")
@@ -279,7 +288,7 @@ class Game:
     def scene_pirate_contact(self):
         """Сцена: Контакт с пиратами"""
         clear_screen()
-        print("\n  [ТРЕВОГА!]")
+        print_alert("\n  [ТРЕВОГА!]")
         print_separator("-")
         print()
 
@@ -306,7 +315,8 @@ class Game:
     def scene_sabotage(self):
         """Сцена: Саботаж на корабле"""
         clear_screen()
-        print("\n  [СБОЙ СИСТЕМ]")
+        print_alert("\n  [СБОЙ СИСТЕМ]")
+        print_art("sabotage")
         print_separator("-")
         print()
 
@@ -382,7 +392,19 @@ class Game:
             try:
                 text = self.dialogue_manager.get_current_text()
                 if text:
-                    print(f"\n  {text}\n")
+                    # Раскраска имени персонажа
+                    if ":" in text:
+                        speaker, dialogue = text.split(":", 1)
+                        speaker = speaker.strip()
+                        # Найти ID персонажа по имени
+                        char_id = self._find_char_id_by_name(speaker)
+                        if char_id:
+                            color = get_character_color(char_id)
+                            print(f"\n  {colorize(speaker + ':', color)}{dialogue}\n")
+                        else:
+                            print(f"\n  {text}\n")
+                    else:
+                        print(f"\n  {text}\n")
 
                 choices = self.dialogue_manager.get_available_choices(
                     self.game_state.save_data.stats if self.game_state.save_data else {},
@@ -401,8 +423,22 @@ class Game:
                     self.game_state.change_relationship(char_id, amount)
 
             except (IndexError, KeyError, TypeError) as e:
-                print(f"\n  [Ошибка диалога: {e}]")
+                logger.debug(f"Ошибка диалога: {e}")
                 break
+    
+    def _find_char_id_by_name(self, name: str) -> str:
+        """Найти ID персонажа по имени"""
+        name_map = {
+            "Афина": "athena",
+            "Алия": "alia_naar",
+            "Ирина": "irina_lebedeva",
+            "Рина": "rina_mirai",
+            "Надежда": "nadezhda",
+            "Екатерина": "ekaterina",
+            "Макс": "max_well",
+            "Селена Ро": "selena_ro",
+        }
+        return name_map.get(name)
     
     def chapter_end(self):
         """Конец главы"""
