@@ -318,10 +318,15 @@ class Game:
         print(text)
         print()
 
-        choice = get_choice(
-            "Как ответить Ирине?",
-            ["Продолжай исследования", "Будь осторожна", "Нужна помощь?"]
-        )
+        # Проверяем, была ли уже сцена в лаборатории
+        lab_visited = self.game_state.get_flag("lab_artifact_discussed", False)
+
+        if lab_visited:
+            options = ["Продолжай исследования", "Будь осторожна", "Ты права насчёт артефакта"]
+        else:
+            options = ["Продолжай исследования", "Будь осторожна", "Нужна помощь?"]
+
+        choice = get_choice("Как ответить Ирине?", options)
 
         if choice == 0:
             self.game_state.change_relationship("irina_lebedeva", 5)
@@ -331,8 +336,36 @@ class Game:
             self.game_state.change_relationship("irina_lebedeva", 3)
             print("\n  — Буду, капитан. Обещаю.")
         else:
-            print("\n  — Спасибо, но пока всё под контролем.")
-            print("  Хотя... если найдёте время, загляните в лабораторию.")
+            if lab_visited:
+                print("\n  — Да... после того, что я видела в лаборатории...")
+                print("  — Это сложно объяснить, но артефакт реагирует на нас.")
+                self.game_state.change_trust("irina_lebedeva", 8)
+                self.game_state.set_flag("bridge_artifact_confirmed", True)
+            else:
+                print("\n  — Спасибо, но пока всё под контролем.")
+                print("  Хотя... если найдёте время, загляните в лабораторию.")
+                self.game_state.change_relationship("irina_lebedeva", 2)
+
+        # Взаимодействие с Риной
+        print("\n  Рина повернулась:")
+        rina_choice = get_choice(
+            "Что сказать Рине?",
+            ["Доложи обстановку", "Есть проблемы?", "Хорошая работа"]
+        )
+
+        if rina_choice == 0:
+            print("\n  — Патруль флота на орбите. Пропуск получен.")
+            print("  — Можем стыковаться в любое время.")
+            self.game_state.change_trust("rina_mirai", 3)
+        elif rina_choice == 1:
+            print("\n  — Пока нет. Но я слежу за аномалиями в секторе.")
+            print("  — Лучше перестраховаться.")
+            self.game_state.change_relationship("rina_mirai", 3)
+        else:
+            print("\n  Рина улыбнулась:")
+            print("  — Стараюсь, капитан.")
+            self.game_state.change_relationship("rina_mirai", 5)
+            self.game_state.change_trust("rina_mirai", 3)
 
         input("\n  [Нажмите Enter...]")
     
@@ -358,10 +391,36 @@ class Game:
         print(text)
         print()
 
+        # Проверяем психическую связь - даёт дополнительные опции
+        psychic = self.game_state.get_flag("psychic_connection", False)
+        
+        if psychic:
+            print("  [Психическая связь пульсирует...]")
+            print("  Вы чувствуете... любопытство от артефакта?")
+            print()
+
         self.dialogue_manager.start_dialogue("pirate_contact")
         self.run_dialogue()
 
         self.game_state.set_flag("pirate_contact_made", True)
+        
+        # Влияние на команду
+        print("\n  [Реакция экипажа:]")
+        rina_trust = self.game_state.crew_manager.get_character("rina_mirai").trust
+        if rina_trust >= 50:
+            print("  — Рина: «Капитан, я прикрою с любой стороны.»")
+            self.game_state.change_trust("rina_mirai", 3)
+        else:
+            print("  — Рина выглядит напряжённой.")
+        
+        nadezhda_trust = self.game_state.crew_manager.get_character("nadezhda").trust
+        if nadezhda_trust >= 50:
+            print("  — Надежда: «Оружие готово к бою.»")
+            self.game_state.change_trust("nadezhda", 3)
+        else:
+            print("  — Надежда проверяет системы безопасности.")
+
+        input("\n  [Нажмите Enter...]")
     
     def scene_sabotage(self):
         """Сцена: Саботаж на корабле"""
@@ -373,7 +432,7 @@ class Game:
 
         text = """
   Свет на мостике мигнул. На секунду погас, затем вернулся — тусклее.
-  Из динадоников донёсся голос Алии, напряжённый, без обычной уверенности:
+  Из динамиков донёсся голос Алии, напряжённый, без обычной уверенности:
 
   — Макс, у нас проблема. Система охлаждения вышла из строя.
     Это не случайность, капитан. Кто-то намеренно вывел её из строя.
@@ -387,9 +446,46 @@ class Game:
         print(text)
         print()
 
-        self.dialogue_manager.start_dialogue("sabotage_discussion")
-        self.run_dialogue()
+        # Проверяем доверие к Алии
+        alia_trust = self.game_state.crew_manager.get_character("alia_naar").trust
+        
+        print("  [Ваша реакция:]")
+        if alia_trust >= 60:
+            choice = get_choice(
+                "Что делать?",
+                ["Довериться Алие", "Отправить команду", "Лично проверить"]
+            )
+        else:
+            choice = get_choice(
+                "Что делать?",
+                ["Довериться Алие", "Отправить команду", "Обвинить Алию"]
+            )
 
+        if choice == 0:
+            print("\n  — Алия, действуй. Докладывай о любых изменениях.")
+            print("  — Есть, капитан!")
+            self.game_state.change_trust("alia_naar", 8)
+            self.game_state.change_relationship("alia_naar", 5)
+        elif choice == 1:
+            print("\n  — Надежда, отправь команду в технический отсек.")
+            print("  — Есть, капитан!")
+            self.game_state.change_trust("nadezhda", 5)
+            self.game_state.change_trust("alia_naar", -3)
+        else:
+            if alia_trust >= 60:
+                print("\n  — Я проверю лично. Алия, придержи системы.")
+                print("  — Поняла, капитан.")
+                self.game_state.change_relationship("alia_naar", 5)
+                self.game_state.set_flag("personally_checked_sabotage", True)
+            else:
+                print("\n  — Алия, объяснись. Почему система отказала?")
+                print("  — Капитан, я не причём! Клянусь!")
+                self.game_state.change_trust("alia_naar", -15)
+                self.game_state.change_relationship("alia_naar", -10)
+                self.game_state.set_flag("alia_accused", True)
+
+        input("\n  [Нажмите Enter...]")
+        
         self.game_state.set_flag("sabotage_discovered", True)
 
     def scene_discovery(self):
@@ -568,13 +664,19 @@ class Game:
         artifact_knowledge = sum([
             self.game_state.get_flag("lab_artifact_discussed", False),
             self.game_state.get_flag("artifact_scanned", False),
-            self.game_state.get_flag("irina_artifact_confirmed", False),
+            self.game_state.get_flag("irina_artifact_confirmed", True),
         ])
         print(f"    • Изучение артефакта: {artifact_knowledge}/3")
 
         # Психическая связь
         if self.game_state.get_flag("psychic_connection", False):
             print("    • ⚠ Психическая связь с артефактом")
+
+        # Реакция на саботаж
+        if self.game_state.get_flag("alia_accused", False):
+            print("    • ⚠ Алия обвинена — доверие потеряно")
+        elif self.game_state.get_flag("personally_checked_sabotage", False):
+            print("    • Личная проверка саботажа")
 
         # Отношения и доверие
         print("\n    • Экипаж:")
@@ -590,6 +692,8 @@ class Game:
             print("    • Саботаж расследуется. Команда ждёт ваших приказов.")
         if self.game_state.get_flag("psychic_connection", False):
             print("    • Вы чувствуете... что-то в глубине сознания.")
+        if self.game_state.get_flag("bridge_artifact_confirmed", False):
+            print("    • Ирина доверяет вам в вопросе артефакта.")
         
         # Проверка на потенциальных предателей
         traitors = self.game_state.crew_manager.get_potential_traitors()
@@ -602,6 +706,11 @@ class Game:
         if artifact_knowledge >= 3:
             print("\n  🎯 Бонус: Глубокое понимание артефакта")
             print("     +10 к психике в следующей главе")
+        
+        # Проверка на идеальное прохождение
+        if clues_found == 2 and artifact_knowledge >= 2 and not traitors:
+            print("\n  🏆 Идеальное прохождение главы 1!")
+            print("     Все улики найдены, экипаж loyal")
 
         print()
         self.game_state.save_game("autosave.json")
