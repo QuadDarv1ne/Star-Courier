@@ -26,7 +26,10 @@ from items import (
 from quests import (
     Quest, QuestType, QuestState, Objective, ObjectiveType, QuestManager, QuestReward
 )
-from abilities import AbilitiesManager, AbilityType, AbilityTier, CombatSystem
+from abilities import (
+    AbilitiesManager, AbilityType, AbilityTier, CombatSystem,
+    AlchemyAbility, BioticAbility, PsychicAbility
+)
 
 
 class TestConfig(unittest.TestCase):
@@ -569,6 +572,27 @@ class TestAbilitiesLogging(unittest.TestCase):
 
         self.assertFalse(result["success"])
         self.assertEqual(result["message"], "Недостаточно энергии")
+
+    def test_combat_heal(self):
+        manager = AbilitiesManager()
+        combat = CombatSystem(manager)
+
+        combat.take_damage(30)
+        self.assertEqual(combat.player_hp, 70)
+
+        combat.heal(25)
+        self.assertEqual(combat.player_hp, 95)
+
+    def test_combat_energy_restore(self):
+        manager = AbilitiesManager()
+        combat = CombatSystem(manager)
+
+        combat.player_energy = 50
+        combat.restore_energy(30)
+        self.assertEqual(combat.player_energy, 80)
+
+        combat.restore_energy(50)
+        self.assertEqual(combat.player_energy, 100)
 
 
 if __name__ == "__main__":
