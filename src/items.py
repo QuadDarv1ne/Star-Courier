@@ -2,10 +2,13 @@
 Система предметов и инвентаря
 """
 
+import logging
 from dataclasses import dataclass, field
 from typing import Dict, List, Optional, Callable
 from enum import Enum
 import json
+
+logger = logging.getLogger('items')
 
 
 class ItemType(Enum):
@@ -208,22 +211,23 @@ class Inventory:
         Возвращает True если успешно.
         """
         remaining = quantity
-        
+
         while remaining > 0:
             slot_idx = self.get_slot_for_item(item)
-            
+
             if slot_idx == -1:
-                return False  # Нет места
-            
+                logger.warning(f"Нет места в инвентаре для {item.name}")
+                return False
+
             if self.slots[slot_idx]:
-                # Добавляем в существующий стак
-                remaining = self.slots[slot_idx].add(remaining)
+                added = self.slots[slot_idx].add(remaining)
+                remaining = added
             else:
-                # Создаём новый стак
                 stack_size = min(remaining, item.max_stack)
                 self.slots[slot_idx] = ItemStack(item, stack_size)
                 remaining -= stack_size
-        
+
+        logger.info(f"Добавлено {quantity} x {item.name}")
         return True
     
     def remove_item(self, item_id: str, quantity: int = 1) -> bool:

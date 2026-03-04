@@ -2,10 +2,13 @@
 Система квестов и заданий
 """
 
+import logging
 from dataclasses import dataclass, field
 from typing import Dict, List, Optional, Callable
 from enum import Enum
 from datetime import datetime
+
+logger = logging.getLogger('quests')
 
 
 class QuestType(Enum):
@@ -421,15 +424,18 @@ class QuestManager:
         """Принять квест"""
         quest = self.get_quest(quest_id)
         if not quest:
+            logger.warning(f"Квест не найден: {quest_id}")
             return False
-        
+
         if not quest.is_available(self.completed_quests):
+            logger.warning(f"Квест {quest_id} недоступен для принятия")
             return False
-        
+
         quest.state = QuestState.ACTIVE
         quest.date_accepted = datetime.now().isoformat()
         self.active_quests[quest_id] = quest
-        
+        logger.info(f"Квест {quest_id} принят")
+
         return True
     
     def complete_quest(self, quest_id: str) -> Optional[QuestReward]:
@@ -439,18 +445,21 @@ class QuestManager:
         """
         quest = self.active_quests.get(quest_id)
         if not quest:
+            logger.warning(f"Активный квест не найден: {quest_id}")
             return None
-        
+
         if not quest.can_complete():
+            logger.warning(f"Квест {quest_id} не может быть завершён - цели не выполнены")
             return None
-        
+
         quest.state = QuestState.COMPLETED
         quest.date_completed = datetime.now().isoformat()
-        
+
         reward = quest.reward
         self.completed_quests.append(quest_id)
         del self.active_quests[quest_id]
-        
+        logger.info(f"Квест {quest_id} завершён, награда: {reward.credits} кредитов")
+
         return reward
     
     def fail_quest(self, quest_id: str):
