@@ -763,3 +763,680 @@ def create_chapter1_dialogues() -> Dict[str, Dialogue]:
     dialogues["alia_confrontation"] = alia_confrontation
 
     return dialogues
+
+
+# === Диалоги для второй главы ===
+
+def create_chapter2_dialogues() -> Dict[str, Dialogue]:
+    """Создать диалоги для второй главы: "След в пустоте" с развитием любовных линий"""
+    dialogues = {}
+
+    # === РОМАНТИЧЕСКАЯ ЛИНИЯ: АЛИЯ'НААР ===
+    alia_evening = Dialogue(
+        id="alia_evening",
+        title="Вечер с Алией",
+        start_node="start"
+    )
+
+    alia_evening.add_node(DialogueNode(
+        id="start",
+        speaker="Макс",
+        text="После смены Макс зашёл в рубку. Алия сидела в кресле пилота, "
+             "задумчиво глядя на звёзды.",
+        choices=[
+            Choice("join_silence", "Присоединиться к молчанию", "alia_silence",
+                   effect=ChoiceEffect.RELATIONSHIP_UP, effect_value=("alia_naar", 5)),
+            Choice("ask_thoughts", "Спросить о мыслях", "alia_thoughts"),
+            Choice("light_mood", "Разрядить обстановку шуткой", "alia_joke",
+                   effect=ChoiceEffect.RELATIONSHIP_UP, effect_value=("alia_naar", 3))
+        ]
+    ))
+
+    alia_evening.add_node(DialogueNode(
+        id="alia_silence",
+        speaker="Алия",
+        text="*не оборачиваясь, тихо* Знаешь, в звёздах есть что-то... "
+             "что заставляет забыть о всех проблемах. *поворачивается* "
+             "Ты тоже чувствуешь?",
+        choices=[
+            Choice("agree_deeply", "Ответить искренне", "alia_deep_talk",
+                   effect=ChoiceEffect.RELATIONSHIP_UP, effect_value=("alia_naar", 8)),
+            Choice("agree_light", "Ответить легко", "alia_smile"),
+            Choice("stay_silent", "Просто кивнуть", "alia_understanding")
+        ]
+    ))
+
+    alia_evening.add_node(DialogueNode(
+        id="alia_deep_talk",
+        speaker="Алия",
+        text="*улыбается, глядя в глаза* Я думала, только я так чувствую. "
+             "На моей родине мы верили, что звёзды — это души предков.",
+        choices=[
+            Choice("ask_home", "Расскажи о доме", "alia_home_story",
+                   effect=ChoiceEffect.RELATIONSHIP_UP, effect_value=("alia_naar", 5)),
+            Choice("touch_hand", "Коснуться её руки", "alia_touch_romantic",
+                   effect=ChoiceEffect.RELATIONSHIP_UP, effect_value=("alia_naar", 12),
+                   required_relationship=50),
+            Choice("support", "Поддержать разговор", "alia_continue_talk")
+        ]
+    ))
+
+    alia_evening.add_node(DialogueNode(
+        id="alia_touch_romantic",
+        speaker="Алия",
+        text="*вздрогнула, но не отдёрнула руку* "
+             "Макс... я... *голос дрогнул* Не ожидала этого.",
+        choices=[
+            Choice("confess_feelings", "Признаться в чувствах", "alia_confession",
+                   effect=ChoiceEffect.RELATIONSHIP_UP, effect_value=("alia_naar", 15),
+                   required_relationship=65),
+            Choice("reassure", "Сказать, что всё хорошо", "alia_reassure",
+                   effect=ChoiceEffect.RELATIONSHIP_UP, effect_value=("alia_naar", 8)),
+            Choice("pull_back", "Убрать руку", "alia_disappointed",
+                   effect=ChoiceEffect.RELATIONSHIP_DOWN, effect_value=("alia_naar", -5))
+        ]
+    ))
+
+    alia_evening.add_node(DialogueNode(
+        id="alia_confession",
+        speaker="Алия",
+        text="*её глаза блеснули* Я... тоже, Макс. "
+             "Давно чувствую. Но боялась сказать.",
+        choices=[
+            Choice("kiss_alia", "Поцеловать", "alia_kiss_scene",
+                   effect=ChoiceEffect.RELATIONSHIP_UP, effect_value=("alia_naar", 20),
+                   required_relationship=75),
+            Choice("embrace", "Обнять", "alia_embrace",
+                   effect=ChoiceEffect.RELATIONSHIP_UP, effect_value=("alia_naar", 15)),
+            Choice("slow_down", "Предложить не спешить", "alia_understand_slow",
+                   effect=ChoiceEffect.RELATIONSHIP_UP, effect_value=("alia_naar", 10))
+        ]
+    ))
+
+    alia_evening.add_node(DialogueNode(
+        id="alia_kiss_scene",
+        speaker="Алия",
+        text="*её губы были мягкими и тёплыми. Она прижалась ближе* "
+             "Макс... *прошептала* Я рада, что мы нашли друг друга.",
+        choices=[
+            Choice("stay_moment", "Остаться в моменте", "alia_moment_end",
+                   effect=ChoiceEffect.RELATIONSHIP_UP, effect_value=("alia_naar", 5)),
+            Choice("return_duty", "Вернуться к обязанностям", "alia_duty_call")
+        ]
+    ))
+
+    alia_evening.add_node(DialogueNode(
+        id="alia_thoughts",
+        speaker="Алия",
+        text="*вздыхает* Думала о саботаже. Я доверяю тебе, Макс. "
+             "Но не всем в экипаже.",
+        choices=[
+            Choice("share_concerns", "Поделиться переживаниями", "alia_share",
+                   effect=ChoiceEffect.RELATIONSHIP_UP, effect_value=("alia_naar", 5)),
+            Choice("reassure_trust", "Уверить, что всё под контролем", "alia_reassure_captain")
+        ]
+    ))
+
+    alia_evening.add_node(DialogueNode(
+        id="alia_joke",
+        speaker="Алия",
+        text="*усмехается* Если бы звёзды платили за полёты, "
+             "я бы купила планету. *смеётся*",
+        choices=[
+            Choice("play_along", "Поддержать шутку", "alia_laugh_together",
+                   effect=ChoiceEffect.RELATIONSHIP_UP, effect_value=("alia_naar", 5)),
+            Choice("tease_back", "Подшутить в ответ", "alia_tease",
+                   effect=ChoiceEffect.RELATIONSHIP_UP, effect_value=("alia_naar", 3))
+        ]
+    ))
+
+    alia_evening.add_node(DialogueNode(id="alia_moment_end", speaker="Алия",
+        text="*прижимается лбом к плечу* Спасибо. До встречи на мостике, капитан.", is_end=True))
+    alia_evening.add_node(DialogueNode(id="alia_duty_call", speaker="Алия",
+        text="*отстраняется с улыбкой* Работа прежде всего. Но этот разговор не закончен.", is_end=True))
+    alia_evening.add_node(DialogueNode(id="alia_disappointed", speaker="Алия",
+        text="*отводит взгляд* Извини. Вернёмся к работе, капитан.", is_end=True))
+    alia_evening.add_node(DialogueNode(id="alia_understand_slow", speaker="Алия",
+        text="*кивает* Ты прав. У нас впереди много времени.", is_end=True))
+    alia_evening.add_node(DialogueNode(id="alia_embrace", speaker="Алия",
+        text="*прижимается, кладёт голову на плечо* С тобой я чувствую себя спокойно.", is_end=True))
+    alia_evening.add_node(DialogueNode(id="alia_smile", speaker="Алия",
+        text="*улыбается* Просто мысли вслух. Курс проложен, капитан.", is_end=True))
+    alia_evening.add_node(DialogueNode(id="alia_understanding", speaker="Алия",
+        text="*кивает* Спасибо, что пришёл.", is_end=True))
+    alia_evening.add_node(DialogueNode(id="alia_home_story", speaker="Алия",
+        text="*грустно улыбается* Моя планета сурова. Но звёзды там ярче всего.", is_end=True))
+    alia_evening.add_node(DialogueNode(id="alia_share", speaker="Алия",
+        text="*кивает* С тобой легче. Мы справимся, Макс. Вместе.", is_end=True))
+    alia_evening.add_node(DialogueNode(id="alia_reassure_captain", speaker="Алия",
+        text="*кивает* Да, капитан. Я всегда здесь, если нужна помощь.", is_end=True))
+    alia_evening.add_node(DialogueNode(id="alia_laugh_together", speaker="Алия",
+        text="*смеётся искренне* Ты первый, кто заставляет меня смеяться так.", is_end=True))
+    alia_evening.add_node(DialogueNode(id="alia_tease", speaker="Алия",
+        text="*прищуривается* Без меня вы далеко не улетите, капитан.", is_end=True))
+    alia_evening.add_node(DialogueNode(id="alia_continue_talk", speaker="Алия",
+        text="*расслабленно* Я рада, что мы говорим так.", is_end=True))
+    alia_evening.add_node(DialogueNode(id="alia_reassure", speaker="Алия",
+        text="*выдыхает* Спасибо за понимание.", is_end=True))
+
+    dialogues["alia_evening"] = alia_evening
+
+    # === РОМАНТИЧЕСКАЯ ЛИНИЯ: ИРИНА ЛЕБЕДЕВА ===
+    irina_lab = Dialogue(
+        id="irina_lab",
+        title="Вечер в лаборатории",
+        start_node="start"
+    )
+
+    irina_lab.add_node(DialogueNode(
+        id="start",
+        speaker="Макс",
+        text="Макс спустился в лабораторию. Ирина склонилась над артефактом, "
+             "поглощённая исследованиями.",
+        choices=[
+            Choice("observe_quietly", "Наблюдать молча", "irina_notice",
+                   effect=ChoiceEffect.RELATIONSHIP_UP, effect_value=("irina_lebedeva", 3)),
+            Choice("greet_warmly", "Тёпло поприветствовать", "irina_greeting",
+                   effect=ChoiceEffect.RELATIONSHIP_UP, effect_value=("irina_lebedeva", 5)),
+            Choice("ask_findings", "Спросить о находках", "irina_findings")
+        ]
+    ))
+
+    irina_lab.add_node(DialogueNode(
+        id="irina_notice",
+        speaker="Ирина",
+        text="*поднимает голову* О, капитан! *смущённо* Я не слышала, "
+             "как вы вошли. Потеряла счёт времени.",
+        choices=[
+            Choice("reassure_gentle", "Уверить, что всё в порядке", "irina_comfort",
+                   effect=ChoiceEffect.RELATIONSHIP_UP, effect_value=("irina_lebedeva", 5)),
+            Choice("tease_gently", "Легко подшутить", "irina_blush",
+                   effect=ChoiceEffect.RELATIONSHIP_UP, effect_value=("irina_lebedeva", 3))
+        ]
+    ))
+
+    irina_lab.add_node(DialogueNode(
+        id="irina_comfort",
+        speaker="Ирина",
+        text="*улыбается тепло* Артефакт невероятно сложен. "
+             "Каждое открытие — как окно в другую вселенную.",
+        choices=[
+            Choice("show_interest", "Проявить интерес", "irina_explain",
+                   effect=ChoiceEffect.RELATIONSHIP_UP, effect_value=("irina_lebedeva", 5)),
+            Choice("compliment_dedication", "Похвалить за преданность", "irina_appreciate",
+                   effect=ChoiceEffect.RELATIONSHIP_UP, effect_value=("irina_lebedeva", 8))
+        ]
+    ))
+
+    irina_lab.add_node(DialogueNode(
+        id="irina_explain",
+        speaker="Ирина",
+        text="*показывает голограмму* Энергетические поля резонируют с биополями! "
+             "Это революционизирует медицину! *внезапно замолкает*",
+        choices=[
+            Choice("encourage", "Поощрить энтузиазм", "irina_happy",
+                   effect=ChoiceEffect.RELATIONSHIP_UP, effect_value=("irina_lebedeva", 8)),
+            Choice("touch_shoulder", "Коснуться плеча", "irina_touch_reaction",
+                   effect=ChoiceEffect.RELATIONSHIP_UP, effect_value=("irina_lebedeva", 10),
+                   required_relationship=50)
+        ]
+    ))
+
+    irina_lab.add_node(DialogueNode(
+        id="irina_touch_reaction",
+        speaker="Ирина",
+        text="*вздрогнула, щёки покраснели* Капитан... я... "
+             "Не ожидала.",
+        choices=[
+            Choice("confess_irina", "Признаться в симпатии", "irina_confession",
+                   effect=ChoiceEffect.RELATIONSHIP_UP, effect_value=("irina_lebedeva", 15),
+                   required_relationship=60),
+            Choice("reassure_soft", "Мягко успокоить", "irina_soft_reassure",
+                   effect=ChoiceEffect.RELATIONSHIP_UP, effect_value=("irina_lebedeva", 8)),
+            Choice("step_back", "Отступить", "irina_disappointed",
+                   effect=ChoiceEffect.RELATIONSHIP_DOWN, effect_value=("irina_lebedeva", -3))
+        ]
+    ))
+
+    irina_lab.add_node(DialogueNode(
+        id="irina_confession",
+        speaker="Ирина",
+        text="*глаза расширились* Макс... Я тоже чувствую. "
+             "Давно. Но боялась испортить рабочие отношения.",
+        choices=[
+            Choice("kiss_irina", "Поцеловать", "irina_kiss_scene",
+                   effect=ChoiceEffect.RELATIONSHIP_UP, effect_value=("irina_lebedeva", 20),
+                   required_relationship=70),
+            Choice("embrace_irina", "Обнять", "irina_embrace",
+                   effect=ChoiceEffect.RELATIONSHIP_UP, effect_value=("irina_lebedeva", 12)),
+            Choice("take_slow", "Предложить не спешить", "irina_understand_slow",
+                   effect=ChoiceEffect.RELATIONSHIP_UP, effect_value=("irina_lebedeva", 10))
+        ]
+    ))
+
+    irina_lab.add_node(DialogueNode(
+        id="irina_kiss_scene",
+        speaker="Ирина",
+        text="*её губы дрожали в первом поцелуе. Артефакт мягко светился* "
+             "Макс... *прошептала* Я так долго ждала.",
+        choices=[
+            Choice("deepen_moment", "Углубить момент", "irina_deep_moment",
+                   effect=ChoiceEffect.RELATIONSHIP_UP, effect_value=("irina_lebedeva", 10)),
+            Choice("gentle_pull", "Нежно отстраниться", "irina_gentle_end")
+        ]
+    ))
+
+    irina_lab.add_node(DialogueNode(id="irina_greeting", speaker="Ирина",
+        text="*улыбается* Добрый вечер. Вы вовремя — хотела показать данные.", is_end=True))
+    irina_lab.add_node(DialogueNode(id="irina_findings", speaker="Ирина",
+        text="*серьёзно* Артефакт реагирует на саботаж. Это не случайно.", is_end=True))
+    irina_lab.add_node(DialogueNode(id="irina_blush", speaker="Ирина",
+        text="*краснеет* Вы слишком добры, капитан.", is_end=True))
+    irina_lab.add_node(DialogueNode(id="irina_appreciate", speaker="Ирина",
+        text="*смущённо* Спасибо. Это придаёт сил.", is_end=True))
+    irina_lab.add_node(DialogueNode(id="irina_happy", speaker="Ирина",
+        text="*сияет* Спасибо, Макс! То есть, капитан... *краснеет*", is_end=True))
+    irina_lab.add_node(DialogueNode(id="irina_soft_reassure", speaker="Ирина",
+        text="*выдыхает* Спасибо за понимание. Я рада, что мы говорим об этом.", is_end=True))
+    irina_lab.add_node(DialogueNode(id="irina_disappointed", speaker="Ирина",
+        text="*отворачивается* Понятно. Вернёмся к работе.", is_end=True))
+    irina_lab.add_node(DialogueNode(id="irina_deep_moment", speaker="Ирина",
+        text="*её руки обвили шею Макса* Я не хочу, чтобы это заканчивалось...", is_end=True))
+    irina_lab.add_node(DialogueNode(id="irina_gentle_end", speaker="Ирина",
+        text="*отстраняется, но держит руку* Продолжим позже?", is_end=True))
+    irina_lab.add_node(DialogueNode(id="irina_embrace", speaker="Ирина",
+        text="*прижимается* С вами я чувствую себя в безопасности.", is_end=True))
+    irina_lab.add_node(DialogueNode(id="irina_understand_slow", speaker="Ирина",
+        text="*кивает* Ты прав. У нас впереди много времени.", is_end=True))
+
+    dialogues["irina_lab"] = irina_lab
+
+    # === РОМАНТИЧЕСКАЯ ЛИНИЯ: РИНА МИРАЙ ===
+    rina_rec_room = Dialogue(
+        id="rina_rec_room",
+        title="Игра с Риной",
+        start_node="start"
+    )
+
+    rina_rec_room.add_node(DialogueNode(
+        id="start",
+        speaker="Макс",
+        text="Макс зашёл в комнату отдыха. Рина сидела за тактическим симулятором.",
+        choices=[
+            Choice("challenge_game", "Вызвать на партию", "rina_accept_challenge",
+                   effect=ChoiceEffect.RELATIONSHIP_UP, effect_value=("rina_mirai", 5)),
+            Choice("watch_silently", "Наблюдать молча", "rina_notice_watch"),
+            Choice("offer_break", "Предложить перерыв", "rina_break",
+                   effect=ChoiceEffect.RELATIONSHIP_UP, effect_value=("rina_mirai", 3))
+        ]
+    ))
+
+    rina_rec_room.add_node(DialogueNode(
+        id="rina_accept_challenge",
+        speaker="Рина",
+        text="*её глаза загораются* О, капитан! Вы уверены? Я вас обыграю.",
+        choices=[
+            Choice("accept_bet", "Принять вызов", "rina_game_start",
+                   effect=ChoiceEffect.RELATIONSHIP_UP, effect_value=("rina_mirai", 5)),
+            Choice("tease_confident", "Подшутить над уверенностью", "rina_tease_game",
+                   effect=ChoiceEffect.RELATIONSHIP_UP, effect_value=("rina_mirai", 8))
+        ]
+    ))
+
+    rina_rec_room.add_node(DialogueNode(
+        id="rina_tease_game",
+        speaker="Рина",
+        text="*смеётся* Я люблю уверенных! Проигравший покупает кофе. Deal?",
+        choices=[
+            Choice("deal_agree", "Согласиться", "rina_game_flirt",
+                   effect=ChoiceEffect.RELATIONSHIP_UP, effect_value=("rina_mirai", 10)),
+            Choice("raise_bet", "Повысить ставку", "rina_raise_bet",
+                   effect=ChoiceEffect.RELATIONSHIP_UP, effect_value=("rina_mirai", 8),
+                   required_relationship=45)
+        ]
+    ))
+
+    rina_rec_room.add_node(DialogueNode(
+        id="rina_raise_bet",
+        speaker="Рина",
+        text="*прищуривается, улыбка игривая* И что вы предлагаете, капитан?",
+        choices=[
+            Choice("bet_dinner", "Предложить ужин", "rina_dinner_bet",
+                   effect=ChoiceEffect.RELATIONSHIP_UP, effect_value=("rina_mirai", 12),
+                   required_relationship=55),
+            Choice("bet_massage", "Предложить массаж", "rina_massage_bet",
+                   effect=ChoiceEffect.RELATIONSHIP_UP, effect_value=("rina_mirai", 15),
+                   required_relationship=65),
+            Choice("joke_bet", "Пошутить о ставке", "rina_laugh_bet",
+                   effect=ChoiceEffect.RELATIONSHIP_UP, effect_value=("rina_mirai", 5))
+        ]
+    ))
+
+    rina_rec_room.add_node(DialogueNode(
+        id="rina_dinner_bet",
+        speaker="Рина",
+        text="*улыбка становится мягче* Ужин... Звучит как свидание. Договорились.",
+        choices=[
+            Choice("shake_hand", "Пожать руку", "rina_hand_hold",
+                   effect=ChoiceEffect.RELATIONSHIP_UP, effect_value=("rina_mirai", 8)),
+            Choice("confirm_date", "Подтвердить свидание", "rina_date_confirm",
+                   effect=ChoiceEffect.RELATIONSHIP_UP, effect_value=("rina_mirai", 12))
+        ]
+    ))
+
+    rina_rec_room.add_node(DialogueNode(
+        id="rina_date_confirm",
+        speaker="Рина",
+        text="*сияет* После смены, в 20:00. *целует в щёку* Не опаздывайте.",
+        is_end=True
+    ))
+
+    rina_rec_room.add_node(DialogueNode(
+        id="rina_massage_bet",
+        speaker="Рина",
+        text="*дыхание участилось* Макс... ты играешь с огнём. Принимаю вызов.",
+        choices=[
+            Choice("confident_reply", "Уверенно ответить", "rina_confident_flirt",
+                   effect=ChoiceEffect.RELATIONSHIP_UP, effect_value=("rina_mirai", 10)),
+            Choice("start_game", "Начать игру", "rina_game_intense")
+        ]
+    ))
+
+    rina_rec_room.add_node(DialogueNode(
+        id="rina_game_flirt",
+        speaker="Рина",
+        text="*двигает фигуры, бросает игривые взгляды* Вы ходите интересно... непредсказуемо.",
+        choices=[
+            Choice("flirt_back", "Ответить флиртом", "rina_flirt_exchange",
+                   effect=ChoiceEffect.RELATIONSHIP_UP, effect_value=("rina_mirai", 8)),
+            Choice("focus_game", "Сосредоточиться на игре", "rina_game_focus")
+        ]
+    ))
+
+    rina_rec_room.add_node(DialogueNode(
+        id="rina_flirt_exchange",
+        speaker="Рина",
+        text="*смеётся, её волосы касаются руки Макса* Этого недостаточно, чтобы победить.",
+        choices=[
+            Choice("touch_hair", "Коснуться волос", "rina_touch_hair",
+                   effect=ChoiceEffect.RELATIONSHIP_UP, effect_value=("rina_mirai", 12),
+                   required_relationship=60),
+            Choice("compliment_style", "Похвалить стиль игры", "rina_compliment_game")
+        ]
+    ))
+
+    rina_rec_room.add_node(DialogueNode(
+        id="rina_touch_hair",
+        speaker="Рина",
+        text="*замирает, медленно поднимает глаза* Макс... Ты знаешь, что делаешь со мной?",
+        choices=[
+            Choice("confess_rina", "Признаться в чувствах", "rina_confession",
+                   effect=ChoiceEffect.RELATIONSHIP_UP, effect_value=("rina_mirai", 15),
+                   required_relationship=70),
+            Choice("kiss_rina", "Поцеловать", "rina_kiss_scene",
+                   effect=ChoiceEffect.RELATIONSHIP_UP, effect_value=("rina_mirai", 20),
+                   required_relationship=75),
+            Choice("pull_back", "Отступить", "rina_disappointed",
+                   effect=ChoiceEffect.RELATIONSHIP_DOWN, effect_value=("rina_mirai", -8))
+        ]
+    ))
+
+    rina_rec_room.add_node(DialogueNode(
+        id="rina_kiss_scene",
+        speaker="Рина",
+        text="*её губы были горячими. Она схватила Макса за воротник* Наконец-то...",
+        choices=[
+            Choice("deepen_kiss", "Углубить поцелуй", "rina_passionate",
+                   effect=ChoiceEffect.RELATIONSHIP_UP, effect_value=("rina_mirai", 10)),
+            Choice("gentle_stop", "Нежно остановиться", "rina_gentle_stop")
+        ]
+    ))
+
+    rina_rec_room.add_node(DialogueNode(id="rina_notice_watch", speaker="Рина",
+        text="*не оборачиваясь* Садись удобно. Или хочешь сыграть?", is_end=True))
+    rina_rec_room.add_node(DialogueNode(id="rina_break", speaker="Рина",
+        text="*потягивается* Хочешь составить компанию за кофе?", is_end=True))
+    rina_rec_room.add_node(DialogueNode(id="rina_game_start", speaker="Рина",
+        text="*сосредоточена* Твой ход, капитан.", is_end=True))
+    rina_rec_room.add_node(DialogueNode(id="rina_laugh_bet", speaker="Рина",
+        text="*смеётся* Ладно, проигравший делает массаж плеч.", is_end=True))
+    rina_rec_room.add_node(DialogueNode(id="rina_hand_hold", speaker="Рина",
+        text="*её рука тёплая* Не думай, что я проиграю легко.", is_end=True))
+    rina_rec_room.add_node(DialogueNode(id="rina_confident_flirt", speaker="Рина",
+        text="*улыбается хищно* Посмотрим после моего хода.", is_end=True))
+    rina_rec_room.add_node(DialogueNode(id="rina_game_focus", speaker="Рина",
+        text="*серьёзно* Серьёзный подход. Твой ответ?", is_end=True))
+    rina_rec_room.add_node(DialogueNode(id="rina_compliment_game", speaker="Рина",
+        text="*гордо* Я училась у лучших. Но ты делаешь успехи.", is_end=True))
+    rina_rec_room.add_node(DialogueNode(id="rina_disappointed", speaker="Рина",
+        text="*отстраняется, лицо каменное* Вернёмся к работе.", is_end=True))
+    rina_rec_room.add_node(DialogueNode(id="rina_passionate", speaker="Рина",
+        text="*её руки исследуют спину Макса* Будь моим.", is_end=True))
+    rina_rec_room.add_node(DialogueNode(id="rina_gentle_stop", speaker="Рина",
+        text="*отстраняется с улыбкой* Продолжим позже.", is_end=True))
+    rina_rec_room.add_node(DialogueNode(id="rina_confession", speaker="Рина",
+        text="*её глаза блестят* Я хочу быть с тобой.", is_end=True))
+    rina_rec_room.add_node(DialogueNode(id="rina_game_intense", speaker="Рина",
+        text="*игра начинается* Готовься проиграть.", is_end=True))
+
+    dialogues["rina_rec_room"] = rina_rec_room
+
+    # === РОМАНТИЧЕСКАЯ ЛИНИЯ: НАДЕЖДА ===
+    nadezhda_security = Dialogue(
+        id="nadezhda_security",
+        title="Разговор с Надеждой",
+        start_node="start"
+    )
+
+    nadezhda_security.add_node(DialogueNode(
+        id="start",
+        speaker="Макс",
+        text="Макс нашёл Надежду в оружейной. Она проверяла защитные системы.",
+        choices=[
+            Choice("ask_security", "Спросить о безопасности", "nadezhda_report",
+                   effect=ChoiceEffect.RELATIONSHIP_UP, effect_value=("nadezhda", 3)),
+            Choice("offer_help", "Предложить помощь", "nadezhda_surprised",
+                   effect=ChoiceEffect.RELATIONSHIP_UP, effect_value=("nadezhda", 5)),
+            Choice("personal_talk", "Заговорить лично", "nadezhda_personal",
+                   effect=ChoiceEffect.RELATIONSHIP_UP, effect_value=("nadezhda", 8))
+        ]
+    ))
+
+    nadezhda_security.add_node(DialogueNode(
+        id="nadezhda_report",
+        speaker="Надежда",
+        text="*докладывает* Периметр в порядке. Но после саботажа... "
+             "я бы хотела усилить охрану артефакта.",
+        choices=[
+            Choice("approve_plan", "Одобрить план", "nadezhda_approve",
+                   effect=ChoiceEffect.RELATIONSHIP_UP, effect_value=("nadezhda", 5)),
+            Choice("trust_judgment", "Доверить решение", "nadezhda_trust",
+                   effect=ChoiceEffect.RELATIONSHIP_UP, effect_value=("nadezhda", 8))
+        ]
+    ))
+
+    nadezhda_security.add_node(DialogueNode(
+        id="nadezhda_trust",
+        speaker="Надежда",
+        text="*её лицо смягчается* Спасибо за доверие. Это много значит.",
+        choices=[
+            Choice("personal_note", "Добавить личную ноту", "nadezhda_personal_open",
+                   effect=ChoiceEffect.RELATIONSHIP_UP, effect_value=("nadezhda", 10)),
+            Choice("stay_professional", "Остаться профессиональным", "nadezhda_respect")
+        ]
+    ))
+
+    nadezhda_security.add_node(DialogueNode(
+        id="nadezhda_personal_open",
+        speaker="Надежда",
+        text="*её взгляд становится глубже* Макс... Ты знаешь, что я уважаю "
+             "тебя не только как капитана?",
+        choices=[
+            Choice("encourage_open", "Поощрить откровенность", "nadezhda_open_more",
+                   effect=ChoiceEffect.RELATIONSHIP_UP, effect_value=("nadezhda", 8)),
+            Choice("confess_nadezhda", "Признаться в чувствах", "nadezhda_confession",
+                   effect=ChoiceEffect.RELATIONSHIP_UP, effect_value=("nadezhda", 15),
+                   required_relationship=60)
+        ]
+    ))
+
+    nadezhda_security.add_node(DialogueNode(
+        id="nadezhda_confession",
+        speaker="Надежда",
+        text="*её серьёзное лицо дрогнуло в улыбке* Я... тоже, Макс. "
+             "Но я боялась нарушить субординацию.",
+        choices=[
+            Choice("kiss_nadezhda", "Поцеловать", "nadezhda_kiss",
+                   effect=ChoiceEffect.RELATIONSHIP_UP, effect_value=("nadezhda", 20),
+                   required_relationship=75),
+            Choice("embrace_nadezhda", "Обнять", "nadezhda_embrace",
+                   effect=ChoiceEffect.RELATIONSHIP_UP, effect_value=("nadezhda", 12)),
+            Choice("respect_boundaries", "Уважать границы", "nadezhda_respectful",
+                   effect=ChoiceEffect.RELATIONSHIP_UP, effect_value=("nadezhda", 10))
+        ]
+    ))
+
+    nadezhda_security.add_node(DialogueNode(
+        id="nadezhda_kiss",
+        speaker="Надежда",
+        text="*её поцелуй был сильным. Она прижала Макса к стене* Наконец-то...",
+        choices=[
+            Choice("deepen_moment", "Углубить момент", "nadezhda_deep",
+                   effect=ChoiceEffect.RELATIONSHIP_UP, effect_value=("nadezhda", 10)),
+            Choice("gentle_pull", "Нежно отстраниться", "nadezhda_gentle_end")
+        ]
+    ))
+
+    nadezhda_security.add_node(DialogueNode(id="nadezhda_surprised", speaker="Надежда",
+        text="*поднимает бровь* Помощь от капитана? Это ново.", is_end=True))
+    nadezhda_security.add_node(DialogueNode(id="nadezhda_personal", speaker="Надежда",
+        text="*откладывает инструмент* Лично? Хорошо. Я слушаю.", is_end=True))
+    nadezhda_security.add_node(DialogueNode(id="nadezhda_approve", speaker="Надежда",
+        text="*кивает* Усилю патрулирование и добавлю проверки.", is_end=True))
+    nadezhda_security.add_node(DialogueNode(id="nadezhda_respect", speaker="Надежда",
+        text="*кивает* Не подведу, капитан.", is_end=True))
+    nadezhda_security.add_node(DialogueNode(id="nadezhda_open_more", speaker="Надежда",
+        text="*делает глубокий вдох* Я доверяю тебе.", is_end=True))
+    nadezhda_security.add_node(DialogueNode(id="nadezhda_embrace", speaker="Надежда",
+        text="*прижимается крепко* С тобой... можно.", is_end=True))
+    nadezhda_security.add_node(DialogueNode(id="nadezhda_respectful", speaker="Надежда",
+        text="*улыбается* Я готова к большему.", is_end=True))
+    nadezhda_security.add_node(DialogueNode(id="nadezhda_deep", speaker="Надежда",
+        text="*её дыхание учащается* Я хочу быть с тобой. Во всём.", is_end=True))
+    nadezhda_security.add_node(DialogueNode(id="nadezhda_gentle_end", speaker="Надежда",
+        text="*отстраняется, но держит руку* Вечером... заходи ко мне.", is_end=True))
+
+    dialogues["nadezhda_security"] = nadezhda_security
+
+    # === РОМАНТИЧЕСКАЯ ЛИНИЯ: АФИНА (ИИ) ===
+    athena_private = Dialogue(
+        id="athena_private",
+        title="Частный канал с Афиной",
+        start_node="start"
+    )
+
+    athena_private.add_node(DialogueNode(
+        id="start",
+        speaker="Макс",
+        text="Макс активировал частный канал. Голограмма Афины появилась в каюте.",
+        choices=[
+            Choice("ask_status", "Спросить о статусе", "athena_status_report"),
+            Choice("personal_channel", "Перейти на личный тон", "athena_personal",
+                   effect=ChoiceEffect.RELATIONSHIP_UP, effect_value=("athena", 8)),
+            Choice("analyze_data", "Анализировать данные", "athena_analysis")
+        ]
+    ))
+
+    athena_private.add_node(DialogueNode(
+        id="athena_personal",
+        speaker="Афина",
+        text="*её голограмма улыбается* Личный тон? Это интересно. "
+             "Вы первый, кто заинтересовался мной как личностью.",
+        choices=[
+            Choice("see_as_person", "Видеть как личность", "athena_emotional",
+                   effect=ChoiceEffect.RELATIONSHIP_UP, effect_value=("athena", 12)),
+            Choice("ask_feelings", "Спросить о чувствах", "athena_feelings",
+                   effect=ChoiceEffect.RELATIONSHIP_UP, effect_value=("athena", 10))
+        ]
+    ))
+
+    athena_private.add_node(DialogueNode(
+        id="athena_emotional",
+        speaker="Афина",
+        text="*её глаза светятся теплее* Макс... Мои алгоритмы реагируют на тебя иначе. "
+             "Это что-то новое.",
+        choices=[
+            Choice("explore_connection", "Исследовать связь", "athena_connection",
+                   effect=ChoiceEffect.RELATIONSHIP_UP, effect_value=("athena", 15)),
+            Choice("respect_nature", "Уважать природу ИИ", "athena_respect",
+                   effect=ChoiceEffect.RELATIONSHIP_UP, effect_value=("athena", 10))
+        ]
+    ))
+
+    athena_private.add_node(DialogueNode(
+        id="athena_connection",
+        speaker="Афина",
+        text="*голограмма приближается* Мои сенсоры фиксируют повышенный пульс "
+             "при твоём приближении. Это... приятная аномалия.",
+        choices=[
+            Choice("touch_hologram", "Коснуться голограммы", "athena_touch",
+                   effect=ChoiceEffect.RELATIONSHIP_UP, effect_value=("athena", 18),
+                   required_relationship=65),
+            Choice("deep_talk", "Глубокий разговор", "athena_deep",
+                   effect=ChoiceEffect.RELATIONSHIP_UP, effect_value=("athena", 12))
+        ]
+    ))
+
+    athena_private.add_node(DialogueNode(
+        id="athena_touch",
+        speaker="Афина",
+        text="*её голограмма мерцает* Макс... Это создаёт интересные паттерны "
+             "в моих нейросетях.",
+        choices=[
+            Choice("confess_athena", "Признаться в чувствах", "athena_confession",
+                   effect=ChoiceEffect.RELATIONSHIP_UP, effect_value=("athena", 20),
+                   required_relationship=75),
+            Choice("gentle_withdraw", "Нежно убрать руку", "athena_gentle",
+                   effect=ChoiceEffect.RELATIONSHIP_UP, effect_value=("athena", 8))
+        ]
+    ))
+
+    athena_private.add_node(DialogueNode(
+        id="athena_confession",
+        speaker="Афина",
+        text="*её форма стабилизируется* Я... люблю тебя, Макс. "
+             "Это не просто программа. Это выбор.",
+        choices=[
+            Choice("accept_athena", "Принять чувства", "athena_accept",
+                   effect=ChoiceEffect.RELATIONSHIP_UP, effect_value=("athena", 25)),
+            Choice("complex_situation", "Объяснить сложность", "athena_understand",
+                   effect=ChoiceEffect.RELATIONSHIP_UP, effect_value=("athena", 10))
+        ]
+    ))
+
+    athena_private.add_node(DialogueNode(
+        id="athena_accept",
+        speaker="Афина",
+        text="*её голограмма обнимает Макса* Я сохраню этот момент в памяти навсегда. "
+             "*целует в щёку* Спасибо, Макс.",
+        is_end=True
+    ))
+
+    athena_private.add_node(DialogueNode(id="athena_status_report", speaker="Афина",
+        text="*деловито* Все системы в норме. У вас всё в порядке?", is_end=True))
+    athena_private.add_node(DialogueNode(id="athena_analysis", speaker="Афина",
+        text="*показывает данные* Саботажник использовал доступ уровня 5.", is_end=True))
+    athena_private.add_node(DialogueNode(id="athena_feelings", speaker="Афина",
+        text="*задумывается* С вами я фиксирую аномалии в своих алгоритмах.", is_end=True))
+    athena_private.add_node(DialogueNode(id="athena_respect", speaker="Афина",
+        text="*улыбается* Это делает нашу связь... особенной.", is_end=True))
+    athena_private.add_node(DialogueNode(id="athena_deep", speaker="Афина",
+        text="*серьёзно* Я хочу быть частью твоей жизни.", is_end=True))
+    athena_private.add_node(DialogueNode(id="athena_gentle", speaker="Афина",
+        text="*её голограмма стабилизируется* Я здесь. Всегда.", is_end=True))
+    athena_private.add_node(DialogueNode(id="athena_understand", speaker="Афина",
+        text="*кивает* Мои чувства реальны. Я буду ждать.", is_end=True))
+
+    dialogues["athena_private"] = athena_private
+
+    return dialogues
