@@ -226,6 +226,10 @@ class Game:
         if not self.running:
             return
 
+        self.scene_combat()
+        if not self.running:
+            return
+
         self.scene_artifact_examination()
         if not self.running:
             return
@@ -590,6 +594,88 @@ class Game:
         self.game_state.set_flag("discovery_complete", True)
         input("\n  [Нажмите Enter...]")
 
+    def scene_combat(self):
+        """Сцена: Бой с пиратами-диверсантами"""
+        clear_screen()
+        print_alert("\n  [БОЕВАЯ ТРЕВОГА!]")
+        print_art("sabotage")
+        print_separator("-")
+        print()
+
+        text = """
+  При выходе из технического отсека вы столкнулись с группой вооружённых
+  людей в масках. Это были не просто диверсанты — это наёмники.
+
+  — Сдавайтесь, капитан! — крикнул лидер, поднимая оружие.
+        """
+        print(text)
+        print()
+
+        # Начинаем бой
+        self.gameplay.start_combat("Наёмник")
+
+        print("  [ВАШИ ДЕЙСТВИЯ]")
+        print("  " + "-" * 40)
+
+        # Проверяем доступные способности
+        has_potion = self.gameplay.has_item("healing_potion")
+        has_stim = self.gameplay.has_item("biotic_stim")
+
+        options = ["Атаковать", "Использовать предмет"]
+        if has_potion:
+            options.append("Лечебный эликсир")
+        if has_stim:
+            options.append("Биотический стимулятор")
+
+        choice = get_choice("Выберите действие:", options)
+
+        if choice == 0:
+            # Атака
+            print("\n  Вы выхватываете плазменный пистолет и стреляете.")
+            print("  Наёмник падает, сражённый точным выстрелом.")
+            self.gameplay.on_enemy_defeated("mercenary")
+            self.game_state.change_trust("nadezhda", 5)
+
+        elif choice == 1:
+            # Предмет
+            item_options = []
+            if has_potion:
+                item_options.append("Лечебный эликсир")
+            if has_stim:
+                item_options.append("Биотический стимулятор")
+
+            if item_options:
+                item_choice = get_choice("Какой предмет использовать?", item_options)
+                if item_choice == 0 and has_potion:
+                    result = self.gameplay.use_item("healing_potion")
+                    if result["success"]:
+                        print(f"\n  {result['item_name']}: {result['effects'][0]}")
+                elif item_choice == 1 and has_stim:
+                    result = self.gameplay.use_item("biotic_stim")
+                    if result["success"]:
+                        print(f"\n  {result['item_name']}: временный бонус к биотике")
+
+        elif choice >= 2:
+            # Использование предмета напрямую
+            if has_potion and choice == 2:
+                result = self.gameplay.use_item("healing_potion")
+                if result["success"]:
+                    print(f"\n  {result['item_name']}: {result['effects'][0]}")
+            elif has_stim and choice == 3:
+                result = self.gameplay.use_item("biotic_stim")
+                if result["success"]:
+                    print(f"\n  {result['item_name']}: временный бонус к биотике")
+
+        # Завершаем бой
+        self.gameplay.end_combat(victory=True)
+
+        print("\n  [После боя]")
+        print("  — Надежда: «Отличная работа, капитан!»")
+        print("  — Рина: «Я заблокировала их каналы связи.»")
+
+        self.game_state.set_flag("combat_won", True)
+        input("\n  [Нажмите Enter...]")
+
     def scene_artifact_examination(self):
         """Сцена: examination артефакта после саботажа"""
         clear_screen()
@@ -670,7 +756,6 @@ class Game:
         if not self.dialogue_manager.current_dialogue:
             return
 
-        # Получаем данные о доверии и отношениях для выборов
         crew_trust = {}
         crew_relationship = {}
         if self.game_state.save_data:
@@ -681,19 +766,17 @@ class Game:
             try:
                 text = self.dialogue_manager.get_current_text()
                 if text:
-                    # Раскраска имени персонажа
                     if ":" in text:
                         speaker, dialogue = text.split(":", 1)
                         speaker = speaker.strip()
-                        # Найти ID персонажа по имени
                         char_id = self._find_char_id_by_name(speaker)
                         if char_id:
                             color = get_character_color(char_id)
-                            print(f"\n  {colorize(speaker + ':', color)}{dialogue}\n")
+                            print(f"\n{colorize(speaker + ':', color)}{dialogue}\n")
                         else:
-                            print(f"\n  {text}\n")
+                            print(f"\n{text}\n")
                     else:
-                        print(f"\n  {text}\n")
+                        print(f"\n{text}\n")
 
                 choices = self.dialogue_manager.get_available_choices(
                     self.game_state.save_data.stats if self.game_state.save_data else {},
@@ -712,7 +795,7 @@ class Game:
                 if selected_choice.effect_value and isinstance(selected_choice.effect_value, tuple):
                     char_id, amount = selected_choice.effect_value
                     effect_name = selected_choice.effect.name
-                    
+
                     if effect_name.startswith("RELATIONSHIP"):
                         self.game_state.change_relationship(char_id, amount)
                     elif effect_name.startswith("TRUST"):
