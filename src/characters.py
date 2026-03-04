@@ -40,18 +40,49 @@ class Character:
     appearance: str = ""
     personality: str = ""
     motivation: str = ""
-    
+
     # Отношения с игроком (0-100)
     relationship: int = 0
     
+    # Доверие в критических ситуациях (0-100)
+    trust: int = 50
+
     # Статус в экипаже
     is_recruited: bool = True
     is_alive: bool = True
+    
+    # Личный квест
+    personal_quest_id: Optional[str] = None
+    personal_quest_completed: bool = False
     
     def change_relationship(self, amount: int) -> int:
         """Изменить отношение на amount (может быть положительным или отрицательным)"""
         self.relationship = min(MAX_RELATIONSHIP, max(MIN_RELATIONSHIP, self.relationship + amount))
         return self.relationship
+    
+    def change_trust(self, amount: int) -> int:
+        """Изменить доверие на amount"""
+        self.trust = min(MAX_RELATIONSHIP, max(MIN_RELATIONSHIP, self.trust + amount))
+        return self.trust
+    
+    def is_loyal(self) -> bool:
+        """Проверить лояльность (доверие + отношения)"""
+        return (self.relationship + self.trust) >= 100
+    
+    def can_betray(self) -> bool:
+        """Проверить возможность предательства"""
+        return self.trust < 30 and self.relationship < 40
+    
+    def start_personal_quest(self, quest_id: str):
+        """Начать личный квест"""
+        self.personal_quest_id = quest_id
+        self.personal_quest_completed = False
+    
+    def complete_personal_quest(self):
+        """Завершить личный квест"""
+        self.personal_quest_completed = True
+        self.change_trust(20)
+        self.change_relationship(15)
     
     def get_relationship_status(self) -> str:
         """Получить статус отношений"""
@@ -60,6 +91,18 @@ class Character:
             if self.relationship >= threshold:
                 return status
         return "Холодные"
+    
+    def get_trust_level(self) -> str:
+        """Получить уровень доверия"""
+        if self.trust >= 80:
+            return "Абсолютное"
+        elif self.trust >= 60:
+            return "Высокое"
+        elif self.trust >= 40:
+            return "Среднее"
+        elif self.trust >= 20:
+            return "Низкое"
+        return "Отсутствует"
 
 
 class CrewManager:
@@ -148,7 +191,7 @@ class CrewManager:
     def get_by_role(self, role: Role) -> list:
         """Получить персонажей по роли"""
         return [c for c in self.crew.values() if c.role == role]
-    
+
     def get_highest_relationship(self) -> Optional[Character]:
         """Получить персонажа с наивысшими отношениями"""
         return max(
@@ -156,3 +199,14 @@ class CrewManager:
             key=lambda c: c.relationship,
             default=None
         )
+    
+    def get_most_loyal(self) -> Optional[Character]:
+        """Получить самого лояльного персонажа"""
+        crew_without_captain = [c for c in self.crew.values() if c.role != Role.CAPTAIN]
+        if not crew_without_captain:
+            return None
+        return max(crew_without_captain, key=lambda c: c.relationship + c.trust)
+    
+    def get_potential_traitors(self) -> list:
+        """Получить персонажей, которые могут предать"""
+        return [c for c in self.crew.values() if c.can_betray()]

@@ -45,6 +45,7 @@ class SaveData:
     credits: int = 0
     inventory: list = field(default_factory=list)
     relationships: Dict[str, int] = field(default_factory=dict)
+    trust_values: Dict[str, int] = field(default_factory=dict)
     flags: Dict[str, bool] = field(default_factory=dict)
     completed_quests: list = field(default_factory=list)
     active_quests: list = field(default_factory=list)
@@ -58,6 +59,7 @@ class SaveData:
                      "chapter": self.chapter, "scene": self.scene},
             "player": {"stats": self.stats, "credits": self.credits, "inventory": self.inventory},
             "relationships": self.relationships,
+            "trust": self.trust_values,
             "progress": {"flags": self.flags, "completed_quests": self.completed_quests,
                          "active_quests": self.active_quests, "quest_data": self.quest_data},
             "history": {"choices": self.choices_history},
@@ -80,6 +82,7 @@ class SaveData:
         save.credits = player.get("credits", 0)
         save.inventory = player.get("inventory", [])
         save.relationships = data.get("relationships", {})
+        save.trust_values = data.get("trust", {})
         save.flags = progress.get("flags", {})
         save.completed_quests = progress.get("completed_quests", [])
         save.active_quests = progress.get("active_quests", [])
@@ -239,11 +242,13 @@ class GameState:
         self.save_data.stats["psychic"] = \
             self.abilities_manager.get_tier(AbilityType.PSYCHIC).value
 
-        # Отношения
+        # Отношения и доверие
         self.save_data.relationships = {}
+        self.save_data.trust_values = {}
         for char in self.crew_manager.get_all_crew():
             if char.role != Role.CAPTAIN:
                 self.save_data.relationships[char.id] = char.relationship
+                self.save_data.trust_values[char.id] = char.trust
 
         # Инвентарь
         self.save_data.inventory = self.inventory.to_dict()
@@ -277,6 +282,12 @@ class GameState:
             char = self.crew_manager.get_character(char_id)
             if char:
                 char.relationship = value
+        
+        # Доверие
+        for char_id, value in self.save_data.trust_values.items():
+            char = self.crew_manager.get_character(char_id)
+            if char:
+                char.trust = value
 
         # Инвентарь
         if self.save_data.inventory:
@@ -336,6 +347,13 @@ class GameState:
         char = self.crew_manager.get_character(char_id)
         if char:
             char.change_relationship(amount)
+    
+    def change_trust(self, char_id: str, amount: int):
+        """Изменить доверие персонажа"""
+        char = self.crew_manager.get_character(char_id)
+        if char:
+            char.change_trust(amount)
+            logger.info(f"Доверие {char_id} изменено на {amount}")
 
     def get_crew_relationships(self) -> List[tuple]:
         """Получить список отношений с экипажем (name, status)"""

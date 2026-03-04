@@ -12,6 +12,7 @@ sys.path.insert(0, str(src_path))
 
 from config import GAME_TITLE, VERSION, DEFAULT_STATS, DEFAULT_HP, DEFAULT_ENERGY, MAX_RELATIONSHIP
 from characters import Character, Role, CrewManager
+from colors import Colors, colorize
 from abilities import (
     AbilitiesManager, AbilityType, AbilityTier,
     AlchemyAbility, BioticAbility, PsychicAbility, CombatSystem
@@ -593,6 +594,60 @@ class TestAbilitiesLogging(unittest.TestCase):
 
         combat.restore_energy(50)
         self.assertEqual(combat.player_energy, 100)
+
+
+class TestTrustSystem(unittest.TestCase):
+    """Тесты системы доверия"""
+
+    def test_trust_init(self):
+        char = Character(id="test", name="Тест", role=Role.PILOT)
+        self.assertEqual(char.trust, 50)
+
+    def test_change_trust(self):
+        char = Character(id="test", name="Тест", role=Role.PILOT)
+        char.change_trust(20)
+        self.assertEqual(char.trust, 70)
+
+    def test_trust_cap(self):
+        char = Character(id="test", name="Тест", role=Role.PILOT)
+        char.change_trust(100)
+        self.assertEqual(char.trust, 100)
+
+    def test_trust_floor(self):
+        char = Character(id="test", name="Тест", role=Role.PILOT)
+        char.change_trust(-100)
+        self.assertEqual(char.trust, 0)
+
+    def test_is_loyal(self):
+        char = Character(id="test", name="Тест", role=Role.PILOT)
+        char.relationship = 60
+        char.trust = 50
+        self.assertTrue(char.is_loyal())
+
+    def test_can_betray(self):
+        char = Character(id="test", name="Тест", role=Role.PILOT)
+        char.relationship = 20
+        char.trust = 10
+        self.assertTrue(char.can_betray())
+
+    def test_get_most_loyal(self):
+        crew = CrewManager()
+        athena = crew.get_character("athena")
+        athena.relationship = 80
+        athena.trust = 80
+        self.assertEqual(crew.get_most_loyal(), athena)
+
+
+class TestColors(unittest.TestCase):
+    """Тесты цветовой системы"""
+
+    def test_colorize(self):
+        result = colorize("Тест", Colors.RED)
+        self.assertIn("Тест", result)
+
+    def test_supports_color(self):
+        result = Colors.supports_color()
+        self.assertIsInstance(result, bool)
 
 
 if __name__ == "__main__":
