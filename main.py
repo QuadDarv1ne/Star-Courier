@@ -21,17 +21,17 @@ logger = logging.getLogger('main')
 # Добавляем src в путь импорта
 sys.path.insert(0, str(Path(__file__).parent))
 
-from src.config import GAME_TITLE, VERSION, TEXT_WIDTH, DEFAULT_HP, DEFAULT_ENERGY
+from src.config import GAME_TITLE, VERSION, TEXT_WIDTH
 from src.utils import (
     clear_screen, print_header, print_separator,
     print_menu, get_choice, confirm, list_saves_menu
 )
 from src.colors import Colors, colorize, get_character_color, print_alert
 from src.ascii_art import print_art
-from src.save_system import GameState, SaveManager
+from src.save_system import GameState
 from src.characters import CrewManager
 from src.dialogues import DialogueManager, create_chapter1_dialogues, create_chapter2_dialogues
-from src.abilities import AbilitiesManager, AbilityType, AbilityTier
+from src.gameplay import GameplaySystem
 
 
 class Game:
@@ -40,6 +40,7 @@ class Game:
     def __init__(self):
         self.game_state = GameState()
         self.dialogue_manager = DialogueManager()
+        self.gameplay = GameplaySystem()
         self.current_chapter = 1
         self.current_scene = "start"
         self.running = True
@@ -97,29 +98,36 @@ class Game:
         """Новая игра"""
         clear_screen()
         print_header("НОВАЯ ИГРА", TEXT_WIDTH + 4)
-        
+
         if self.game_state.save_data and confirm("Текущий прогресс будет потерян. Продолжить?"):
             pass
-        
+
         self.game_state.new_game()
 
         # Инициализация диалогов первой главы
         dialogues = create_chapter1_dialogues()
         for dialogue in dialogues.values():
             self.dialogue_manager.add_dialogue(dialogue)
-        
+
         # Инициализация диалогов второй главы
         dialogues_ch2 = create_chapter2_dialogues()
         for dialogue in dialogues_ch2.values():
             self.dialogue_manager.add_dialogue(dialogue)
 
+        # Инициализация игровой системы
+        self.gameplay.set_crew_manager(self.game_state.crew_manager)
+        self.gameplay.set_game_state(self.game_state)
+
+        # Выдача стартового квеста
+        self.gameplay.accept_quest("main_001")
+
         print("\n  Начало новой миссии...")
         print("\n  Вы — капитан Макс Велл, командир звездолёта «Элея».")
         print("  Вам предстоит доставить загадочный артефакт и раскрыть его тайны.")
         print()
-        
+
         input("Нажмите Enter для начала главы 1...")
-        
+
         self.play_chapter_1()
     
     def load_game_menu(self):
@@ -291,6 +299,8 @@ class Game:
             print("  — Такое ощущение, что он реагирует на что-то.")
             self.game_state.change_relationship("irina_lebedeva", 3)
             self.game_state.set_flag("lab_artifact_discussed", True)
+            # Обновляем квест исследования
+            self.gameplay.on_explore_location("lab")
         elif choice == 1:
             print("\n  — Пока нет. Но я продолжаю мониторинг.")
             print("  — Если что-то изменится — вы узнаете первым.")
@@ -550,9 +560,13 @@ class Game:
             print("\n  Чип был повреждён, но на нём виден логотип:")
             print("  «НейроТех Индастриз» — производитель систем безопасности.")
             self.game_state.set_flag("found_chip", True)
+            # Добавляем предмет и обновляем квест
+            self.gameplay.on_item_collected("alien_data_chip", 1)
+            self.gameplay.update_quest_objective("side_001", "obj_evidence", 1)
         elif choice == 1:
             print("\n  На панели — следы вскрытия. Профессиональная работа.")
             self.game_state.set_flag("examined_panel", True)
+            self.gameplay.update_quest_objective("side_001", "obj_evidence", 1)
         else:
             # Разговор с Алией
             if alia_trust < 30 and alia_rel < 30:
@@ -721,7 +735,24 @@ class Game:
             "Селена Ро": "selena_ro",
         }
         return name_map.get(name)
-    
+
+    def show_status(self):
+        """Показать статус игрока"""
+        clear_screen()
+        print_header("СТАТУС ИГРОКА", TEXT_WIDTH + 4)
+
+        self.gameplay.print_status(print)
+
+        print("\n  [КОМАНДА]")
+        print("  " + "-" * 40)
+        crew = self.game_state.crew_manager.get_all_crew()
+        for char in crew[:5]:  # Показываем до 5 персонажей
+            rel_status = char.get_relationship_status()
+            print(f"  {char.name}: {rel_status}")
+
+        print("\n  Нажмите Enter для возврата...")
+        input()
+
     def chapter_end(self):
         """Конец главы"""
         clear_screen()

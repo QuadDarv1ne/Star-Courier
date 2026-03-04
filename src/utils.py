@@ -1,5 +1,6 @@
 """
 Утилиты для работы с текстом и файлами
+Расширенная версия с анимациями и эффектами
 """
 
 import os
@@ -58,6 +59,295 @@ def print_typewriter(text: str, delay: float = 0.03):
     """
     for char in text:
         print(char, end="", flush=True)
+        time.sleep(delay)
+    print()
+
+
+def print_typewriter_colored(text: str, delay: float = 0.03, color: str = ""):
+    """
+    Эффект печатной машинки с цветом.
+
+    Args:
+        text: Текст для вывода
+        delay: Задержка между символами (сек)
+        color: ANSI код цвета
+    """
+    from .colors import colorize
+
+    for char in text:
+        if color:
+            print(colorize(char, color), end="", flush=True)
+        else:
+            print(char, end="", flush=True)
+        time.sleep(delay)
+    print()
+
+
+def print_glitch(text: str, delay: float = 0.05, glitch_chars: str = "░▒▓█▀▄"):
+    """
+    Эффект глитча/помех для текста.
+    
+    Args:
+        text: Текст для вывода
+        delay: Задержка между символами
+        glitch_chars: Символы для эффекта глитча
+    """
+    import random
+    
+    for char in text:
+        if char == " " or random.random() > 0.3:
+            print(char, end="", flush=True)
+        else:
+            # Показываем случайный символ глитча
+            glitch_char = random.choice(glitch_chars)
+            print(glitch_char, end="", flush=True)
+            time.sleep(delay / 2)
+            # Возвращаем оригинальный символ
+            print("\b" + char, end="", flush=True)
+        time.sleep(delay)
+    print()
+
+
+def print_digital_rain(text: str, delay: float = 0.1):
+    """
+    Эффект «цифрового дождя» в стиле Матрицы.
+    Выводит текст по одной строке с эффектом падения.
+    
+    Args:
+        text: Текст для вывода
+        delay: Задержка между строками
+    """
+    lines = text.split("\n")
+    digital_chars = "01ﾊﾐﾋｰｳｼﾅﾓﾆｻﾜﾂｵﾘｱﾎﾃﾏｹﾒｴｶﾑﾕﾗｾﾈｽﾀﾇﾍｦｲｸｺ"
+    
+    for line in lines:
+        # Сначала показываем «падающие» символы
+        for _ in range(3):
+            print("".join(__import__('random').choice(digital_chars) for _ in range(len(line))), 
+                  end="\r", flush=True)
+            time.sleep(delay / 3)
+        
+        # Затем показываем реальную строку
+        print(line, end="\r", flush=True)
+        time.sleep(delay)
+        print(line)
+    
+    print()
+
+
+def print_wave(text: str, delay: float = 0.1, amplitude: int = 3):
+    """
+    Вывод текста волной.
+    
+    Args:
+        text: Текст для вывода
+        delay: Задержка между символами
+        amplitude: Амплитуда волны (сдвиг строк)
+    """
+    import math
+    
+    lines = []
+    for i, char in enumerate(text):
+        if char == " ":
+            lines.append((" ", 0))
+            continue
+        
+        offset = int(amplitude * math.sin(i * 0.5))
+        lines.append((char, offset))
+    
+    # Группируем по строкам
+    max_offset = max(off for _, off in lines) if lines else 0
+    min_offset = min(off for _, off in lines) if lines else 0
+    
+    for row in range(min_offset, max_offset + 1):
+        line_chars = []
+        for char, offset in lines:
+            if offset == row:
+                line_chars.append(char)
+            else:
+                line_chars.append(" ")
+        print("".join(line_chars))
+        time.sleep(delay * 2)
+    
+    print()
+
+
+def print_fade_in(text: str, delay: float = 0.05):
+    """
+    Эффект плавного появления текста.
+    
+    Args:
+        text: Текст для вывода
+        delay: Задержка между шагами
+    """
+    # Символы для эффекта появления
+    fade_chars = " ░▒▓█"
+    
+    for i, char in enumerate(text):
+        # Показываем символ с нарастающей «яркостью»
+        for fade_char in fade_chars:
+            print(fade_char, end="\b", flush=True)
+            time.sleep(delay / len(fade_chars))
+        print(char, end="", flush=True)
+    
+    print()
+
+
+def print_reveal(text: str, delay: float = 0.03, reveal_char: str = "_"):
+    """
+    Эффект «проявления» текста.
+
+    Args:
+        text: Текст для вывода
+        delay: Задержка между символами
+        reveal_char: Символ-заполнитель
+    """
+    print(reveal_char * len(text), end="", flush=True)
+    time.sleep(delay * 2)
+
+    for i, char in enumerate(text):
+        print("\b" + char, end="", flush=True)
+        time.sleep(delay)
+
+    print()
+
+
+def print_scroll(text: str, delay: float = 0.02, direction: str = "left"):
+    """
+    Эффект прокрутки текста.
+    
+    Args:
+        text: Текст для вывода
+        delay: Задержка между шагами
+        direction: Направление прокрутки (left/right/up/down)
+    """
+    if direction == "left":
+        # Прокрутка справа налево
+        padded = " " * 20 + text + " " * 20
+        for i in range(len(padded) - 40):
+            print("\r" + padded[i:i+40], end="", flush=True)
+            time.sleep(delay)
+        print()
+    
+    elif direction == "right":
+        # Прокрутка слева направо
+        padded = " " * 20 + text + " " * 20
+        for i in range(len(padded) - 40, -1, -1):
+            print("\r" + padded[i:i+40], end="", flush=True)
+            time.sleep(delay)
+        print()
+
+
+def print_bounce(text: str, bounces: int = 3, delay: float = 0.1):
+    """
+    Эффект «подпрыгивания» текста.
+    
+    Args:
+        text: Текст для вывода
+        bounces: Количество подпрыгиваний
+        delay: Задержка между кадрами
+    """
+    max_indent = 20
+    
+    for _ in range(bounces):
+        # Вправо
+        for i in range(max_indent):
+            print("\r" + " " * i + text, end="", flush=True)
+            time.sleep(delay)
+        # Влево
+        for i in range(max_indent, 0, -1):
+            print("\r" + " " * i + text, end="", flush=True)
+            time.sleep(delay)
+    
+    print("\r" + text, end="", flush=True)
+    print()
+
+
+def print_spinner(duration: float = 2.0, message: str = "Загрузка..."):
+    """
+    Показывать спиннер загрузки.
+
+    Args:
+        duration: Длительность показа (сек)
+        message: Сообщение рядом со спиннером
+    """
+    spinner_chars = "⠋⠙⠹⠸⠼⠴⠦⠧⠇⠏"
+    start_time = time.time()
+
+    try:
+        while time.time() - start_time < duration:
+            for char in spinner_chars:
+                print(f"\r{char} {message}", end="", flush=True)
+                time.sleep(0.1)
+                if time.time() - start_time >= duration:
+                    break
+    except KeyboardInterrupt:
+        pass
+
+    print(f"\r✓ {message}", end="", flush=True)
+    print()
+
+
+def print_progress_bar(current: int, total: int, width: int = 40, fill: str = "█", empty: str = "░"):
+    """
+    Отобразить прогресс-бар.
+    
+    Args:
+        current: Текущий прогресс
+        total: Всего
+        width: Ширина в символах
+        fill: Символ заполнения
+        empty: Символ пустого места
+    """
+    percent = current / total if total > 0 else 0
+    filled = int(width * percent)
+    bar = fill * filled + empty * (width - filled)
+    print(f"\r[{bar}] {percent*100:.1f}%", end="", flush=True)
+
+
+def animate_dialogue(text: str, speaker: str = "", delay: float = 0.03,
+                     show_name: bool = True, color: str = ""):
+    """
+    Анимированный вывод диалога.
+
+    Args:
+        text: Текст реплики
+        speaker: Имя говорящего
+        delay: Задержка между символами
+        show_name: Показывать ли имя
+        color: Цвет текста
+    """
+    from .colors import colorize, style_text
+
+    if show_name and speaker:
+        name_display = f"[{speaker}]"
+        if color:
+            print(colorize(name_display, color))
+        else:
+            print(style_text(name_display, bold=True))
+        print()
+
+    if color:
+        print_typewriter_colored(text, delay, color)
+    else:
+        print_typewriter(text, delay)
+
+
+def type_with_sound(text: str, delay: float = 0.05, beep: bool = False):
+    """
+    Печатная машинка со звуком (опционально).
+    Требует установки библиотеки playsound или аналогичной.
+
+    Args:
+        text: Текст для вывода
+        delay: Задержка между символами
+        beep: Воспроизводить ли звук
+    """
+    for char in text:
+        print(char, end="", flush=True)
+        if beep:
+            sys.stdout.write('\a')
+            sys.stdout.flush()
         time.sleep(delay)
     print()
 
