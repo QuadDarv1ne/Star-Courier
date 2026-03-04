@@ -5,7 +5,18 @@ Star Courier — Текстовая RPG-игра
 """
 
 import sys
+import logging
 from pathlib import Path
+
+# Настройка логгирования
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+    handlers=[
+        logging.FileHandler('game.log', encoding='utf-8', mode='a'),
+    ]
+)
+logger = logging.getLogger('main')
 
 # Добавляем src в путь импорта
 sys.path.insert(0, str(Path(__file__).parent))
@@ -443,20 +454,29 @@ class Game:
     
     def save_game(self):
         """Сохранить игру"""
-        if self.game_state.save_game():
-            print("  Игра сохранена!")
-        else:
+        try:
+            if self.game_state.save_game():
+                logger.info("Игра сохранена успешно")
+                print("  Игра сохранена!")
+            else:
+                logger.warning("Ошибка при сохранении игры")
+                print("  Ошибка сохранения!")
+        except Exception as e:
+            logger.error(f"Критическая ошибка сохранения: {e}")
             print("  Ошибка сохранения!")
 
 
 def main():
     """Точка входа"""
     try:
+        logger.info("Запуск игры Star Courier")
         game = Game()
         game.start()
     except KeyboardInterrupt:
+        logger.info("Игра прервана пользователем")
         print("\n\n  Игра прервана. До встречи!")
     except Exception as e:
+        logger.exception(f"Критическая ошибка: {e}")
         print(f"\n  Критическая ошибка: {e}")
         if confirm("Сохранить лог ошибки?"):
             with open("error.log", "w", encoding="utf-8") as f:
