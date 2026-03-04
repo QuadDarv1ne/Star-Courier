@@ -2,9 +2,12 @@
 Модуль персонажей и системы отношений
 """
 
+import logging
 from dataclasses import dataclass, field
 from typing import Dict, Optional
 from enum import Enum
+
+logger = logging.getLogger('characters')
 
 try:
     from .config import MAX_RELATIONSHIP, MIN_RELATIONSHIP
@@ -130,6 +133,8 @@ class CrewManager:
     
     def add_character(self, character: Character):
         """Добавить персонажа в экипаж"""
+        if character.id in self.crew:
+            logger.warning(f"Персонаж уже существует: {character.id}")
         self.crew[character.id] = character
     
     def get_character(self, char_id: str) -> Optional[Character]:
