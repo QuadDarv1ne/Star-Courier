@@ -21,13 +21,13 @@ logging.basicConfig(
 logger = logging.getLogger('save_system')
 
 try:
-    from .config import SAVE_DIR, DEFAULT_SAVE, GAME_TITLE, VERSION
+    from .config import SAVE_DIR, DEFAULT_SAVE, GAME_TITLE, VERSION, MAX_INVENTORY_SLOTS
     from .characters import CrewManager, Character, Role
     from .abilities import AbilitiesManager, AbilityType, AbilityTier
     from .items import Inventory, ItemDatabase
     from .quests import QuestManager
 except ImportError:
-    from config import SAVE_DIR, DEFAULT_SAVE, GAME_TITLE, VERSION
+    from config import SAVE_DIR, DEFAULT_SAVE, GAME_TITLE, VERSION, MAX_INVENTORY_SLOTS
     from characters import CrewManager, Character, Role
     from abilities import AbilitiesManager, AbilityType, AbilityTier
     from items import Inventory, ItemDatabase
@@ -192,19 +192,20 @@ class SaveManager:
 class GameState:
     """Состояние игры — объединяет все системы"""
 
-    def __init__(self):
+    def __init__(self, max_inventory_slots: int = 20):
         self.save_manager = SaveManager()
         self.crew_manager = CrewManager()
         self.abilities_manager = AbilitiesManager()
-        self.inventory = Inventory()
+        self.inventory = Inventory(max_slots=max_inventory_slots)
         self.item_db = ItemDatabase()
         self.quest_manager = QuestManager()
         self.save_data: Optional[SaveData] = None
-    
+
     def new_game(self):
         """Новая игра"""
         self.save_data = self.save_manager.create_new_save()
         self._sync_from_save()
+        logger.info("Новая игра создана")
     
     def load_game(self, filename: str = None) -> bool:
         """Загрузить игру"""
@@ -212,13 +213,18 @@ class GameState:
         if loaded:
             self.save_data = loaded
             self._sync_from_save()
+            logger.info(f"Игра загружена из {filename or DEFAULT_SAVE}")
             return True
+        logger.warning(f"Не удалось загрузить игру из {filename or DEFAULT_SAVE}")
         return False
-    
+
     def save_game(self, filename: str = None) -> bool:
         """Сохранить игру"""
         self._sync_to_save()
-        return self.save_manager.save_game(filename)
+        result = self.save_manager.save_game(filename)
+        if result:
+            logger.info(f"Игра сохранена в {filename or DEFAULT_SAVE}")
+        return result
     
     def _sync_to_save(self):
         """Синхронизировать состояние с данными сохранения"""
