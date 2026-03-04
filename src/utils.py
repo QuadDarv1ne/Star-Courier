@@ -75,6 +75,7 @@ def _get_int_input(prompt: str, min_val: int = None, max_val: int = None) -> Opt
             return None
         return idx
     except ValueError:
+        logger.debug(f"Неверный ввод: ожидалось число")
         return None
     except KeyboardInterrupt:
         print("\n")
@@ -107,15 +108,19 @@ def get_choice(prompt: str, options: List[str]) -> int:
 def confirm(prompt: str = "Вы уверены?") -> bool:
     """
     Запрос подтверждения.
-    
+
     Args:
         prompt: Текст запроса
-    
+
     Returns:
         True если подтверждено
     """
-    choice = input(f"{prompt} (y/n): ").strip().lower()
-    return choice in ("y", "yes", "да", "д")
+    try:
+        choice = input(f"{prompt} (y/n): ").strip().lower()
+        return choice in ("y", "yes", "да", "д")
+    except (KeyboardInterrupt, EOFError):
+        print()
+        return False
 
 
 def print_separator(char: str = "—", length: int = 60):
@@ -168,6 +173,24 @@ def print_menu(title: str, options: List[str]) -> int:
         if idx is not None:
             return idx
         print(f"Введите число от 1 до {len(options)}")
+
+
+def list_saves_menu(saves: list) -> None:
+    """
+    Вывести список сохранений.
+
+    Args:
+        saves: Список сохранений
+    """
+    if not saves:
+        print("  Нет сохранений")
+        return
+
+    print(f"  Доступные сохранения ({len(saves)}):")
+    for i, save in enumerate(saves[:5], 1):
+        print(f"    {i}. {save['timestamp']} — Глава {save['chapter']}")
+    if len(saves) > 5:
+        print(f"    ... и ещё {len(saves) - 5}")
 
 
 def wrap_text(text: str, width: int = 80) -> List[str]:
