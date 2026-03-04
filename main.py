@@ -24,7 +24,7 @@ sys.path.insert(0, str(Path(__file__).parent))
 from src.config import GAME_TITLE, VERSION, TEXT_WIDTH, DEFAULT_HP, DEFAULT_ENERGY
 from src.utils import (
     clear_screen, print_header, print_separator,
-    print_menu, get_choice, confirm
+    print_menu, get_choice, confirm, list_saves_menu
 )
 from src.save_system import GameState, SaveManager
 from src.characters import CrewManager
@@ -65,18 +65,14 @@ class Game:
         while self.running:
             clear_screen()
             print_header("ГЛАВНОЕ МЕНЮ", TEXT_WIDTH + 4)
-            
-            save_manager = SaveManager()
-            saves = save_manager.list_saves()
-            
+
+            saves = self.game_state.save_manager.list_saves()
+
             options = ["Новая игра", "Загрузить игру", "Об игре", "Выход"]
-            
-            if saves:
-                print(f"\n  Доступные сохранения ({len(saves)}):")
-                for i, save in enumerate(saves[:3], 1):
-                    print(f"    {i}. {save['timestamp']} — Глава {save['chapter']}")
-                print()
-            
+
+            list_saves_menu(saves)
+            print()
+
             choice = print_menu("Меню", options)
             
             if choice == 0:
@@ -114,25 +110,18 @@ class Game:
     
     def load_game_menu(self):
         """Меню загрузки игры"""
-        save_manager = SaveManager()
-        saves = save_manager.list_saves()
-        
+        saves = self.game_state.save_manager.list_saves()
+
         if not saves:
             print("\n  Нет сохранений!")
             input("Нажмите Enter...")
             return
-        
+
         clear_screen()
         print_header("ЗАГРУЗКА ИГРЫ", TEXT_WIDTH + 4)
-        
-        for i, save in enumerate(saves, 1):
-            print(f"  {i}. {save['timestamp']}")
-            print(f"     Глава {save['chapter']}, Сцена: {save['scene']}")
-            print()
-        
-        print("  0. Назад")
-        print()
-        
+        list_saves_menu(saves)
+        print("\n  0. Назад\n")
+
         try:
             choice = int(input("Выберите сохранение: ").strip())
             if choice == 0:
@@ -141,7 +130,6 @@ class Game:
                 filename = saves[choice - 1]["filename"]
                 if self.game_state.load_game(filename):
                     print("\n  Игра загружена!")
-                    # Сохраняем сцену для продолжения
                     self.loaded_scene = self.game_state.save_data.scene if self.game_state.save_data else None
                     input("Нажмите Enter...")
                     self.play_chapter_1()
