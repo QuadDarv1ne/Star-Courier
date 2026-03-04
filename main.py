@@ -184,6 +184,7 @@ class Game:
         """Глава 1: Нежданная встреча"""
         clear_screen()
         print_header("ГЛАВА 1: НЕЖДАННАЯ ВСТРЕЧА", TEXT_WIDTH + 4)
+        print_art("station")
         print("\n  Станция Орбис-9. 2187 год.")
         print("  Корабль «Элея» с ценным грузом на борту.")
         input("\n  [Нажмите Enter для начала...]")
@@ -196,6 +197,10 @@ class Game:
         if not self.running:
             return
 
+        self.scene_lab()
+        if not self.running:
+            return
+
         self.scene_pirate_contact()
         if not self.running:
             return
@@ -205,6 +210,10 @@ class Game:
             return
 
         self.scene_discovery()
+        if not self.running:
+            return
+
+        self.scene_artifact_examination()
         if not self.running:
             return
 
@@ -241,6 +250,48 @@ class Game:
         self.run_dialogue()
 
         self.game_state.set_flag("chapter1_started", True)
+
+    def scene_lab(self):
+        """Сцена: Лаборатория с артефактом"""
+        clear_screen()
+        print("\n  [ЛАБОРАТОРИЯ]")
+        print_separator("-")
+        print()
+
+        text = """
+  Лаборатория встретила Макса тихим гудением сканеров. Ирина Лебедева
+  склонилась над терминалом, её лицо освещалось голубым светом голограммы.
+
+  В центре комнаты, за защитным полем, пульсировал артефакт.
+        """
+        print(text)
+        print_art("artifact")
+
+        print("\n  Ирина обернулась:")
+        print("  — Капитан! Я как раз хотела вам доложить...")
+        print()
+
+        choice = get_choice(
+            "Что спросить?",
+            ["Что с артефактом?", "Есть опасность?", "Нужна помощь?"]
+        )
+
+        if choice == 0:
+            print("\n  — Энергетические всплески участились. Это... необычно.")
+            print("  — Такое ощущение, что он реагирует на что-то.")
+            self.game_state.change_relationship("irina_lebedeva", 3)
+            self.game_state.set_flag("lab_artifact_discussed", True)
+        elif choice == 1:
+            print("\n  — Пока нет. Но я продолжаю мониторинг.")
+            print("  — Если что-то изменится — вы узнаете первым.")
+            self.game_state.change_trust("irina_lebedeva", 5)
+        else:
+            print("\n  — Да, собственно... можете передать Афии, что нужны")
+            print("    дополнительные данные по фоновому излучению.")
+            self.game_state.change_relationship("irina_lebedeva", 2)
+            self.game_state.change_relationship("athena", 2)
+
+        input("\n  [Нажмите Enter...]")
     
     def scene_bridge(self):
         """Сцена: Мостик"""
@@ -382,6 +433,50 @@ class Game:
 
         self.game_state.set_flag("discovery_complete", True)
         input("\n  [Нажмите Enter...]")
+
+    def scene_artifact_examination(self):
+        """Сцена: examination артефакта после саботажа"""
+        clear_screen()
+        print("\n  [ГРУЗОВОЙ ОТСЕК]")
+        print_separator("-")
+        print()
+
+        text = """
+  После обнаружения саботажа Макс решил лично проверить артефакт.
+  Грузовой отсек был почти пуст, кроме защитной камеры в центре.
+
+  Артефакт... пульсировал. Ритмично, как сердце.
+        """
+        print(text)
+        print()
+
+        choice = get_choice(
+            "Ваши действия?",
+            ["Осмотреть ближе", "Сканировать", "Поговорить с Ириной"]
+        )
+
+        if choice == 0:
+            print("\n  Макс приблизился к камере.")
+            print("  На мгновение ему показалось, что артефакт...")
+            print("  ...посмотрел на него.")
+            print("\n  [Психическая связь установлена]")
+            self.game_state.set_flag("psychic_connection", True)
+            self.game_state.change_trust("athena", -5)
+        elif choice == 1:
+            print("\n  Сканирование показало аномалию:")
+            print("  > Энергия: 847 ТэВ (норма: 150)")
+            print("  > Температура: -3°C (внутри камеры)")
+            print("  > Психический фон: обнаружен")
+            self.game_state.set_flag("artifact_scanned", True)
+            self.game_state.change_relationship("irina_lebedeva", 3)
+        else:
+            print("\n  Ирина прибыла через несколько минут.")
+            print("  — Я тоже это чувствую, капитан.")
+            print("  — Он... живой. Или был когда-то.")
+            self.game_state.change_trust("irina_lebedeva", 10)
+            self.game_state.set_flag("irina_artifact_confirmed", True)
+
+        input("\n  [Нажмите Enter...]")
     
     def run_dialogue(self):
         """Запустить текущий диалог"""
@@ -469,6 +564,18 @@ class Game:
         ])
         print(f"    • Найдено улик: {clues_found}/2")
 
+        # Исследование артефакта
+        artifact_knowledge = sum([
+            self.game_state.get_flag("lab_artifact_discussed", False),
+            self.game_state.get_flag("artifact_scanned", False),
+            self.game_state.get_flag("irina_artifact_confirmed", False),
+        ])
+        print(f"    • Изучение артефакта: {artifact_knowledge}/3")
+
+        # Психическая связь
+        if self.game_state.get_flag("psychic_connection", False):
+            print("    • ⚠ Психическая связь с артефактом")
+
         # Отношения и доверие
         print("\n    • Экипаж:")
         for char in self.game_state.crew_manager.get_all_crew():
@@ -481,6 +588,8 @@ class Game:
             print("    • Пираты знают о вас. Селена Ро запомнила встречу.")
         if self.game_state.get_flag("discovery_complete", False):
             print("    • Саботаж расследуется. Команда ждёт ваших приказов.")
+        if self.game_state.get_flag("psychic_connection", False):
+            print("    • Вы чувствуете... что-то в глубине сознания.")
         
         # Проверка на потенциальных предателей
         traitors = self.game_state.crew_manager.get_potential_traitors()
@@ -488,6 +597,11 @@ class Game:
             print("\n  ⚠  Внимание:")
             for traitor in traitors:
                 print(f"    • {traitor.name} может предать вас...")
+
+        # Бонусы за исследования
+        if artifact_knowledge >= 3:
+            print("\n  🎯 Бонус: Глубокое понимание артефакта")
+            print("     +10 к психике в следующей главе")
 
         print()
         self.game_state.save_game("autosave.json")
