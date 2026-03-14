@@ -4,6 +4,8 @@ Star Courier - Dialogues for Chapters 11-18
 Совместимо с существующей структурой dialogues.py
 """
 
+from typing import Dict
+
 # === ГЛАВА 11: Тени Прошлого ===
 
 CHAPTER_11_DIALOGUES = {
@@ -568,7 +570,7 @@ def create_chapter11_dialogues() -> Dict[str, "Dialogue"]:
         choices=[
             Choice("courier", "Я — Курьер. Ищу информацию об угрозе, поглощающей миры.", "echo_threat_info"),
             Choice("what_are_you", "Что ты такое? Почему я слышу тебя?", "echo_explain"),
-            Choice("ignore", "Игнорировать сигнал", "echo_ignore", is_end=True)
+            Choice("ignore", "Игнорировать сигнал", "echo_ignore")
         ]
     ))
     echo_first.add_node(DialogueNode(
