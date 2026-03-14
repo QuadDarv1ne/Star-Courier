@@ -540,9 +540,216 @@ def apply_effects(effects, game_state):
     """Применение эффектов диалога к состоянию игры"""
     if not effects:
         return game_state
-    
+
     for stat, value in effects.items():
         current = game_state.get(stat, 0)
         game_state[stat] = current + value
-    
+
     return game_state
+
+
+def create_chapter11_dialogues() -> Dict[str, "Dialogue"]:
+    """Создать диалоги главы 11 в формате Dialogue"""
+    from .dialogues import Dialogue, DialogueNode, Choice
+    
+    dialogues = {}
+    
+    # Первый контакт с Эхо
+    echo_first = Dialogue(
+        id="echo_first_contact",
+        title="Первый контакт с Эхо",
+        start_node="start"
+    )
+    echo_first.add_node(DialogueNode(
+        id="start",
+        speaker="Эхо",
+        text="Ты слышишь меня... Интересно. Долгие века никто не мог воспринимать мои слова. "
+             "Кто ты, путник, способный слышать голос погибшего мира?",
+        choices=[
+            Choice("courier", "Я — Курьер. Ищу информацию об угрозе, поглощающей миры.", "echo_threat_info"),
+            Choice("what_are_you", "Что ты такое? Почему я слышу тебя?", "echo_explain"),
+            Choice("ignore", "Игнорировать сигнал", "echo_ignore", is_end=True)
+        ]
+    ))
+    echo_first.add_node(DialogueNode(
+        id="echo_threat_info",
+        speaker="Эхо",
+        text="Угроза... да. Древняя, как сама галактика. Сущность, которая пожирает миры "
+             "и оставляет после лишь пустоту. Я — последнее эхо цивилизации, которая пала от неё.",
+        choices=[
+            Choice("where", "Где она сейчас?", "echo_location"),
+            Choice("stop", "Как её остановить?", "echo_stop"),
+            Choice("help", "Чем ты можешь помочь?", "echo_help")
+        ]
+    ))
+    echo_first.add_node(DialogueNode(
+        id="echo_explain",
+        speaker="Эхо",
+        text="Я был одним из Хранителей. Теперь лишь эхо в системах этой станции. "
+             "Ты слышишь меня потому, что твой разум... особенный. Или артефакт, что ты несёшь.",
+        choices=[
+            Choice("artifact", "Это артефакт из Координаты Нуля", "echo_artifact"),
+            Choice("mind", "Мой разум? Что с ним?", "echo_mind")
+        ]
+    ))
+    echo_first.add_node(DialogueNode(
+        id="echo_location",
+        speaker="Эхо",
+        text="Она пробуждается. Зона Тишины расширяется. Следующая цель — сектор 7. "
+             "У вас мало времени, Курьер.",
+        is_end=True
+    ))
+    echo_first.add_node(DialogueNode(
+        id="echo_stop",
+        speaker="Эхо",
+        text="Остановить? Нет. Но можно замедлить. Можно понять. Нужно найти Якорь — "
+             "место, где Сущность крепче всего связана с нашей реальностью.",
+        is_end=True
+    ))
+    echo_first.add_node(DialogueNode(
+        id="echo_help",
+        speaker="Эхо",
+        text="Я могу дать знания. Координаты. Предупреждения. Но я не могу действовать напрямую. "
+             "Ты — мои руки в этом мире.",
+        is_end=True
+    ))
+    echo_first.add_node(DialogueNode(
+        id="echo_artifact",
+        speaker="Эхо",
+        text="А... один из Ключей. Их было семь. Если у тебя есть один, другие могут быть где угодно. "
+             "Или у кого-то.",
+        is_end=True
+    ))
+    echo_first.add_node(DialogueNode(
+        id="echo_mind",
+        speaker="Эхо",
+        text="Ты чувствуешь Резонанс? Это хорошо. Значит, ты сможешь понять то, что я покажу.",
+        is_end=True
+    ))
+    echo_first.add_node(DialogueNode(
+        id="echo_ignore",
+        speaker="Система",
+        text="Вы игнорируете сигнал. Но он продолжает пульсировать в сознании...",
+        is_end=True
+    ))
+    
+    dialogues["echo_first_contact"] = echo_first
+    
+    return dialogues
+
+
+def create_chapter12_dialogues() -> Dict[str, "Dialogue"]:
+    """Создать диалоги главы 12 в формате Dialogue"""
+    from .dialogues import Dialogue, DialogueNode, Choice
+    
+    dialogues = {}
+    
+    # Встреча с Вероникой
+    veronica_meeting = Dialogue(
+        id="veronica_meeting",
+        title="Встреча с Вероникой",
+        start_node="start"
+    )
+    veronica_meeting.add_node(DialogueNode(
+        id="start",
+        speaker="Вероника",
+        text="Капитан Велл. Я слышала о вас. Вы тот, кто нашёл артефакт на Координате Нуля. "
+             "У меня есть информация, которая может вас заинтересовать.",
+        choices=[
+            Choice("info", "Какая информация?", "veronica_info"),
+            Choice("price", "Что вам нужно?", "veronica_price"),
+            Choice("trust", "Почему я должен доверять?", "veronica_trust")
+        ]
+    ))
+    veronica_meeting.add_node(DialogueNode(
+        id="veronica_info",
+        speaker="Вероника",
+        text="Альянс скрывает правду о проекте «Эхо». Они знали об артефактах десятилетиями. "
+             "И они экспериментировали с ними.",
+        choices=[
+            Choice("experiments", "Какие эксперименты?", "veronica_experiments"),
+            Choice("why_hide", "Зачем скрывать?", "veronica_hide")
+        ]
+    ))
+    veronica_meeting.add_node(DialogueNode(
+        id="veronica_price",
+        speaker="Вероника",
+        text="Мне нужна защита. Альянс охотится за мной. Я знаю слишком много. "
+             "Дайте мне убежище на вашем корабле, и информация ваша.",
+        choices=[
+            Choice("agree", "Согласиться", "veronica_agree"),
+            Choice("refuse", "Отказать", "veronica_refuse"),
+            Choice("negotiate", "Торговаться", "veronica_negotiate")
+        ]
+    ))
+    veronica_meeting.add_node(DialogueNode(
+        id="veronica_trust",
+        speaker="Вероника",
+        text="*смеётся* Доверие? В галактике, где каждый продаёт душу за кредиты? "
+             "Не доверяйте. Проверяйте. Вот данные — убедитесь сами.",
+        choices=[
+            Choice("check", "Проверить данные", "veronica_data"),
+            Choice("accept", "Принять на веру", "veronica_accept")
+        ]
+    ))
+    veronica_meeting.add_node(DialogueNode(
+        id="veronica_experiments",
+        speaker="Вероника",
+        text="Люди, артефакты, слияние... Они пытались создать оружие из Сущности. "
+             "Все подопытные погибли. Или стали чем-то... другим.",
+        is_end=True
+    ))
+    veronica_meeting.add_node(DialogueNode(
+        id="veronica_hide",
+        speaker="Вероника",
+        text="Паника. Если люди узнают, что Сущность реальна, начнётся хаос. "
+             "Альянс предпочитает контролировать информацию.",
+        is_end=True
+    ))
+    veronica_meeting.add_node(DialogueNode(
+        id="veronica_agree",
+        speaker="Вероника",
+        text="*кивает* Разумный выбор. Вот коды доступа к архивам. И ещё... "
+             "будьте осторожны. За вами следят.",
+        is_end=True
+    ))
+    veronica_meeting.add_node(DialogueNode(
+        id="veronica_refuse",
+        speaker="Вероника",
+        text="*хмурится* Жаль. Думала, вы умнее. Но вот информация — бесплатно. "
+             "Потом не говорите, что я не предупреждала.",
+        is_end=True
+    ))
+    veronica_meeting.add_node(DialogueNode(
+        id="veronica_negotiate",
+        speaker="Вероника",
+        text="*усмехается* Люблю деловых. Хорошо — только данные, без убежища. "
+             "Но если передумаете — знаете, где найти.",
+        is_end=True
+    ))
+    veronica_meeting.add_node(DialogueNode(
+        id="veronica_data",
+        speaker="Вероника",
+        text="*передаёт чип* Здесь всё. Проект «Эхо», список объектов, имена исследователей. "
+             "Осторожно с этим.",
+        is_end=True
+    ))
+    veronica_meeting.add_node(DialogueNode(
+        id="veronica_accept",
+        speaker="Вероника",
+        text="Наивность или смелость? Не знаю, что хуже. Но спасибо. "
+             "Вот что я обещала.",
+        is_end=True
+    ))
+    
+    dialogues["veronica_meeting"] = veronica_meeting
+    
+    return dialogues
+
+
+def create_all_chapter11_18_dialogues() -> Dict[str, "Dialogue"]:
+    """Создать все диалоги для глав 11-18"""
+    all_dialogues = {}
+    all_dialogues.update(create_chapter11_dialogues())
+    all_dialogues.update(create_chapter12_dialogues())
+    return all_dialogues
