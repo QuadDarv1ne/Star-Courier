@@ -11,6 +11,7 @@ from .items import ItemDatabase, Inventory, Consumable
 from .quests import QuestManager, ObjectiveType
 from .characters import CrewManager
 from .config import DEFAULT_HP, DEFAULT_ENERGY, MAX_INVENTORY_SLOTS
+from .abilities_advanced import get_ability as get_advanced_ability, get_available_abilities as get_adv_abilities
 
 logger = logging.getLogger('gameplay')
 
@@ -28,6 +29,12 @@ class GameplaySystem:
         self.inventory = Inventory(max_slots=MAX_INVENTORY_SLOTS)
         self.quest_manager = QuestManager()
         self.crew_manager: Optional[CrewManager] = None
+        self.game_state = None
+
+        # Ссылки на новые системы (инициализируются из GameState)
+        self.resonance_system = None
+        self.path_system = None
+        self.ending_system = None
 
         # Инициализация стартовых предметов
         self._init_starting_items()
@@ -55,6 +62,13 @@ class GameplaySystem:
         Нужно для синхронизации HP/Energy с CombatSystem.
         """
         self.game_state = game_state
+        # Инициализация ссылок на новые системы
+        if hasattr(game_state, 'get_resonance_system'):
+            self.resonance_system = game_state.get_resonance_system()
+        if hasattr(game_state, 'get_path_system'):
+            self.path_system = game_state.get_path_system()
+        if hasattr(game_state, 'get_ending_system'):
+            self.ending_system = game_state.get_ending_system()
 
     # ==================== БОЕВАЯ СИСТЕМА ====================
 
@@ -428,3 +442,49 @@ class GameplaySystem:
             system.quest_manager = QuestManager.from_dict(data["quests"])
 
         return system
+
+    # ==================== НОВЫЕ МЕХАНИКИ ====================
+
+    def get_advanced_ability(self, branch: str, ability_id: str):
+        """Получить продвинутую способность (50-100 уровень)"""
+        return get_advanced_ability(branch, ability_id)
+
+    def get_available_advanced_abilities(self, character: dict, chapter: int) -> list:
+        """Получить доступные продвинутые способности"""
+        return get_adv_abilities(character, chapter)
+
+    def check_resonance_effect(self, effect_name: str) -> bool:
+        """Проверить эффект Резонанса"""
+        if not self.resonance_system:
+            return False
+        return self.resonance_system.has_effect(effect_name)
+
+    def get_resonance_level(self) -> int:
+        """Получить уровень Резонанса"""
+        if not self.resonance_system:
+            return 1
+        return self.resonance_system.get_level_number()
+
+    def get_current_path(self) -> Optional[str]:
+        """Получить текущий Путь"""
+        if not self.path_system:
+            return None
+        path = self.path_system.get_current_path()
+        return path.path_type.value if path else None
+
+    def has_path_bonus(self, bonus_id: str) -> bool:
+        """Проверить бонус Пути"""
+        if not self.path_system:
+            return False
+        return self.path_system.has_bonus(bonus_id)
+
+    def check_ending_available(self, ending_type: str) -> bool:
+        """Проверить доступность финала"""
+        if not self.ending_system:
+            return False
+        from .ending_system import EndingType
+        try:
+            ending = EndingType(ending_type)
+            return ending.ending_type in [e.ending_type for e in self.ending_system.get_available_endings()]
+        except ValueError:
+            return False
