@@ -170,3 +170,19 @@ def complete_path_quest(quest_id: str, game_state) -> bool:
     # Путь выбирается через game_state
     # Эта функция для будущей интеграции с UI выбора пути
     return True
+
+
+def on_path_selected(path_type: str, gameplay, quest_manager) -> bool:
+    """
+    Вызывается когда игрок выбирает путь.
+    Завершает квест q12_03 и применяет бонусы пути.
+    """
+    # Завершить квест выбора пути
+    if quest_manager.get_quest("q12_03"):
+        quest_manager.complete_quest("q12_03")
+    
+    # Выбрать путь через gameplay
+    if gameplay.choose_path(path_type):
+        return True
+    
+    return False

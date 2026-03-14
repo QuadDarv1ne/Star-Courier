@@ -488,3 +488,23 @@ class GameplaySystem:
             return ending.ending_type in [e.ending_type for e in self.ending_system.get_available_endings()]
         except ValueError:
             return False
+
+    def choose_path(self, path_type: str) -> bool:
+        """Выбрать путь развития (Альянс/Наблюдатель/Независимость)"""
+        if not self.path_system:
+            return False
+        from .path_system import PathType
+        try:
+            path = PathType(path_type)
+            result = self.path_system.choose_path(path)
+            if result and self.game_state:
+                self.game_state.set_flag(f"path_chosen_{path_type}", True)
+            return result
+        except ValueError:
+            return False
+
+    def get_path_bonus(self, bonus_id: str):
+        """Получить бонус текущего пути"""
+        if not self.path_system:
+            return None
+        return self.path_system.get_effect_value(bonus_id)
