@@ -4,7 +4,7 @@
 """
 
 from typing import Dict
-from quests import Quest, QuestType, QuestState, QuestReward, Objective, ObjectiveType, QuestManager
+from .quests import Quest, QuestType, QuestState, QuestReward, Objective, ObjectiveType, QuestManager
 
 
 def create_chapter6_quests() -> Dict[str, Quest]:
