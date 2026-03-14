@@ -22,7 +22,6 @@ build/
 Thumbs.db
 
 # Project specific
-*.docx
 characters_docs.zip
 new_characters_docs.zip
 *.zip
