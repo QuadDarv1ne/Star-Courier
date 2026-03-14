@@ -32,7 +32,7 @@ from src.save_system import GameState
 from src.characters import CrewManager
 from src.dialogues import DialogueManager, create_chapter1_dialogues, create_chapter2_dialogues
 from src.dialogues_ch6_10 import create_chapter6_dialogues, create_chapter7_dialogues, create_chapter8_dialogues, create_chapter9_10_dialogues
-from src.dialogues_ch11_18 import CHAPTER_11_DIALOGUES, CHAPTER_12_DIALOGUES, create_chapter11_dialogues, create_chapter12_dialogues
+from src.dialogues_ch11_18 import CHAPTER_11_DIALOGUES, CHAPTER_12_DIALOGUES, create_chapter11_dialogues, create_chapter12_dialogues, create_chapter13_dialogues
 from src.gameplay import GameplaySystem
 from src.quests_ch11_12 import create_all_chapter11_12_quests
 
@@ -129,6 +129,10 @@ class Game:
         for dialogue in create_chapter11_dialogues().values():
             self.dialogue_manager.add_dialogue(dialogue)
         for dialogue in create_chapter12_dialogues().values():
+            self.dialogue_manager.add_dialogue(dialogue)
+        
+        # Инициализация диалогов главы 13
+        for dialogue in create_chapter13_dialogues().values():
             self.dialogue_manager.add_dialogue(dialogue)
 
         # Инициализация игровой системы
