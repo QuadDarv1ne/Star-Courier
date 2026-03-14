@@ -31,6 +31,8 @@ from src.ascii_art import print_art
 from src.save_system import GameState
 from src.characters import CrewManager
 from src.dialogues import DialogueManager, create_chapter1_dialogues, create_chapter2_dialogues
+from src.dialogues_ch6_10 import create_chapter6_dialogues, create_chapter7_dialogues, create_chapter8_dialogues, create_chapter9_10_dialogues
+from src.dialogues_ch11_18 import CHAPTER_11_DIALOGUES, CHAPTER_12_DIALOGUES
 from src.gameplay import GameplaySystem
 
 
@@ -115,6 +117,12 @@ class Game:
         dialogues_ch2 = create_chapter2_dialogues()
         for dialogue in dialogues_ch2.values():
             self.dialogue_manager.add_dialogue(dialogue)
+
+        # Инициализация диалогов глав 6-10
+        for chapter_func in [create_chapter6_dialogues, create_chapter7_dialogues, 
+                             create_chapter8_dialogues, create_chapter9_10_dialogues]:
+            for dialogue in chapter_func().values():
+                self.dialogue_manager.add_dialogue(dialogue)
 
         # Инициализация игровой системы
         self.gameplay.set_crew_manager(self.game_state.crew_manager)
