@@ -26,12 +26,18 @@ try:
     from .abilities import AbilitiesManager, AbilityType, AbilityTier
     from .items import Inventory, ItemDatabase
     from .quests import QuestManager
+    from .resonance import ResonanceSystem, ResonanceLevel
+    from .path_system import PathSystem, PathType
+    from .ending_system import EndingSystem, EndingType, RomanceEndingSystem
 except ImportError:
     from config import SAVE_DIR, DEFAULT_SAVE, GAME_TITLE, VERSION, MAX_INVENTORY_SLOTS
     from characters import CrewManager, Character, Role
     from abilities import AbilitiesManager, AbilityType, AbilityTier
     from items import Inventory, ItemDatabase
     from quests import QuestManager
+    from resonance import ResonanceSystem, ResonanceLevel
+    from path_system import PathSystem, PathType
+    from ending_system import EndingSystem, EndingType, RomanceEndingSystem
 
 
 @dataclass
@@ -51,6 +57,12 @@ class SaveData:
     active_quests: list = field(default_factory=list)
     choices_history: list = field(default_factory=list)
     quest_data: Dict[str, Any] = field(default_factory=dict)
+    
+    # Новые механики
+    resonance: Dict[str, Any] = field(default_factory=dict)  # Система Резонанса
+    path: Dict[str, Any] = field(default_factory=dict)  # Система Путей
+    endings: Dict[str, Any] = field(default_factory=dict)  # Система Финалов
+    mental_state: Dict[str, int] = field(default_factory=lambda: {"mental_health": 100, "entity_influence": 0})
 
     def to_dict(self) -> Dict[str, Any]:
         """Сериализовать в словарь"""
@@ -63,6 +75,11 @@ class SaveData:
             "progress": {"flags": self.flags, "completed_quests": self.completed_quests,
                          "active_quests": self.active_quests, "quest_data": self.quest_data},
             "history": {"choices": self.choices_history},
+            # Новые механики
+            "resonance": self.resonance,
+            "path": self.path,
+            "endings": self.endings,
+            "mental_state": self.mental_state,
         }
 
     @classmethod
@@ -88,6 +105,13 @@ class SaveData:
         save.active_quests = progress.get("active_quests", [])
         save.quest_data = progress.get("quest_data", {})
         save.choices_history = history.get("choices", [])
+        
+        # Новые механики
+        save.resonance = data.get("resonance", {})
+        save.path = data.get("path", {})
+        save.endings = data.get("endings", {})
+        save.mental_state = data.get("mental_state", {"mental_health": 100, "entity_influence": 0})
+        
         return save
 
 
@@ -203,6 +227,13 @@ class GameState:
         self.item_db = ItemDatabase()
         self.quest_manager = QuestManager()
         self.save_data: Optional[SaveData] = None
+        
+        # Новые системы
+        self.resonance_system = ResonanceSystem()
+        self.path_system = PathSystem()
+        self.ending_system = EndingSystem()
+        self.romance_ending_system = RomanceEndingSystem()
+        self.mental_state = {"mental_health": 100, "entity_influence": 0}
 
     def new_game(self):
         """Новая игра"""
@@ -260,6 +291,15 @@ class GameState:
         self.save_data.quest_data = self.quest_manager.to_dict()
         self.save_data.completed_quests = self.quest_manager.completed_quests
         self.save_data.active_quests = list(self.quest_manager.active_quests.keys())
+        
+        # Новые механики
+        self.save_data.resonance = self.resonance_system.to_dict()
+        self.save_data.path = self.path_system.to_dict()
+        self.save_data.endings = {
+            "main": self.ending_system.to_dict(),
+            "romance": self.romance_ending_system.to_dict()
+        }
+        self.save_data.mental_state = self.mental_state
     
     def _sync_from_save(self):
         """Синхронизировать данные сохранения с состоянием"""
@@ -282,7 +322,7 @@ class GameState:
             char = self.crew_manager.get_character(char_id)
             if char:
                 char.relationship = value
-        
+
         # Доверие
         for char_id, value in self.save_data.trust_values.items():
             char = self.crew_manager.get_character(char_id)
@@ -292,13 +332,29 @@ class GameState:
         # Инвентарь
         if self.save_data.inventory:
             self.inventory = Inventory.from_dict(self.save_data.inventory)
-        
+
         # Кредиты
         self.inventory.credits = self.save_data.credits
 
         # Квесты
         if self.save_data.quest_data:
             self.quest_manager = QuestManager.from_dict(self.save_data.quest_data)
+        
+        # Новые механики
+        if self.save_data.resonance:
+            self.resonance_system.from_dict(self.save_data.resonance)
+        
+        if self.save_data.path:
+            self.path_system.from_dict(self.save_data.path)
+        
+        if self.save_data.endings:
+            if "main" in self.save_data.endings:
+                self.ending_system.from_dict(self.save_data.endings["main"])
+            if "romance" in self.save_data.endings:
+                self.romance_ending_system.from_dict(self.save_data.endings["romance"])
+        
+        if self.save_data.mental_state:
+            self.mental_state = self.save_data.mental_state
     
     def set_flag(self, flag: str, value: bool = True):
         """Установить флаг сюжета"""
@@ -401,3 +457,57 @@ class GameState:
     def update_objective(self, quest_id: str, objective_id: str, amount: int = 1):
         """Обновить цель квеста"""
         self.quest_manager.update_objective(quest_id, objective_id, amount)
+
+    # === НОВЫЕ МЕХАНИКИ ===
+    
+    def get_resonance_system(self) -> ResonanceSystem:
+        """Получить систему Резонанса"""
+        return self.resonance_system
+    
+    def get_path_system(self) -> PathSystem:
+        """Получить систему Путей"""
+        return self.path_system
+    
+    def get_ending_system(self) -> EndingSystem:
+        """Получить систему Финалов"""
+        return self.ending_system
+    
+    def get_romance_ending_system(self) -> RomanceEndingSystem:
+        """Получить систему Романтических Концовок"""
+        return self.romance_ending_system
+    
+    def choose_path(self, path_type: PathType) -> bool:
+        """Выбрать Путь развития"""
+        return self.path_system.choose_path(path_type)
+    
+    def check_ending_unlock(self, ending_type: EndingType) -> bool:
+        """Проверить разблокировку Финала"""
+        psychic = self.abilities_manager.get_tier(AbilityType.PSYCHIC).value * 25  # Примерный расчёт
+        resonance_level = self.resonance_system.get_level_number()
+        abilities = []  # TODO: Получить список способностей
+        completed_quests = self.quest_manager.completed_quests
+        
+        return self.ending_system.check_unlock(
+            ending_type, psychic, 0, resonance_level, abilities, completed_quests
+        )
+    
+    def set_active_ending(self, ending_type: EndingType) -> bool:
+        """Установить активный Финал"""
+        return self.ending_system.set_active_ending(ending_type)
+    
+    def update_mental_state(self, health_change: int = 0, influence_change: int = 0):
+        """Обновить ментальное состояние"""
+        self.mental_state["mental_health"] = max(0, min(100, 
+            self.mental_state["mental_health"] + health_change))
+        self.mental_state["entity_influence"] = max(0, min(100,
+            self.mental_state["entity_influence"] + influence_change))
+    
+    def get_mental_state(self) -> dict:
+        """Получить ментальное состояние"""
+        return self.mental_state.copy()
+    
+    def check_resonance_level_up(self):
+        """Проверить повышение уровня Резонанса"""
+        psychic = self.abilities_manager.get_tier(AbilityType.PSYCHIC).value * 25
+        completed_chapters = [self.save_data.chapter] if self.save_data else [1]
+        return self.resonance_system.check_level_up(psychic, completed_chapters)

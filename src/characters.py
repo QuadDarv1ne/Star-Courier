@@ -28,6 +28,12 @@ class Role(Enum):
     HACKER = "Специалист по кибербезопасности"
     COMMUNICATIONS = "Офицер связи"
     MECHANIC = "Механик"
+    MERCHANT = "Торговец"
+    MERCENARY = "Наёмник"
+    INFORMANT = "Информатор"
+    KNIGHT = "Рыцарь Ордена"
+    CAPTAIN_NPC = "Капитан"
+    SCIENTIST_NPC = "Учёный"
 
 
 @dataclass
@@ -43,17 +49,42 @@ class Character:
 
     # Отношения с игроком (0-100)
     relationship: int = 0
-    
+
     # Доверие в критических ситуациях (0-100)
     trust: int = 50
 
     # Статус в экипаже
     is_recruited: bool = True
     is_alive: bool = True
-    
+
     # Личный квест
     personal_quest_id: Optional[str] = None
     personal_quest_completed: bool = False
+
+    # === НОВЫЕ МЕХАНИКИ для глав 11-18 ===
+    # Уровень Резонанса (1-4)
+    resonance_level: int = 1
+    
+    # Выбранный путь: "alliance", "observer", "independence", None
+    path: Optional[str] = None
+    
+    # Ментальное состояние (0-100, 100 = идеально)
+    mental_health: int = 100
+    
+    # Влияние Сущности (0-100, 0 = чист)
+    entity_influence: int = 0
+    
+    # Доступные концовки
+    ending_available: list = field(default_factory=lambda: ["exile"])
+    
+    # Навыки для глав 6-18
+    alchemy_level: int = 0
+    biotics_level: int = 0
+    psychic_level: int = 0
+    hacking_level: int = 0
+    empathy_level: int = 0
+    determination_level: int = 0
+    knowledge_level: int = 0
     
     def change_relationship(self, amount: int) -> int:
         """Изменить отношение на amount (может быть положительным или отрицательным)"""
