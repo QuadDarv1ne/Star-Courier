@@ -34,6 +34,7 @@ from src.dialogues import DialogueManager, create_chapter1_dialogues, create_cha
 from src.dialogues_ch6_10 import create_chapter6_dialogues, create_chapter7_dialogues, create_chapter8_dialogues, create_chapter9_10_dialogues
 from src.dialogues_ch11_18 import CHAPTER_11_DIALOGUES, CHAPTER_12_DIALOGUES, create_chapter11_dialogues, create_chapter12_dialogues
 from src.gameplay import GameplaySystem
+from src.quests_ch11_12 import create_all_chapter11_12_quests
 
 
 class Game:
@@ -136,6 +137,10 @@ class Game:
 
         # Выдача стартового квеста
         self.gameplay.accept_quest("main_001")
+
+        # Инициализация квестов глав 11-12
+        for quest in create_all_chapter11_12_quests().values():
+            self.gameplay.quest_manager.add_quest(quest)
 
         print("\n  Начало новой миссии...")
         print("\n  Вы — капитан Макс Велл, командир звездолёта «Элея».")
