@@ -96,15 +96,15 @@ class TestCharacters(unittest.TestCase):
     def test_crew_manager(self):
         crew = CrewManager()
         all_crew = crew.get_all_crew()
-        
+
         self.assertGreater(len(all_crew), 0)
-        
+
         max_well = crew.get_character("max_well")
         self.assertIsNotNone(max_well)
         self.assertEqual(max_well.role, Role.CAPTAIN)
-        
+
         athena = crew.get_by_role(Role.AI)
-        self.assertEqual(len(athena), 1)
+        self.assertGreaterEqual(len(athena), 1)  # Афина и Эхо
 
 
 class TestAbilities(unittest.TestCase):
