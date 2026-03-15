@@ -139,7 +139,7 @@ class TestRomanceSceneEffects(unittest.TestCase):
                 self.assertIsInstance(effect, dict)
 
     def test_effect_types(self):
-        valid_keys = {"relationship", "trust", "romance_unlock", "flag", "romance_confirmed"}
+        valid_keys = {"relationship", "trust", "romance_unlock", "romance_confirmed"}
         for scene in self.scenes.values():
             for choice in scene.choices:
                 effect = choice.get("effect", {})
