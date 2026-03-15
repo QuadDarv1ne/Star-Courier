@@ -33,8 +33,14 @@ from src.characters import CrewManager
 from src.dialogues import DialogueManager, create_chapter1_dialogues, create_chapter2_dialogues
 from src.dialogues_ch6_10 import create_chapter6_dialogues, create_chapter7_dialogues, create_chapter8_dialogues, create_chapter9_10_dialogues
 from src.dialogues_ch11_18 import CHAPTER_11_DIALOGUES, CHAPTER_12_DIALOGUES, create_chapter11_dialogues, create_chapter12_dialogues, create_chapter13_dialogues
+from src.dialogues_ch14_18 import create_chapter14_dialogues, create_chapter15_dialogues, create_chapter16_dialogues, create_chapter17_dialogues, create_chapter18_dialogues
 from src.gameplay import GameplaySystem
 from src.quests_ch11_12 import create_all_chapter11_12_quests
+from src.quests_ch14_18 import create_all_chapter14_18_quests
+from src.path_quests import create_alliance_path_quests, create_observer_path_quests, create_independent_path_quests
+from src.romance_scenes import create_romance_scenes, get_romance_characters
+from src.ending_scenes import create_ending_scenes, get_ending_by_type, EndingType, EndingVariation
+from src.mental_state import MentalStateSystem, get_condition_description, get_influence_description
 
 
 class Game:
@@ -44,6 +50,9 @@ class Game:
         self.game_state = GameState()
         self.dialogue_manager = DialogueManager()
         self.gameplay = GameplaySystem()
+        self.mental_state_system = MentalStateSystem()
+        self.romance_scenes = create_romance_scenes()
+        self.ending_scenes = create_ending_scenes()
         self.current_chapter = 1
         self.current_scene = "start"
         self.running = True
@@ -135,6 +144,13 @@ class Game:
         for dialogue in create_chapter13_dialogues().values():
             self.dialogue_manager.add_dialogue(dialogue)
 
+        # Инициализация диалогов глав 14-18
+        for chapter_func in [create_chapter14_dialogues, create_chapter15_dialogues,
+                             create_chapter16_dialogues, create_chapter17_dialogues,
+                             create_chapter18_dialogues]:
+            for dialogue in chapter_func().values():
+                self.dialogue_manager.add_dialogue(dialogue)
+
         # Инициализация игровой системы
         self.gameplay.set_crew_manager(self.game_state.crew_manager)
         self.gameplay.set_game_state(self.game_state)
@@ -145,6 +161,22 @@ class Game:
         # Инициализация квестов глав 11-12
         for quest in create_all_chapter11_12_quests().values():
             self.gameplay.quest_manager.add_quest(quest)
+
+        # Инициализация квестов глав 14-18
+        for quest in create_all_chapter14_18_quests().values():
+            self.gameplay.quest_manager.add_quest(quest)
+
+        # Инициализация квестов путей
+        for quest in create_alliance_path_quests().values():
+            self.gameplay.quest_manager.add_quest(quest)
+        for quest in create_observer_path_quests().values():
+            self.gameplay.quest_manager.add_quest(quest)
+        for quest in create_independent_path_quests().values():
+            self.gameplay.quest_manager.add_quest(quest)
+
+        # Инициализация системы ментального состояния
+        crew_ids = list(self.game_state.crew_manager.crew.keys())
+        self.mental_state_system.initialize_crew(crew_ids)
 
         print("\n  Начало новой миссии...")
         print("\n  Вы — капитан Макс Велл, командир звездолёта «Элея».")
