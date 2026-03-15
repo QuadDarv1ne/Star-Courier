@@ -42,7 +42,7 @@ class ResonanceSystem:
 
     def _init_abilities(self):
         """Инициализировать способности Резонанса"""
-        
+
         self.abilities["resonance_basics"] = ResonanceAbility(
             id="res_1",
             name="Основы Резонанса",
@@ -84,15 +84,39 @@ class ResonanceSystem:
         self.abilities["resonance_transcendent"] = ResonanceAbility(
             id="res_4",
             name="Трансцендентный Резонанс",
-            description="Единение с тканью реальности. Требуется для финала Слияния.",
+            description="Полное слияние с резонансом. Доступ к древним знаниям.",
             level_required=ResonanceLevel.TRANSCENDENT,
             effects={
-                "reality_manipulation": True,
-                "entity_integration_safe": True,
-                "merge_ending_unlock": True
+                "anomaly_immunity": True,
+                "entity_bond": True,
+                "time_perception": True,
+                "psychic_amplification": 50
             },
-            unlock_condition="psychic_90_or_entity_communion"
+            unlock_condition="psychic_90_plus"
         )
+
+    def get_level_number(self) -> int:
+        """Получить текущий уровень числом"""
+        return self.current_level.value
+
+    def check_level_up(self, psychic_level: int, completed_chapters: List[int]):
+        """Проверить повышение уровня Резонанса"""
+        if 14 in completed_chapters and self.current_level.value < 3:
+            self.current_level = ResonanceLevel.MASTERY
+            logger.info(f"Resonance: повышен до {self.current_level.name}")
+        
+        if psychic_level >= 90 and self.current_level.value < 4:
+            self.current_level = ResonanceLevel.TRANSCENDENT
+            logger.info(f"Resonance: повышен до {self.current_level.name} (трансцендентный)")
+        
+        return self.current_level
+
+    def get_effects(self) -> Dict:
+        """Получить текущие эффекты Резонанса"""
+        ability = self.abilities.get(f"resonance_{self.current_level.name.lower()}")
+        if ability:
+            return ability.effects
+        return {}
 
     def get_level(self) -> ResonanceLevel:
         """Получить текущий уровень"""
@@ -106,52 +130,6 @@ class ResonanceSystem:
         """Добавить опыт Резонанса"""
         self.experience += amount
         logger.info(f"Получен опыт Резонанса: {amount} (всего: {self.experience})")
-
-    def check_level_up(self, psychic_stat: int, completed_chapters: List[int]) -> bool:
-        """Проверить возможность повышения уровня"""
-        if self.current_level == ResonanceLevel.TRANSCENDENT:
-            return False
-
-        next_level = ResonanceLevel(self.current_level.value + 1)
-        ability = self._get_ability_for_level(next_level)
-
-        if not ability:
-            return False
-
-        # Проверка условия разблокировки
-        if self._check_unlock_condition(ability, psychic_stat, completed_chapters):
-            self.current_level = next_level
-            logger.info(f"Уровень Резонанса повышен: {self.current_level.name}")
-            return True
-
-        return False
-
-    def _get_ability_for_level(self, level: ResonanceLevel) -> Optional[ResonanceAbility]:
-        """Получить способность для уровня"""
-        for ability in self.abilities.values():
-            if ability.level_required == level:
-                return ability
-        return None
-
-    def _check_unlock_condition(self, ability: ResonanceAbility, 
-                                 psychic_stat: int, 
-                                 completed_chapters: List[int]) -> bool:
-        """Проверить условие разблокировки"""
-        condition = ability.unlock_condition
-
-        if "chapter_6" in condition and 6 in completed_chapters:
-            return True
-        if "chapter_10" in condition and 10 in completed_chapters:
-            return True
-        if "chapter_14" in condition and 14 in completed_chapters:
-            return True
-        if "psychic_90" in condition and psychic_stat >= 90:
-            return True
-        if "entity_communion" in condition:
-            # Проверяется через флаг игры
-            return True
-
-        return False
 
     def get_active_effects(self) -> Dict[str, any]:
         """Получить активные эффекты"""
