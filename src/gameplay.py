@@ -4,7 +4,8 @@
 """
 
 import logging
-from typing import Optional, Dict, List
+import random
+from typing import Optional, Dict, List, Tuple
 
 from .abilities import AbilitiesManager, CombatSystem
 from .items import ItemDatabase, Inventory, Consumable
@@ -12,6 +13,7 @@ from .quests import QuestManager, ObjectiveType
 from .characters import CrewManager
 from .config import DEFAULT_HP, DEFAULT_ENERGY, MAX_INVENTORY_SLOTS
 from .abilities_advanced import get_ability as get_advanced_ability, get_available_abilities as get_adv_abilities
+from .random_events import RandomEventsManager, EventOutcome
 
 logger = logging.getLogger('gameplay')
 
@@ -30,11 +32,13 @@ class GameplaySystem:
         self.quest_manager = QuestManager()
         self.crew_manager: Optional[CrewManager] = None
         self.game_state = None
+        self.random_events_manager = RandomEventsManager()
 
         # Ссылки на новые системы (инициализируются из GameState)
         self.resonance_system = None
         self.path_system = None
         self.ending_system = None
+        self.mental_state_system = None
 
         # Инициализация стартовых предметов
         self._init_starting_items()
@@ -508,3 +512,70 @@ class GameplaySystem:
         if not self.path_system:
             return None
         return self.path_system.get_effect_value(bonus_id)
+
+    # ==================== СЛУЧАЙНЫЕ СОБЫТИЯ ====================
+
+    def trigger_random_event(self, chapter: int = 1) -> Optional[Dict]:
+        """
+        Запустить случайное событие.
+        Возвращает данные события или None.
+        """
+        event = self.random_events_manager.get_random_event(chapter)
+        if not event:
+            return None
+
+        return {
+            "id": event.id,
+            "title": event.title,
+            "description": event.description,
+            "event_type": event.event_type.value,
+            "choices": [
+                {
+                    "id": choice.id,
+                    "text": choice.text,
+                    "description": choice.description,
+                    "outcome": choice.outcome.value,
+                    "effects": choice.effects
+                }
+                for choice in event.choices
+            ]
+        }
+
+    def resolve_event_choice(self, event_id: str, choice_id: str) -> Dict:
+        """
+        Разрешить выбор в событии.
+        Возвращает результат.
+        """
+        event = self.random_events_manager.events.get(event_id)
+        if not event:
+            return {"success": False, "message": "Событие не найдено"}
+
+        choice = next((c for c in event.choices if c.id == choice_id), None)
+        if not choice:
+            return {"success": False, "message": "Выбор не найден"}
+
+        result = {
+            "success": True,
+            "outcome": choice.outcome.value,
+            "effects": choice.effects,
+            "message": f"Исход: {choice.outcome.value}"
+        }
+
+        # Применение эффектов
+        if self.game_state:
+            for effect, value in choice.effects.items():
+                if effect == "credits":
+                    self.inventory.credits += value
+                elif effect == "relationship_crew" and self.crew_manager:
+                    for char in self.crew_manager.get_all_crew():
+                        char.change_relationship(value)
+                elif effect == "mental_health" and self.mental_state_system:
+                    self.mental_state_system.change_mental_health(value)
+                elif effect == "entity_influence" and self.mental_state_system:
+                    self.mental_state_system.change_entity_influence(value)
+
+        return result
+
+    def set_mental_state_system(self, mental_state_system):
+        """Установить систему ментального состояния"""
+        self.mental_state_system = mental_state_system
