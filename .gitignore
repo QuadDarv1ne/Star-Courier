@@ -10,6 +10,7 @@ ENV/
 *.egg-info/
 dist/
 build/
+.pytest_cache/
 
 # IDE
 .vscode/
@@ -20,6 +21,7 @@ build/
 # OS
 .DS_Store
 Thumbs.db
+desktop.ini
 
 # Project specific
 characters_docs.zip
@@ -33,3 +35,9 @@ new_characters_docs.zip
 # Logs
 *.log
 error.log
+game.log
+
+# Temp files
+*.tmp
+*.bak
+~$*
