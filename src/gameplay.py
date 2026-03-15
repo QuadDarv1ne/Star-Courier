@@ -80,6 +80,14 @@ class GameplaySystem:
         """Начать бой"""
         self.combat_system = CombatSystem(self.abilities_manager)
         self.combat_system.enemy_name = enemy_name
+        
+        # Применение эффектов ментального состояния
+        if self.mental_state_system:
+            mental_state = self.mental_state_system.get_player_state()
+            effects = self._get_mental_state_effects(mental_state.health, mental_state.entity_influence)
+            self.combat_system.player_hp += effects.get("hp_bonus", 0)
+            self.combat_system.energy_bonus = effects.get("energy_bonus", 0)
+        
         logger.info(f"Начат бой с {enemy_name}")
         return True
 
@@ -99,6 +107,34 @@ class GameplaySystem:
             self.game_state.save_data.energy = self.combat_system.player_energy
 
         self.combat_system = None
+
+    def _get_mental_state_effects(self, mental_health: int, entity_influence: int) -> Dict:
+        """Получить эффекты ментального состояния для боя"""
+        effects = {"hp_bonus": 0, "energy_bonus": 0, "damage_bonus": 0}
+
+        # Пороги ментального здоровья
+        if mental_health >= 80:
+            effects["hp_bonus"] = 10
+            effects["energy_bonus"] = 10
+        elif mental_health >= 60:
+            effects["hp_bonus"] = 0
+            effects["energy_bonus"] = 0
+        elif mental_health >= 40:
+            effects["hp_bonus"] = -10
+            effects["energy_bonus"] = -10
+        elif mental_health >= 20:
+            effects["hp_bonus"] = -20
+            effects["energy_bonus"] = -15
+        else:
+            effects["hp_bonus"] = -30
+            effects["energy_bonus"] = -25
+
+        # Влияние Сущности даёт бонус к урону, но штраф к HP
+        if entity_influence >= 50:
+            effects["damage_bonus"] = entity_influence // 10
+            effects["hp_bonus"] -= entity_influence // 5
+
+        return effects
 
     def is_in_combat(self) -> bool:
         """Проверить, идёт ли бой"""
