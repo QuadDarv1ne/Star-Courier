@@ -149,11 +149,12 @@ class CrewManager:
 
     def _add_crew(self, id: str, name: str, role: Role, bio: str = "",
                   appearance: str = "", personality: str = "", motivation: str = "",
-                  relationship: int = 0):
+                  relationship: int = 0, path: Optional[str] = None):
         """Вспомогательный метод для добавления персонажа"""
         self.crew[id] = Character(
             id=id, name=name, role=role, bio=bio, appearance=appearance,
-            personality=personality, motivation=motivation, relationship=relationship
+            personality=personality, motivation=motivation, relationship=relationship,
+            path=path
         )
 
     def _init_default_crew(self):
@@ -207,6 +208,122 @@ class CrewManager:
             appearance="Невысокая, чёрная стрижка, голубые глаза.",
             personality="Добрая, застенчивая, перфекционист в работе.",
             motivation="Сделать вклад в миссию и доказать свою ценность."
+        )
+
+        # === НОВЫЕ ПЕРСОНАЖИ: Основной экипаж (романтические интересы) ===
+        self._add_crew(
+            id="mia", name="Мия", role=Role.SECURITY,
+            bio="Тактик с исключительными аналитическими способностями. "
+                "Специализируется на стратегическом планировании и разведке.",
+            appearance="Стройная, короткие тёмные волосы, проницательный взгляд.",
+            personality="Аналитичная, сдержанная, преданная делу.",
+            motivation="Защитить экипаж через стратегическое превосходство.",
+            relationship=25
+        )
+        self._add_crew(
+            id="maria", name="Мария", role=Role.MEDIC,
+            bio="Главный медик корабля. Специалист по ксенобиологии и экстренной медицине.",
+            appearance="Среднего роста, длинные каштановые волосы, тёплые карие глаза.",
+            personality="Заботливая, терпеливая, эмпатичная.",
+            motivation="Сохранить жизнь каждому члену экипажа.",
+            relationship=30
+        )
+        self._add_crew(
+            id="anna", name="Анна", role=Role.NAVIGATOR,
+            bio="Навигатор второго класса. Специализируется на аномальных зонах.",
+            appearance="Высокая, светлые волосы до плеч, голубые глаза.",
+            personality="Спокойная, интуитивная, мечтательная.",
+            motivation="Найти безопасные пути через опасные регионы.",
+            relationship=25
+        )
+        self._add_crew(
+            id="sergey", name="Сергей", role=Role.ENGINEER,
+            bio="Старший инженер. Эксперт по двигательным системам.",
+            appearance="Крепкий, короткая стрижка, борода.",
+            personality="Практичный, надёжный, немногословный.",
+            motivation="Поддержать корабль в идеальном состоянии."
+        )
+        self._add_crew(
+            id="dmitry", name="Дмитрий", role=Role.PILOT,
+            bio="Второй пилот. Специализируется на экстремальных манёврах.",
+            appearance="Среднего роста, тёмные волосы, спортивное телосложение.",
+            personality="Азартный, уверенный, лояльный.",
+            motivation="Доказать мастерство пилотирования."
+        )
+
+        # === КЛЮЧЕВЫЕ NPC (романтические интересы + пути) ===
+        self._add_crew(
+            id="veronika", name="Вероника", role=Role.INFORMANT,
+            bio="Информатор из теневой сети. Знает секреты галактики.",
+            appearance="Элегантная, чёрные волосы, пронзительные зелёные глаза.",
+            personality="Хитрая, независимая, загадочная.",
+            motivation="Выжить в опасном мире через информацию.",
+            relationship=20,
+            path="independence"
+        )
+        self._add_crew(
+            id="zara", name="Зара", role=Role.MERCENARY,
+            bio="Наёмник с тёмным прошлым. Боевой специалист.",
+            appearance="Атлетичная, короткая стрижка, шрам на щеке.",
+            personality="Жёсткая, прямая, с кодексом чести.",
+            motivation="Найти искупление через службу.",
+            relationship=15,
+            path="observer"
+        )
+        self._add_crew(
+            id="kira", name="Кира", role=Role.MERCENARY,
+            bio="Курьер-наёмник. Специализируется на доставке артефактов.",
+            appearance="Стройная, рыжие волосы, веснушки.",
+            personality="Энергичная, оптимистичная, независимая.",
+            motivation="Свобода путешествий по галактике.",
+            relationship=20,
+            path="independence"
+        )
+
+        # === КЛЮЧЕВЫЕ NPC (сюжетные) ===
+        self._add_crew(
+            id="rainer", name="Райнер", role=Role.MERCENARY,
+            bio="Наёмник-ветеран. Работает на того, кто платит.",
+            appearance="Массивный, лысый, бородатый.",
+            personality="Циничный, профессиональный, надёжный в сделке.",
+            motivation="Кредиты и выживание."
+        )
+        self._add_crew(
+            id="volkov", name="Волков", role=Role.CAPTAIN_NPC,
+            bio="Капитан торгового судна. Связи в криминальном мире.",
+            appearance="Среднего возраста, усы, дорогая одежда.",
+            personality="Хитрый, харизматичный, непредсказуемый.",
+            motivation="Прибыль и влияние.",
+            path="independence"
+        )
+        self._add_crew(
+            id="marcus_ride", name="Маркус Рид", role=Role.MERCENARY,
+            bio="Командир Альянса. Стратег с безупречной репутацией.",
+            appearance="Высокий, седые виски, военная форма.",
+            personality="Дисциплинированный, справедливый, патриот.",
+            motivation="Служение Альянсу.",
+            path="alliance"
+        )
+        self._add_crew(
+            id="vera", name="Вера", role=Role.SCIENTIST_NPC,
+            bio="Учёный-исследователь. Изучает Древние Цивилизации.",
+            appearance="Пожилая, седые волосы, умные глаза.",
+            personality="Мудрая, терпеливая, любопытная.",
+            motivation="Понимание тайн вселенной."
+        )
+        self._add_crew(
+            id="echo", name="Эхо", role=Role.AI,
+            bio="Древний ИИ погибшей цивилизации. Голос в кристалле.",
+            appearance="Голос без формы, иногда проявляется как свет.",
+            personality="Загадочная, меланхоличная, всезнающая.",
+            motivation="Передать знания выжившим."
+        )
+        self._add_crew(
+            id="guardian", name="Страж Ядра", role=Role.KNIGHT,
+            bio="Последний из Древних. Хранитель Ядра Реальности.",
+            appearance="Светящаяся фигура, непостижимый облик.",
+            personality="Беспристрастный, древний, мудрый.",
+            motivation="Защитить Ядро от недостойных."
         )
     
     def add_character(self, character: Character):
