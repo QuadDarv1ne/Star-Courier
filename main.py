@@ -6,6 +6,7 @@ Star Courier — Текстовая RPG-игра
 
 import sys
 import logging
+import socket
 from pathlib import Path
 
 # Настройка логгирования
@@ -17,6 +18,45 @@ logging.basicConfig(
     ]
 )
 logger = logging.getLogger('main')
+
+
+def check_port_available(port: int, host: str = 'localhost') -> bool:
+    """
+    Проверить, свободен ли порт.
+    Используется для веб-интерфейса или сетевого режима.
+    """
+    sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+    
+    try:
+        sock.bind((host, port))
+        return True
+    except OSError:
+        return False
+    finally:
+        sock.close()
+
+
+def find_available_port(start_port: int = 8000, end_port: int = 9000) -> tuple:
+    """
+    Найти свободный порт в диапазоне.
+    Returns (port_number, message)
+    """
+    for port in range(start_port, end_port + 1):
+        if check_port_available(port):
+            return (port, f"Найден доступный порт: {port}")
+    return (-1, "Не удалось найти свободный порт")
+
+
+def get_port_status(port: int) -> tuple:
+    """
+    Получить статус порта.
+    Returns (port_number, message)
+    """
+    if check_port_available(port):
+        return (port, f"Найден доступный порт: {port}")
+    else:
+        return (-1, f"Порт {port} занят")
 
 # Добавляем src в путь импорта
 sys.path.insert(0, str(Path(__file__).parent))
@@ -44,6 +84,7 @@ from src.mental_state import MentalStateSystem, get_condition_description, get_i
 from src.random_events import RandomEventsManager
 from src.advanced_abilities import AdvancedAbilitiesManager
 from src.relationship_enhancements import RelationshipEnhancementManager
+from src.system_check import check_python_version, check_terminal_support, find_available_port
 
 
 class Game:
@@ -66,14 +107,31 @@ class Game:
     
     def start(self):
         """Запуск игры"""
-        clear_screen()
+        # Проверка системных требований
+        self._check_system_requirements()
         
+        clear_screen()
+
         # Проверка поддержки цвета
         if not Colors.supports_color():
             Colors.disable()
-        
+
         self.show_title_screen()
         self.main_menu()
+
+    def _check_system_requirements(self):
+        """Проверить системные требования"""
+        # Проверка версии Python
+        success, msg = check_python_version()
+        if not success:
+            print(f"\n  КРИТИЧЕСКАЯ ОШИБКА: {msg}")
+            input("  Нажмите Enter для выхода...")
+            sys.exit(1)
+        
+        # Проверка терминала
+        success, msg = check_terminal_support()
+        if not success:
+            logger.warning(f"Проблемы с терминалом: {msg}")
     
     def show_title_screen(self):
         """Показать заглавный экран"""
@@ -1350,7 +1408,53 @@ class Game:
 
 def main():
     """Точка входа"""
+    import argparse
+    
+    parser = argparse.ArgumentParser(description='Star Courier - Текстовая RPG')
+    parser.add_argument(
+        '--check-port', '-p',
+        type=int,
+        default=None,
+        help='Проверить конкретный порт'
+    )
+    parser.add_argument(
+        '--find-port', '-f',
+        action='store_true',
+        help='Найти доступный порт в диапазоне 8000-8100'
+    )
+    parser.add_argument(
+        '--check-system', '-s',
+        action='store_true',
+        help='Проверить системные требования'
+    )
+    args = parser.parse_args()
+    
     try:
+        # Проверка порта
+        if args.check_port is not None:
+            from src.system_check import check_port_available
+            success, msg = check_port_available(args.check_port)
+            print(msg)
+            if not success:
+                port, msg = find_available_port(8000, 8100)
+                if port:
+                    print(f"✓ Альтернативный порт: {port}")
+                else:
+                    print("✗ Нет доступных портов в диапазоне 8000-8100")
+            sys.exit(0 if success else 1)
+        
+        # Поиск порта
+        if args.find_port:
+            port, msg = find_available_port(8000, 8100)
+            print(msg)
+            sys.exit(0 if port else 1)
+        
+        # Проверка системы
+        if args.check_system:
+            from src.system_check import print_system_check
+            success = print_system_check()
+            sys.exit(0 if success else 1)
+        
         logger.info("Запуск игры Star Courier")
         game = Game()
         game.start()
