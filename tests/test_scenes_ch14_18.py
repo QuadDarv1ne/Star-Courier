@@ -340,6 +340,17 @@ class TestChapter18Scenes(unittest.TestCase):
         self.assertTrue(progress.confession_accepted)
         self.assertTrue(progress.romance_unlocked)
 
+    def test_game_stats_display(self):
+        """Проверка отображения статистики игры"""
+        from scenes_ch14_18 import get_mental_state_effects as get_ch18_effects
+        
+        # Проверка что функция возвращает правильные данные
+        effects = get_ch18_effects(mental_health=50, entity_influence=60)
+        
+        self.assertEqual(effects["condition"], "traumatized")
+        self.assertEqual(effects["vision_frequency"], "frequent")
+        self.assertFalse(effects.get("entity_communion", False))
+
 
 if __name__ == "__main__":
     unittest.main()

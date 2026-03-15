@@ -1,6 +1,6 @@
 # Star Courier: План разработки
 
-## Статус на 16 марта 2026 (00:30)
+## Статус на 16 марта 2026 (01:30)
 
 ### ✅ Интегрировано (по документации)
 
@@ -180,7 +180,7 @@ src/
 
 ---
 
-## 🔍 Аудит кода (16.03.2026 00:30)
+## 🔍 Аудит кода (16.03.2026 01:30)
 
 **Проверено:**
 - [x] Все модули импортируются корректно ✅
@@ -192,16 +192,16 @@ src/
 - [x] dialogues_ch14_18.py — диалоги финальных глав ✅
 - [x] quests_ch14_18.py — квесты финальных глав ✅
 - [x] scenes_ch1_2.py — сцены глав 1-2 вынесены в отдельный модуль ✅
-- [x] scenes_ch14_18.py — сцены глав 14-18 с romance/ending интеграцией ✅
+- [x] scenes_ch14_18.py — сцены глав 14-18 с romance/ending интеграцией + статистика ✅
 - [x] gameplay.py — mental state thresholds в бою ✅
-- [x] tests/test_scenes_ch14_18.py — 30 тестов ✅
+- [x] tests/test_scenes_ch14_18.py — 31 тест ✅
 - [x] tests/test_mental_state.py — 44 теста (сопротивление/очищение/медитация) ✅
 
 **Git статус:**
 - Ветки: master, dev (синхронизированы)
-- Последний коммит: 88c5f99 feat: добавлены механики сопротивления Сущности
+- Последний коммит: 02e5fda feat: интеграция романтического партнёра в финальные сцены
 - Изменения: src/scenes_ch14_18.py, tests/test_scenes_ch14_18.py, TODO.md
-- Тесты: 159 passed ✅
+- Тесты: 160 passed ✅
 
 **Структура src/ (35 файлов):**
 - characters.py, dialogues*.py, quests*.py — контент
@@ -212,13 +212,13 @@ src/
 - gameplay.py, save_system.py, items.py — ядро
 - utils.py, config.py, colors.py, ascii_art.py — утилиты
 - scenes_ch1_2.py — сцены глав 1-2 (650 строк)
-- scenes_ch14_18.py — сцены глав 14-18 (470 строк)
+- scenes_ch14_18.py — сцены глав 14-18 (520 строк)
 
 **Структура tests/ (8 файлов):**
 - test_mental_state.py — 44 теста ✅
 - test_romance_scenes.py — 14 тестов
 - test_ending_scenes.py — 22 теста
-- test_scenes_ch14_18.py — 30 тестов ✅
+- test_scenes_ch14_18.py — 31 тест ✅
 - test_game.py, test_game_run.py — интеграционные
 
 ---
@@ -359,16 +359,17 @@ src/
 
 **Текущее состояние:**
 - main.py — 1466 строк, UTF-8 encoding fix ✅
-- tests/ — 8 файлов, 159 тестов ✅
+- tests/ — 8 файлов, 160 тестов ✅
 - requirements.txt — pytest добавлен ✅
 - src/scenes_ch1_2.py — сцены глав 1-2 (650 строк) ✅
-- src/scenes_ch14_18.py — сцены глав 14-18 (470 строк) ✅
+- src/scenes_ch14_18.py — сцены глав 14-18 (520 строк) ✅
 - src/gameplay.py — mental state thresholds ✅
 - src/mental_state.py — сопротивление/очищение/медитация ✅
-- tests/test_scenes_ch14_18.py — 30 тестов ✅
+- src/scenes_ch14_18.py — статистика игры в эпилоге ✅
+- tests/test_scenes_ch14_18.py — 31 тест ✅
 - tests/test_mental_state.py — 44 теста ✅
 - working tree: modified files ✅
-- last update: 16.03.2026 (00:30)
+- last update: 16.03.2026 (01:30)
 
 ---
 

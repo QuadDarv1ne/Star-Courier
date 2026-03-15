@@ -345,9 +345,61 @@ class Chapter18Scenes:
 
         epilogue_text = epilogues.get(ending_type, "Эпилог не найден.")
         print(epilogue_text)
+        
+        # Показ статистики игры
+        self._show_game_stats()
+        
         print("\n  " + "=" * 60)
         print("  КОНЕЦ ИГРЫ")
         print("  " + "=" * 60)
+
+    def _show_game_stats(self):
+        """Показать статистику игры"""
+        print("\n  " + "-" * 60)
+        print("  СТАТИСТИКА ИГРЫ")
+        print("  " + "-" * 60)
+        print()
+        
+        # Получение статистики из game_state
+        stats = self.game_state.save_data.stats if self.game_state.save_data else {}
+        relationships = self.game_state.save_data.relationships if self.game_state.save_data else {}
+        flags = self.game_state.save_data.flags if self.game_state.save_data else {}
+        
+        # Способности
+        print("  [СПОСОБНОСТИ]")
+        print(f"    Алхимия: {stats.get('alchemy', 0)} уровень")
+        print(f"    Биотика: {stats.get('biotics', 0)} уровень")
+        print(f"    Психика: {stats.get('psychic', 0)} уровень")
+        print()
+        
+        # Отношения
+        top_relationships = sorted(
+            [(k, v) for k, v in relationships.items() if v > 50],
+            key=lambda x: x[1],
+            reverse=True
+        )[:3]
+        
+        if top_relationships:
+            print("  [ОТНОШЕНИЯ]")
+            for char_id, value in top_relationships:
+                char = self.game_state.crew_manager.get_character(char_id)
+                name = char.name if char else char_id
+                print(f"    {name}: {value}%")
+            print()
+        
+        # Достигнутые флаги
+        important_flags = [
+            ("combat_won", "Битва выиграна"),
+            ("psychic_connection", "Психическая связь"),
+            ("artifact_scanned", "Артефакт изучен"),
+        ]
+        
+        achieved = [name for flag_id, name in important_flags if flags.get(flag_id)]
+        if achieved:
+            print("  [ДОСТИЖЕНИЯ]")
+            for achievement in achieved:
+                print(f"    ✓ {achievement}")
+            print()
 
     def play_all(self):
         """Сыграть все сцены главы 18"""
