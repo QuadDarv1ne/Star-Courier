@@ -160,6 +160,7 @@ class Game:
         # Инициализация игровой системы
         self.gameplay.set_crew_manager(self.game_state.crew_manager)
         self.gameplay.set_game_state(self.game_state)
+        self.gameplay.set_mental_state_system(self.mental_state_system)
 
         # Выдача стартового квеста
         self.gameplay.accept_quest("main_001")
