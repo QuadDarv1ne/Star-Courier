@@ -816,3 +816,30 @@ def register_path_quests(path: str, quest_manager) -> Dict[str, Quest]:
         quest_manager.add_quest(quest)
     
     return quests
+
+
+def get_available_path_quests(path: str, completed_quests: List[str]) -> List[Quest]:
+    """
+    Получить доступные квесты для указанного пути.
+    
+    Args:
+        path: Выбранный путь ("alliance", "observer", "independence")
+        completed_quests: Список завершённых квестов
+    
+    Returns:
+        List[Quest]: Список доступных квестов
+    """
+    all_quests = {
+        "alliance": create_alliance_path_quests(),
+        "observer": create_observer_path_quests(),
+        "independent": create_independent_path_quests()
+    }
+
+    path_quests = all_quests.get(path, {})
+    available = []
+
+    for quest in path_quests.values():
+        if quest.is_available(completed_quests):
+            available.append(quest)
+
+    return available
