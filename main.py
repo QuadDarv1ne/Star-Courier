@@ -19,45 +19,6 @@ logging.basicConfig(
 )
 logger = logging.getLogger('main')
 
-
-def check_port_available(port: int, host: str = 'localhost') -> bool:
-    """
-    Проверить, свободен ли порт.
-    Используется для веб-интерфейса или сетевого режима.
-    """
-    sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-    
-    try:
-        sock.bind((host, port))
-        return True
-    except OSError:
-        return False
-    finally:
-        sock.close()
-
-
-def find_available_port(start_port: int = 8000, end_port: int = 9000) -> tuple:
-    """
-    Найти свободный порт в диапазоне.
-    Returns (port_number, message)
-    """
-    for port in range(start_port, end_port + 1):
-        if check_port_available(port):
-            return (port, f"Найден доступный порт: {port}")
-    return (-1, "Не удалось найти свободный порт")
-
-
-def get_port_status(port: int) -> tuple:
-    """
-    Получить статус порта.
-    Returns (port_number, message)
-    """
-    if check_port_available(port):
-        return (port, f"Найден доступный порт: {port}")
-    else:
-        return (-1, f"Порт {port} занят")
-
 # Добавляем src в путь импорта
 sys.path.insert(0, str(Path(__file__).parent))
 
