@@ -272,6 +272,7 @@ class GameplaySystem:
             "experience": reward.experience,
             "items": [],
             "relationship_changes": reward.relationship_changes,
+            "game_complete": reward.game_complete,
         }
 
         # Выдача наград

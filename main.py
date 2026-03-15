@@ -925,8 +925,21 @@ class Game:
                 if not choices:
                     break
 
-                idx = get_choice("Ваш выбор:", [c.text for c in choices])
+                choice_texts = [c.text for c in choices]
+                idx = get_choice("Ваш выбор:", choice_texts)
+                
+                # Проверка корректности индекса
+                if idx < 0 or idx >= len(choices):
+                    logger.warning(f"Некорректный индекс выбора: {idx}")
+                    break
+                    
                 selected_choice = choices[idx]
+                
+                # Проверка что selected_choice это объект Choice с атрибутом id
+                if not hasattr(selected_choice, 'id'):
+                    logger.warning(f"Выбор не имеет атрибута id: {selected_choice}")
+                    break
+                    
                 self.dialogue_manager.make_choice(selected_choice.id)
 
                 if selected_choice.effect_value and isinstance(selected_choice.effect_value, tuple):

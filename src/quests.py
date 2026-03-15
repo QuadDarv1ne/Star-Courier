@@ -95,6 +95,8 @@ class QuestReward:
     relationship_changes: Dict[str, int] = field(default_factory=dict)  # {char_id: amount}
     unlocks: List[str] = field(default_factory=list)  # Разблокировки
     achievements: List[str] = field(default_factory=list)  # Достижения
+    ship_bonus: Dict[str, int] = field(default_factory=dict)  # {stat: amount}
+    game_complete: bool = False  # Завершение игры
 
 
 @dataclass
@@ -176,6 +178,7 @@ class Quest:
                 "relationship_changes": self.reward.relationship_changes,
                 "unlocks": self.reward.unlocks,
                 "achievements": self.reward.achievements,
+                "ship_bonus": self.reward.ship_bonus,
             },
             "level_requirement": self.level_requirement,
             "time_limit": self.time_limit,

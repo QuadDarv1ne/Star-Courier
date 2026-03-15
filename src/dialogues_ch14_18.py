@@ -5,6 +5,7 @@ Star Courier - Dialogues for Chapters 14-18
 """
 
 from typing import Dict
+from .dialogues import Dialogue, DialogueNode, Choice, ChoiceEffect
 
 # === ГЛАВА 14: Кристалл Времени ===
 
@@ -512,26 +513,109 @@ CHAPTER_18_DIALOGUES = {
 }
 
 
-def create_chapter14_dialogues() -> Dict:
+def _convert_response_to_choice(text: str, resp: dict, idx: int = 0) -> Choice:
+    """Конвертировать ответ в объект Choice"""
+    choice_id = f"choice_{idx}"
+    next_node = resp.get("next_dialogue", "end") or "end"
+    effects = resp.get("effects", {})
+    
+    # Определяем эффект
+    effect = ChoiceEffect.NONE
+    effect_value = None
+    
+    if effects:
+        # Проверяем отношения
+        for key, value in effects.items():
+            if "relationship" in key.lower():
+                effect = ChoiceEffect.RELATIONSHIP_UP if value > 0 else ChoiceEffect.RELATIONSHIP_DOWN
+                # Извлекаем имя персонажа из ключа (например, "maria_relationship" -> "maria")
+                char_name = key.replace("_relationship", "").replace("_trust", "")
+                effect_value = (char_name, value)
+                break
+            elif "trust" in key.lower():
+                effect = ChoiceEffect.TRUST_UP if value > 0 else ChoiceEffect.TRUST_DOWN
+                char_name = key.replace("_trust", "").replace("_relationship", "")
+                effect_value = (char_name, value)
+                break
+    
+    return Choice(
+        id=choice_id,
+        text=text,
+        next_node=next_node,
+        effect=effect,
+        effect_value=effect_value
+    )
+
+
+def _convert_dialog_to_dialogue(dialog_id: str, dialog_data: dict) -> Dialogue:
+    """Конвертировать словарь диалога в объект Dialogue"""
+    dialogue = Dialogue(
+        id=dialog_id,
+        title=dialog_id,
+        start_node="start"
+    )
+    
+    # Создаём все узлы
+    for node_id, node_data in dialog_data.items():
+        speaker = node_data.get("speaker", "???")
+        text = node_data.get("text", "")
+        responses = node_data.get("responses", [])
+        
+        # Создаём выборы
+        choices = []
+        for idx, resp in enumerate(responses):
+            choice = _convert_response_to_choice(resp.get("text", ""), resp, idx)
+            choices.append(choice)
+        
+        # Создаём узел
+        is_end = node_id == "end" or (responses and all(not r.get("next_dialogue") for r in responses))
+        node = DialogueNode(
+            id=node_id,
+            speaker=speaker,
+            text=text,
+            choices=choices,
+            is_end=is_end
+        )
+        dialogue.add_node(node)
+    
+    return dialogue
+
+
+def create_chapter14_dialogues() -> Dict[str, Dialogue]:
     """Создать диалоги для главы 14"""
-    return CHAPTER_14_DIALOGUES
+    result = {}
+    for dialog_id in CHAPTER_14_DIALOGUES.keys():
+        result[dialog_id] = _convert_dialog_to_dialogue(dialog_id, CHAPTER_14_DIALOGUES)
+    return result
 
 
-def create_chapter15_dialogues() -> Dict:
+def create_chapter15_dialogues() -> Dict[str, Dialogue]:
     """Создать диалоги для главы 15"""
-    return CHAPTER_15_DIALOGUES
+    result = {}
+    for dialog_id in CHAPTER_15_DIALOGUES.keys():
+        result[dialog_id] = _convert_dialog_to_dialogue(dialog_id, CHAPTER_15_DIALOGUES)
+    return result
 
 
-def create_chapter16_dialogues() -> Dict:
+def create_chapter16_dialogues() -> Dict[str, Dialogue]:
     """Создать диалоги для главы 16"""
-    return CHAPTER_16_DIALOGUES
+    result = {}
+    for dialog_id in CHAPTER_16_DIALOGUES.keys():
+        result[dialog_id] = _convert_dialog_to_dialogue(dialog_id, CHAPTER_16_DIALOGUES)
+    return result
 
 
-def create_chapter17_dialogues() -> Dict:
+def create_chapter17_dialogues() -> Dict[str, Dialogue]:
     """Создать диалоги для главы 17"""
-    return CHAPTER_17_DIALOGUES
+    result = {}
+    for dialog_id in CHAPTER_17_DIALOGUES.keys():
+        result[dialog_id] = _convert_dialog_to_dialogue(dialog_id, CHAPTER_17_DIALOGUES)
+    return result
 
 
-def create_chapter18_dialogues() -> Dict:
+def create_chapter18_dialogues() -> Dict[str, Dialogue]:
     """Создать диалоги для главы 18"""
-    return CHAPTER_18_DIALOGUES
+    result = {}
+    for dialog_id in CHAPTER_18_DIALOGUES.keys():
+        result[dialog_id] = _convert_dialog_to_dialogue(dialog_id, CHAPTER_18_DIALOGUES)
+    return result

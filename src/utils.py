@@ -385,6 +385,10 @@ def get_choice(prompt: str, options: List[str]) -> int:
     """
     print(f"\n{prompt}\n")
 
+    if not options:
+        logger.warning("get_choice вызван с пустым списком опций")
+        return -1
+
     for i, option in enumerate(options, 1):
         print(f"  [{i}] {option}")
 
