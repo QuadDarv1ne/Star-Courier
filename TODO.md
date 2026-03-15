@@ -1,6 +1,6 @@
 # Star Courier: План разработки
 
-## Статус на 15 марта 2026 (21:30)
+## Статус на 15 марта 2026 (22:30)
 
 ### ✅ Интегрировано (по документации)
 
@@ -122,9 +122,10 @@
 - [x] **test_mental_state.py** — 36 тестов для MentalStateSystem ✅
 - [x] **test_romance_scenes.py** — 14 тестов для RomanceScene ✅
 - [x] **test_ending_scenes.py** — 22 теста для EndingScene ✅
+- [x] **test_scenes_ch14_18.py** — 29 тестов (romance/ending/mental) ✅
 - [ ] **test_path_quests.py** — тесты для квестов путей
 
-**ВСЕГО: 122 теста проходят успешно** ✅
+**ВСЕГО: 151 тест проходят успешно** ✅
 
 ### Ручное тестирование
 - [ ] Пройти все 3 пути развития (Альянс/Наблюдатель/Независимость)
@@ -179,7 +180,7 @@ src/
 
 ---
 
-## 🔍 Аудит кода (15.03.2026 21:30)
+## 🔍 Аудит кода (15.03.2026 22:30)
 
 **Проверено:**
 - [x] Все модули импортируются корректно ✅
@@ -193,12 +194,13 @@ src/
 - [x] scenes_ch1_2.py — сцены глав 1-2 вынесены в отдельный модуль ✅
 - [x] scenes_ch14_18.py — сцены глав 14-18 с romance/ending интеграцией ✅
 - [x] gameplay.py — mental state thresholds в бою ✅
+- [x] tests/test_scenes_ch14_18.py — 29 тестов ✅
 
 **Git статус:**
 - Ветки: master, dev (синхронизированы)
-- Последний коммит: be12971 feat: интеграция mental_state, romance, endings
-- Изменения: src/gameplay.py, src/scenes_ch14_18.py (новый), TODO.md
-- Тесты: 122 passed ✅
+- Последний коммит: b6eb701 feat: добавлены сцены глав 14-18
+- Изменения: tests/test_scenes_ch14_18.py (новый), TODO.md
+- Тесты: 151 passed ✅
 
 **Структура src/ (35 файлов):**
 - characters.py, dialogues*.py, quests*.py — контент
@@ -208,7 +210,14 @@ src/
 - gameplay.py, save_system.py, items.py — ядро
 - utils.py, config.py, colors.py, ascii_art.py — утилиты
 - scenes_ch1_2.py — сцены глав 1-2 (650 строк)
-- scenes_ch14_18.py — сцены глав 14-18 (320 строк, НОВЫЙ)
+- scenes_ch14_18.py — сцены глав 14-18 (320 строк)
+
+**Структура tests/ (8 файлов):**
+- test_mental_state.py — 36 тестов
+- test_romance_scenes.py — 14 тестов
+- test_ending_scenes.py — 22 теста
+- test_scenes_ch14_18.py — 29 тестов (НОВЫЙ)
+- test_game.py, test_game_run.py — интеграционные
 
 ---
 
@@ -339,6 +348,7 @@ src/
 ## 📊 Статистика проекта
 
 **Файлов в src:** 35
+**Файлов в tests:** 8
 **Персонажей:** 23 (15 романтических, 4 друга/наставника, 4 антагониста)
 **Диалогов:** ~50+ (главы 1-18)
 **Квестов:** ~30+ (главы 11-18 + пути)
@@ -347,13 +357,14 @@ src/
 
 **Текущее состояние:**
 - main.py — 1466 строк, UTF-8 encoding fix ✅
-- tests/ — 3 файла, 122 теста ✅
+- tests/ — 8 файлов, 151 тест ✅
 - requirements.txt — pytest добавлен ✅
-- src/scenes_ch1_2.py — новый модуль сцен глав 1-2 (650 строк) ✅
-- src/scenes_ch14_18.py — новый модуль сцен глав 14-18 (320 строк) ✅
+- src/scenes_ch1_2.py — сцены глав 1-2 (650 строк) ✅
+- src/scenes_ch14_18.py — сцены глав 14-18 (320 строк) ✅
 - src/gameplay.py — mental state thresholds ✅
+- tests/test_scenes_ch14_18.py — 29 тестов ✅
 - working tree: modified files ✅
-- last update: 15.03.2026 (21:30)
+- last update: 15.03.2026 (22:30)
 
 ---
 
