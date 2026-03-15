@@ -5,7 +5,7 @@ Star Courier - Ending Scenes System
 """
 
 from typing import Dict, List, Optional
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from enum import Enum
 
 
@@ -25,6 +25,34 @@ class EndingVariation(Enum):
 
 
 @dataclass
+class EndingProgress:
+    """Прогресс финальных сцен"""
+    ending_chosen: bool = False
+    ending_type: Optional[str] = None
+    variation_unlocked: Dict[str, bool] = field(default_factory=dict)
+    requirements_met: Dict[str, bool] = field(default_factory=dict)
+
+    def to_dict(self) -> Dict:
+        """Сериализация"""
+        return {
+            "ending_chosen": self.ending_chosen,
+            "ending_type": self.ending_type,
+            "variation_unlocked": self.variation_unlocked,
+            "requirements_met": self.requirements_met
+        }
+
+    @classmethod
+    def from_dict(cls, data: Dict) -> "EndingProgress":
+        """Десериализация"""
+        return cls(
+            ending_chosen=data.get("ending_chosen", False),
+            ending_type=data.get("ending_type"),
+            variation_unlocked=data.get("variation_unlocked", {}),
+            requirements_met=data.get("requirements_met", {})
+        )
+
+
+@dataclass
 class EndingScene:
     """Класс финальной сцены"""
     id: str
@@ -37,6 +65,37 @@ class EndingScene:
     epilogue_text: str
     crew_fate: Dict[str, str]
     galaxy_fate: str
+
+    def to_dict(self) -> Dict:
+        """Сериализация в словарь"""
+        return {
+            "id": self.id,
+            "ending_type": self.ending_type.value,
+            "variation": self.variation.value,
+            "title": self.title,
+            "description": self.description,
+            "requirements": self.requirements,
+            "scene_text": self.scene_text,
+            "epilogue_text": self.epilogue_text,
+            "crew_fate": self.crew_fate,
+            "galaxy_fate": self.galaxy_fate
+        }
+
+    @classmethod
+    def from_dict(cls, data: Dict) -> "EndingScene":
+        """Десериализация из словаря"""
+        return cls(
+            id=data.get("id", ""),
+            ending_type=EndingType(data.get("ending_type", "exile")),
+            variation=EndingVariation(data.get("variation", "solo")),
+            title=data.get("title", ""),
+            description=data.get("description", ""),
+            requirements=data.get("requirements", {}),
+            scene_text=data.get("scene_text", ""),
+            epilogue_text=data.get("epilogue_text", ""),
+            crew_fate=data.get("crew_fate", {}),
+            galaxy_fate=data.get("galaxy_fate", "")
+        )
 
 
 def create_ending_scenes() -> Dict[str, EndingScene]:
@@ -555,3 +614,44 @@ def get_ending_by_type(ending_type: EndingType, variation: EndingVariation) -> O
 def get_all_ending_types() -> List[EndingType]:
     """Получить все типы концовок"""
     return [EndingType.EXILE, EndingType.TREATY, EndingType.MERGE]
+
+
+# === МЕНЕДЖЕР ПРОГРЕССА ФИНАЛЬНЫХ СЦЕН ===
+
+class EndingSceneManager:
+    """Менеджер прогресса финальных сцен"""
+
+    def __init__(self):
+        self.scenes: Dict[str, EndingScene] = {}
+        self.progress = EndingProgress()
+
+    def initialize(self, scenes: Dict[str, EndingScene]):
+        """Инициализация сцен"""
+        self.scenes = scenes
+
+    def choose_ending(self, ending_type: EndingType):
+        """Выбрать тип концовки"""
+        self.progress.ending_chosen = True
+        self.progress.ending_type = ending_type.value
+
+    def unlock_variation(self, variation_id: str):
+        """Разблокировать вариацию"""
+        self.progress.variation_unlocked[variation_id] = True
+
+    def check_requirement(self, req_id: str, met: bool):
+        """Отметить выполнение требования"""
+        self.progress.requirements_met[req_id] = met
+
+    def to_dict(self) -> Dict:
+        """Сериализация"""
+        return {
+            "progress": self.progress.to_dict()
+        }
+
+    @classmethod
+    def from_dict(cls, data: Dict) -> "EndingSceneManager":
+        """Десериализация"""
+        manager = cls()
+        if "progress" in data:
+            manager.progress = EndingProgress.from_dict(data["progress"])
+        return manager

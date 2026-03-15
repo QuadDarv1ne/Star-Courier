@@ -4,13 +4,44 @@ Star Courier - Romance Scenes System
 Система романтических сцен для 6 персонажей
 """
 
-from typing import Dict, List, Optional
-from dataclasses import dataclass
+from typing import Dict, List, Optional, Set
+from dataclasses import dataclass, field
 
 try:
     from .config import MAX_RELATIONSHIP
 except ImportError:
     from config import MAX_RELATIONSHIP
+
+
+@dataclass
+class RomanceProgress:
+    """Прогресс романтической линии персонажа"""
+    character_id: str
+    scenes_completed: Set[str] = field(default_factory=set)
+    confession_accepted: bool = False
+    romance_unlocked: bool = False
+    relationship_level: int = 0
+
+    def to_dict(self) -> Dict:
+        """Сериализация"""
+        return {
+            "character_id": self.character_id,
+            "scenes_completed": list(self.scenes_completed),
+            "confession_accepted": self.confession_accepted,
+            "romance_unlocked": self.romance_unlocked,
+            "relationship_level": self.relationship_level
+        }
+
+    @classmethod
+    def from_dict(cls, data: Dict) -> "RomanceProgress":
+        """Десериализация"""
+        return cls(
+            character_id=data.get("character_id", ""),
+            scenes_completed=set(data.get("scenes_completed", [])),
+            confession_accepted=data.get("confession_accepted", False),
+            romance_unlocked=data.get("romance_unlocked", False),
+            relationship_level=data.get("relationship_level", 0)
+        )
 
 
 @dataclass
@@ -27,6 +58,39 @@ class RomanceScene:
     is_confession: bool = False
     is_intimate: bool = False
     unlocks_next: bool = False
+
+    def to_dict(self) -> Dict:
+        """Сериализация в словарь"""
+        return {
+            "id": self.id,
+            "character_id": self.character_id,
+            "character_name": self.character_name,
+            "title": self.title,
+            "description": self.description,
+            "min_relationship": self.min_relationship,
+            "scene_text": self.scene_text,
+            "choices": self.choices,
+            "is_confession": self.is_confession,
+            "is_intimate": self.is_intimate,
+            "unlocks_next": self.unlocks_next
+        }
+
+    @classmethod
+    def from_dict(cls, data: Dict) -> "RomanceScene":
+        """Десериализация из словаря"""
+        return cls(
+            id=data.get("id", ""),
+            character_id=data.get("character_id", ""),
+            character_name=data.get("character_name", ""),
+            title=data.get("title", ""),
+            description=data.get("description", ""),
+            min_relationship=data.get("min_relationship", 60),
+            scene_text=data.get("scene_text", ""),
+            choices=data.get("choices", []),
+            is_confession=data.get("is_confession", False),
+            is_intimate=data.get("is_intimate", False),
+            unlocks_next=data.get("unlocks_next", False)
+        )
 
 
 # === РОМАНТИЧЕСКИЕ СЦЕНЫ ДЛЯ КАЖДОГО ПЕРСОНАЖА ===
@@ -534,3 +598,61 @@ def get_available_romance_scenes(character_id: str, relationship: int) -> List[R
 def get_romance_characters() -> List[str]:
     """Получить список персонажей с романтическими сценами"""
     return ["irina_lebedeva", "alia_naar", "rina_mirai", "mia", "maria", "anna"]
+
+
+# === МЕНЕДЖЕР ПРОГРЕССА РОМАНТИЧЕСКИХ СЦЕН ===
+
+class RomanceSceneManager:
+    """Менеджер прогресса романтических сцен"""
+
+    def __init__(self):
+        self.scenes: Dict[str, RomanceScene] = {}
+        self.progress: Dict[str, RomanceProgress] = {}
+
+    def initialize(self, scenes: Dict[str, RomanceScene]):
+        """Инициализация сцен"""
+        self.scenes = scenes
+
+    def get_scene(self, scene_id: str) -> Optional[RomanceScene]:
+        """Получить сцену по ID"""
+        return self.scenes.get(scene_id)
+
+    def complete_scene(self, scene_id: str, character_id: str):
+        """Отметить сцену как завершённую"""
+        if character_id not in self.progress:
+            self.progress[character_id] = RomanceProgress(character_id=character_id)
+
+        self.progress[character_id].scenes_completed.add(scene_id)
+
+    def set_confession_accepted(self, character_id: str, accepted: bool = True):
+        """Установить флаг принятия признания"""
+        if character_id not in self.progress:
+            self.progress[character_id] = RomanceProgress(character_id=character_id)
+        self.progress[character_id].confession_accepted = accepted
+
+    def unlock_romance(self, character_id: str):
+        """Разблокировать романтическую линию"""
+        if character_id not in self.progress:
+            self.progress[character_id] = RomanceProgress(character_id=character_id)
+        self.progress[character_id].romance_unlocked = True
+
+    def get_progress(self, character_id: str) -> Optional[RomanceProgress]:
+        """Получить прогресс персонажа"""
+        return self.progress.get(character_id)
+
+    def to_dict(self) -> Dict:
+        """Сериализация всего прогресса"""
+        return {
+            "progress": {
+                cid: prog.to_dict() for cid, prog in self.progress.items()
+            }
+        }
+
+    @classmethod
+    def from_dict(cls, data: Dict) -> "RomanceSceneManager":
+        """Десериализация"""
+        manager = cls()
+        progress_data = data.get("progress", {})
+        for cid, pdata in progress_data.items():
+            manager.progress[cid] = RomanceProgress.from_dict(pdata)
+        return manager

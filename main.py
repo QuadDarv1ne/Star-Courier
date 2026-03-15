@@ -806,6 +806,9 @@ class Game:
         # Завершаем бой
         self.gameplay.end_combat(victory=True)
 
+        # Интеграция mental_state: последствия боя
+        self.mental_state_system.on_combat_end(victory=True, casualties=0)
+
         print("\n  [После боя]")
         print("  — Надежда: «Отличная работа, капитан!»")
         print("  — Рина: «Я заблокировала их каналы связи.»")
@@ -845,6 +848,9 @@ class Game:
             print("\n  [Психическая связь установлена]")
             self.game_state.set_flag("psychic_connection", True)
             self.game_state.change_trust("athena", -5)
+            
+            # Интеграция mental_state: контакт с Сущностью
+            self.mental_state_system.on_entity_encounter(intensity=15)
         elif choice == 1:
             print("\n  Сканирование показало аномалию:")
             print("  > Энергия: 847 ТэВ (норма: 150)")

@@ -29,6 +29,9 @@ try:
     from .resonance import ResonanceSystem, ResonanceLevel
     from .path_system import PathSystem, PathType
     from .ending_system import EndingSystem, EndingType, RomanceEndingSystem
+    from .mental_state import MentalStateSystem
+    from .romance_scenes import RomanceSceneManager
+    from .ending_scenes import EndingSceneManager
 except ImportError:
     from config import SAVE_DIR, DEFAULT_SAVE, GAME_TITLE, VERSION, MAX_INVENTORY_SLOTS
     from characters import CrewManager, Character, Role
@@ -38,6 +41,9 @@ except ImportError:
     from resonance import ResonanceSystem, ResonanceLevel
     from path_system import PathSystem, PathType
     from ending_system import EndingSystem, EndingType, RomanceEndingSystem
+    from mental_state import MentalStateSystem
+    from romance_scenes import RomanceSceneManager
+    from ending_scenes import EndingSceneManager
 
 
 @dataclass
@@ -57,12 +63,13 @@ class SaveData:
     active_quests: list = field(default_factory=list)
     choices_history: list = field(default_factory=list)
     quest_data: Dict[str, Any] = field(default_factory=dict)
-    
+
     # Новые механики
     resonance: Dict[str, Any] = field(default_factory=dict)  # Система Резонанса
     path: Dict[str, Any] = field(default_factory=dict)  # Система Путей
     endings: Dict[str, Any] = field(default_factory=dict)  # Система Финалов
-    mental_state: Dict[str, int] = field(default_factory=lambda: {"mental_health": 100, "entity_influence": 0})
+    romance: Dict[str, Any] = field(default_factory=dict)  # Романтические сцены
+    mental_state: Dict[str, Any] = field(default_factory=dict)  # Ментальное состояние
 
     def to_dict(self) -> Dict[str, Any]:
         """Сериализовать в словарь"""
@@ -79,6 +86,7 @@ class SaveData:
             "resonance": self.resonance,
             "path": self.path,
             "endings": self.endings,
+            "romance": self.romance,
             "mental_state": self.mental_state,
         }
 
@@ -105,13 +113,14 @@ class SaveData:
         save.active_quests = progress.get("active_quests", [])
         save.quest_data = progress.get("quest_data", {})
         save.choices_history = history.get("choices", [])
-        
+
         # Новые механики
         save.resonance = data.get("resonance", {})
         save.path = data.get("path", {})
         save.endings = data.get("endings", {})
-        save.mental_state = data.get("mental_state", {"mental_health": 100, "entity_influence": 0})
-        
+        save.romance = data.get("romance", {})
+        save.mental_state = data.get("mental_state", {})
+
         return save
 
 
@@ -227,13 +236,15 @@ class GameState:
         self.item_db = ItemDatabase()
         self.quest_manager = QuestManager()
         self.save_data: Optional[SaveData] = None
-        
+
         # Новые системы
         self.resonance_system = ResonanceSystem()
         self.path_system = PathSystem()
         self.ending_system = EndingSystem()
         self.romance_ending_system = RomanceEndingSystem()
-        self.mental_state = {"mental_health": 100, "entity_influence": 0}
+        self.mental_state_system = MentalStateSystem()
+        self.romance_manager = RomanceSceneManager()
+        self.ending_manager = EndingSceneManager()
 
     def new_game(self):
         """Новая игра"""
@@ -299,7 +310,8 @@ class GameState:
             "main": self.ending_system.to_dict(),
             "romance": self.romance_ending_system.to_dict()
         }
-        self.save_data.mental_state = self.mental_state
+        self.save_data.romance = self.romance_manager.to_dict()
+        self.save_data.mental_state = self.mental_state_system.to_dict()
     
     def _sync_from_save(self):
         """Синхронизировать данные сохранения с состоянием"""
@@ -352,9 +364,12 @@ class GameState:
                 self.ending_system.from_dict(self.save_data.endings["main"])
             if "romance" in self.save_data.endings:
                 self.romance_ending_system.from_dict(self.save_data.endings["romance"])
-        
+
+        if self.save_data.romance:
+            self.romance_manager = RomanceSceneManager.from_dict(self.save_data.romance)
+
         if self.save_data.mental_state:
-            self.mental_state = self.save_data.mental_state
+            self.mental_state_system = MentalStateSystem.from_dict(self.save_data.mental_state)
     
     def set_flag(self, flag: str, value: bool = True):
         """Установить флаг сюжета"""
@@ -497,14 +512,26 @@ class GameState:
     
     def update_mental_state(self, health_change: int = 0, influence_change: int = 0):
         """Обновить ментальное состояние"""
-        self.mental_state["mental_health"] = max(0, min(100, 
-            self.mental_state["mental_health"] + health_change))
-        self.mental_state["entity_influence"] = max(0, min(100,
-            self.mental_state["entity_influence"] + influence_change))
-    
+        if health_change != 0:
+            self.mental_state_system.change_mental_health(health_change)
+        if influence_change != 0:
+            self.mental_state_system.change_entity_influence(influence_change)
+
     def get_mental_state(self) -> dict:
         """Получить ментальное состояние"""
-        return self.mental_state.copy()
+        return self.mental_state_system.to_dict()
+
+    def get_mental_state_system(self) -> MentalStateSystem:
+        """Получить систему ментального состояния"""
+        return self.mental_state_system
+
+    def get_romance_manager(self) -> RomanceSceneManager:
+        """Получить менеджер романтических сцен"""
+        return self.romance_manager
+
+    def get_ending_manager(self) -> EndingSceneManager:
+        """Получить менеджер финальных сцен"""
+        return self.ending_manager
     
     def check_resonance_level_up(self):
         """Проверить повышение уровня Резонанса"""

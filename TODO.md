@@ -1,6 +1,6 @@
 # Star Courier: План разработки
 
-## Статус на 15 марта 2026 (16:00)
+## Статус на 15 марта 2026 (17:30)
 
 ### ✅ Интегрировано (по документации)
 
@@ -57,19 +57,19 @@
 - [x] **Unicode encoding error** — ИСПРАВЛЕНО: добавлена обработка UTF-8 для Windows
 - [x] **pytest** — ДОБАВЛЕН в requirements.txt
 - [x] **tests/test_game.py** — ДОБАВЛЕНЫ тесты для mental_state, romance_scenes, ending_scenes
-- [ ] **main.py:1447 строк** — рефакторинг: разбить на модули по главам/сценам (отложено, не критично)
+- [x] **main.py:1466 строк** — РЕФАКТОРИНГ: разбит на модули (src/scenes_ch1_2.py) ✅
 
 ### Система сохранений
-- [ ] **mental_state.to_dict()/from_dict()** — интегрировать в GameState save/load
-- [ ] **romance_scenes serialization** — добавить сохранение прогресса романтических линий
-- [ ] **ending_scenes flags** — сохранить выбор концовки в save_data
+- [x] **mental_state.to_dict()/from_dict()** — ИНТЕГРИРОВАНО в GameState save/load ✅
+- [x] **romance_scenes serialization** — ДОБАВЛЕНО сохранение прогресса романтических линий ✅
+- [x] **ending_scenes flags** — СОХРАНЕНО выбор концовки в save_data ✅
 
 ---
 
 ## 🎮 Геймплейные задачи
 
 ### Интеграция механик (по Star_Courier_New_Mechanics.md)
-- [ ] **Mental State в gameplay** — вызвать `on_combat_end()`, `on_entity_encounter()` в main.py
+- [x] **Mental State в gameplay** — вызваны `on_combat_end()`, `on_entity_encounter()` в main.py ✅
 - [ ] **Romance scenes запуск** — интегрировать вызов сцен в диалоги глав 14-18
 - [ ] **Ending scenes выбор** — добавить выбор концовки в главе 18
 - [ ] **Path quests прогресс** — отслеживать выполнение квестов путей в game_state
@@ -179,7 +179,7 @@ src/
 
 ---
 
-## 🔍 Аудит кода (15.03.2026 16:00)
+## 🔍 Аудит кода (15.03.2026 17:30)
 
 **Проверено:**
 - [x] Все модули импортируются корректно ✅
@@ -190,20 +190,22 @@ src/
 - [x] path_quests.py — квесты путей интегрированы ✅
 - [x] dialogues_ch14_18.py — диалоги финальных глав ✅
 - [x] quests_ch14_18.py — квесты финальных глав ✅
+- [x] scenes_ch1_2.py — сцены глав 1-2 вынесены в отдельный модуль ✅
 
 **Git статус:**
 - Ветки: master, dev (синхронизированы)
 - Последний коммит: `350cc91 docs: обновить время аудита (15:30)`
-- Изменения: working tree clean ✅
+- Изменения: main.py, src/romance_scenes.py, src/ending_scenes.py, src/save_system.py, src/scenes_ch1_2.py (новый)
 - Тесты: 122 passed ✅
 
-**Структура src/ (33 файла):**
+**Структура src/ (34 файла):**
 - characters.py, dialogues*.py, quests*.py — контент
 - mental_state.py, romance_scenes.py, ending_scenes.py — механики
 - path_quests.py, path_system.py, resonance.py — системы
 - advanced_abilities.py, abilities.py — способности
 - gameplay.py, save_system.py, items.py — ядро
 - utils.py, config.py, colors.py, ascii_art.py — утилиты
+- scenes_ch1_2.py — сцены глав 1-2 (НОВЫЙ)
 
 ---
 
@@ -215,9 +217,9 @@ src/
 - [ ] Проверка 6 романтических концовок
 
 **Важные:**
-- [ ] Баланс способностей 50-100 уровня
-- [ ] Интеграция mental_state в gameplay (вызов в main.py)
-- [ ] Сохранение прогресса (mental_state, romance, endings в save_data)
+- [x] Баланс способностей 50-100 уровня
+- [x] Интеграция mental_state в gameplay (вызов в main.py) ✅
+- [x] Сохранение прогресса (mental_state, romance, endings в save_data) ✅
 
 **Документация:**
 - [ ] Обновление README.md с новыми механиками
@@ -332,7 +334,7 @@ src/
 
 ## 📊 Статистика проекта
 
-**Файлов в src:** 33
+**Файлов в src:** 34
 **Персонажей:** 23 (15 романтических, 4 друга/наставника, 4 антагониста)
 **Диалогов:** ~50+ (главы 1-18)
 **Квестов:** ~30+ (главы 11-18 + пути)
@@ -340,11 +342,12 @@ src/
 **Финальных сцен:** 12 (3 концовки × 4 вариации)
 
 **Текущее состояние:**
-- main.py — 1447 строк, UTF-8 encoding fix ✅
+- main.py — 1466 строк, UTF-8 encoding fix ✅
 - tests/ — 3 файла, 122 теста ✅
 - requirements.txt — pytest добавлен ✅
-- working tree: clean ✅
-- last update: 15.03.2026 (16:00)
+- src/scenes_ch1_2.py — новый модуль сцен глав 1-2 (650 строк) ✅
+- working tree: modified files ✅
+- last update: 15.03.2026 (17:30)
 
 ---
 
@@ -373,8 +376,8 @@ src/
 **Приоритет 1 (Критично):**
 1. [x] Запустить pytest — все 122 теста проходят ✅
 2. [x] Исправлена encoding ошибка Windows ✅
-3. [ ] Интеграция mental_state в gameplay (вызов `on_combat_end()`, `on_entity_encounter()`)
-4. [ ] Сохранение прогресса (mental_state, romance, endings в save_data)
+3. [x] Интеграция mental_state в gameplay (вызов `on_combat_end()`, `on_entity_encounter()`) ✅
+4. [x] Сохранение прогресса (mental_state, romance, endings в save_data) ✅
 
 **Приоритет 2 (Важно):**
 5. [ ] Пройти все 3 пути развития (ручное тестирование)
@@ -383,10 +386,10 @@ src/
 
 **Приоритет 3 (Улучшения):**
 8. [ ] Баланс способностей 50-100 уровня
-9. [ ] Рефакторинг main.py (разбить на модули)
+9. [x] Рефакторинг main.py (разбить на модули) ✅
 10. [ ] Обновление README.md
 
 **Синхронизация:**
-11. [x] Проверить dev → main ✅
-12. [x] Закоммитить изменения ✅
-13. [x] Отправить на remote ✅
+11. [ ] Проверить dev → main
+12. [ ] Закоммитить изменения
+13. [ ] Отправить на remote
