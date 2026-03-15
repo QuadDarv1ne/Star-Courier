@@ -789,3 +789,30 @@ def create_all_path_quests() -> Dict[str, Quest]:
     all_quests.update(create_observer_path_quests())
     all_quests.update(create_independent_path_quests())
     return all_quests
+
+
+def register_path_quests(path: str, quest_manager) -> Dict[str, Quest]:
+    """
+    Зарегистрировать квесты в зависимости от выбранного пути.
+    
+    Args:
+        path: Выбранный путь ("alliance", "observer", "independence")
+        quest_manager: Менеджер квестов для регистрации
+    
+    Returns:
+        Dict[str, Quest]: Словарь зарегистрированных квестов
+    """
+    if path == "alliance":
+        quests = create_alliance_path_quests()
+    elif path == "observer":
+        quests = create_observer_path_quests()
+    elif path == "independence":
+        quests = create_independent_path_quests()
+    else:
+        quests = {}
+    
+    # Регистрируем квесты в менеджере
+    for quest in quests.values():
+        quest_manager.add_quest(quest)
+    
+    return quests
