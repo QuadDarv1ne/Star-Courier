@@ -147,9 +147,16 @@ class Chapter18Scenes:
         has_team_loyalty = True  # TODO: проверить лояльность команды
         has_romance = romance_partner and relationship >= 80
 
+        # Получение имени партнёра
+        partner_name = ""
+        if has_romance:
+            char = self.game_state.crew_manager.get_character(romance_partner)
+            if char:
+                partner_name = char.name
+
         options = []
         if has_romance:
-            options.append(f"Остаться с {romance_partner} (вдвоём)")
+            options.append(f"Остаться с {partner_name} (вдвоём)")
         if has_team_loyalty:
             options.append("Попросить команду о помощи")
         options.append("Пожертвовать собой (одиночка)")
@@ -159,6 +166,7 @@ class Chapter18Scenes:
         if choice == 0 and has_romance:
             # Вместе с романтическим партнёром
             self.ending_manager.unlock_variation("exile_together")
+            self.romance_manager.set_confession_accepted(romance_partner, True)
             print("\n  Ваш партнёр делает шаг вперёд:")
             print(f"  — Мы вместе начинали. Вместе и закончим.")
             print("\n  Вы касаетесь якоря вдвоём. Энергия связывает вас навсегда.")

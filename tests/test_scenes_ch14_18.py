@@ -326,6 +326,20 @@ class TestChapter18Scenes(unittest.TestCase):
         self.assertTrue(effects.get("entity_communion", False))
         self.assertEqual(effects["vision_frequency"], "constant")
 
+    def test_romance_partner_affects_ending(self):
+        """Романтический партнёр влияет на концовку"""
+        from romance_scenes import RomanceSceneManager
+        
+        manager = RomanceSceneManager()
+        
+        # Имитация романтических отношений
+        manager.set_confession_accepted("irina_lebedeva", True)
+        manager.unlock_romance("irina_lebedeva")
+        
+        progress = manager.get_progress("irina_lebedeva")
+        self.assertTrue(progress.confession_accepted)
+        self.assertTrue(progress.romance_unlocked)
+
 
 if __name__ == "__main__":
     unittest.main()

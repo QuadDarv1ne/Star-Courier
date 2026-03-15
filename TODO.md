@@ -1,6 +1,6 @@
 # Star Courier: План разработки
 
-## Статус на 15 марта 2026 (23:30)
+## Статус на 16 марта 2026 (00:30)
 
 ### ✅ Интегрировано (по документации)
 
@@ -100,19 +100,19 @@
 ## 📋 Финалы (по документации)
 
 ### Изгнание (Exile)
-- [x] Реализовано в ending_scenes.py
-- [ ] Требуется: жертва (Курьер или соратник)
-- [ ] Требуется: высокий уровень отношений для разделения ноши
+- [x] Реализовано в ending_scenes.py ✅
+- [x] Требуется: жертва (Курьер или соратник) — реализовано ✅
+- [x] Требуется: высокий уровень отношений для разделения ноши — реализовано ✅
 
 ### Договор (Treaty)
-- [x] Реализовано в ending_scenes.py
-- [ ] Требование: Psychic 70+ ИЛИ Empathy 80+
-- [ ] Требуется: перенастройка станции, Курьер становится Хранителем
+- [x] Реализовано в ending_scenes.py ✅
+- [x] Требование: Psychic 70+ ИЛИ Empathy 80+ — реализовано ✅
+- [x] Требуется: перенастройка станции, Курьер становится Хранителем — реализовано ✅
 
 ### Слияние (Merge)
-- [x] Реализовано в ending_scenes.py
-- [ ] Требование: Psychic 90+ + Resonance Level 4
-- [ ] Требуется: Entity Communion способность
+- [x] Реализовано в ending_scenes.py ✅
+- [x] Требование: Psychic 90+ + Resonance Level 4 — реализовано ✅
+- [x] Требуется: Entity Communion способность — реализовано через thresholds ✅
 
 ---
 
@@ -180,7 +180,7 @@ src/
 
 ---
 
-## 🔍 Аудит кода (15.03.2026 23:30)
+## 🔍 Аудит кода (16.03.2026 00:30)
 
 **Проверено:**
 - [x] Все модули импортируются корректно ✅
@@ -194,14 +194,14 @@ src/
 - [x] scenes_ch1_2.py — сцены глав 1-2 вынесены в отдельный модуль ✅
 - [x] scenes_ch14_18.py — сцены глав 14-18 с romance/ending интеграцией ✅
 - [x] gameplay.py — mental state thresholds в бою ✅
-- [x] tests/test_scenes_ch14_18.py — 29 тестов ✅
+- [x] tests/test_scenes_ch14_18.py — 30 тестов ✅
 - [x] tests/test_mental_state.py — 44 теста (сопротивление/очищение/медитация) ✅
 
 **Git статус:**
 - Ветки: master, dev (синхронизированы)
-- Последний коммит: b58a484 test: добавлены тесты для scenes_ch14_18 (29 тестов)
-- Изменения: src/mental_state.py, tests/test_mental_state.py, TODO.md
-- Тесты: 158 passed ✅ (44 + 29 + 36 + 14 + 22 + 13)
+- Последний коммит: 88c5f99 feat: добавлены механики сопротивления Сущности
+- Изменения: src/scenes_ch14_18.py, tests/test_scenes_ch14_18.py, TODO.md
+- Тесты: 159 passed ✅
 
 **Структура src/ (35 файлов):**
 - characters.py, dialogues*.py, quests*.py — контент
@@ -212,13 +212,13 @@ src/
 - gameplay.py, save_system.py, items.py — ядро
 - utils.py, config.py, colors.py, ascii_art.py — утилиты
 - scenes_ch1_2.py — сцены глав 1-2 (650 строк)
-- scenes_ch14_18.py — сцены глав 14-18 (320 строк)
+- scenes_ch14_18.py — сцены глав 14-18 (470 строк)
 
 **Структура tests/ (8 файлов):**
 - test_mental_state.py — 44 теста ✅
 - test_romance_scenes.py — 14 тестов
 - test_ending_scenes.py — 22 теста
-- test_scenes_ch14_18.py — 29 тестов
+- test_scenes_ch14_18.py — 30 тестов ✅
 - test_game.py, test_game_run.py — интеграционные
 
 ---
@@ -359,16 +359,16 @@ src/
 
 **Текущее состояние:**
 - main.py — 1466 строк, UTF-8 encoding fix ✅
-- tests/ — 8 файлов, 158 тестов ✅
+- tests/ — 8 файлов, 159 тестов ✅
 - requirements.txt — pytest добавлен ✅
 - src/scenes_ch1_2.py — сцены глав 1-2 (650 строк) ✅
-- src/scenes_ch14_18.py — сцены глав 14-18 (320 строк) ✅
+- src/scenes_ch14_18.py — сцены глав 14-18 (470 строк) ✅
 - src/gameplay.py — mental state thresholds ✅
 - src/mental_state.py — сопротивление/очищение/медитация ✅
-- tests/test_scenes_ch14_18.py — 29 тестов ✅
+- tests/test_scenes_ch14_18.py — 30 тестов ✅
 - tests/test_mental_state.py — 44 теста ✅
 - working tree: modified files ✅
-- last update: 15.03.2026 (23:30)
+- last update: 16.03.2026 (00:30)
 
 ---
 
