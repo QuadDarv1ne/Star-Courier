@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 """
 Star Courier — Текстовая RPG-игра
 Главный файл запуска
@@ -7,6 +8,7 @@ Star Courier — Текстовая RPG-игра
 import sys
 import logging
 import socket
+import io
 from pathlib import Path
 
 # Настройка логгирования
@@ -14,10 +16,18 @@ logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
     handlers=[
-        logging.FileHandler('game.log', encoding='utf-8', mode='a'),
+        logging.FileHandler('game.log', encoding='utf-8', mode='a', errors='replace'),
     ]
 )
 logger = logging.getLogger('main')
+
+# Fix Windows console encoding
+if sys.platform == 'win32':
+    try:
+        sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8', errors='replace')
+        sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding='utf-8', errors='replace')
+    except (AttributeError, LookupError):
+        pass
 
 # Добавляем src в путь импорта
 sys.path.insert(0, str(Path(__file__).parent))
