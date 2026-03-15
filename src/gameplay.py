@@ -520,7 +520,7 @@ class GameplaySystem:
         Запустить случайное событие.
         Возвращает данные события или None.
         """
-        event = self.random_events_manager.get_random_event(chapter)
+        event = self.random_events_manager.get_event_for_chapter(chapter)
         if not event:
             return None
 
