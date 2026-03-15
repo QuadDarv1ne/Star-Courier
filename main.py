@@ -45,16 +45,28 @@ from src.dialogues import DialogueManager, create_chapter1_dialogues, create_cha
 from src.dialogues_ch6_10 import create_chapter6_dialogues, create_chapter7_dialogues, create_chapter8_dialogues, create_chapter9_10_dialogues
 from src.dialogues_ch11_18 import CHAPTER_11_DIALOGUES, CHAPTER_12_DIALOGUES, create_chapter11_dialogues, create_chapter12_dialogues, create_chapter13_dialogues
 from src.dialogues_ch14_18 import create_chapter14_dialogues, create_chapter15_dialogues, create_chapter16_dialogues, create_chapter17_dialogues, create_chapter18_dialogues
+from src.chapters_1_5 import (
+    CHAPTER_1_DIALOGUES, CHAPTER_2_DIALOGUES, CHAPTER_3_DIALOGUES,
+    CHAPTER_4_DIALOGUES, CHAPTER_5_DIALOGUES, CHOICE_CONSEQUENCES,
+    get_chapter_dialogues, get_dialogue_by_id, apply_choice_consequence
+)
 from src.gameplay import GameplaySystem
 from src.quests_ch11_12 import create_all_chapter11_12_quests
 from src.quests_ch14_18 import create_all_chapter14_18_quests
 from src.path_quests import create_alliance_path_quests, create_observer_path_quests, create_independent_path_quests
 from src.romance_scenes import create_romance_scenes, get_romance_characters
+from src.adult_romance_v5 import FEMALE_ROMANCE_CHARACTERS, INTIMATE_SCENES, ROMANCE_CONFIG
 from src.ending_scenes import create_ending_scenes, get_ending_by_type, EndingType, EndingVariation
 from src.mental_state import MentalStateSystem, get_condition_description, get_influence_description
 from src.random_events import RandomEventsManager
+from src.random_events_v5 import SPACE_EVENTS, STATION_EVENTS
 from src.advanced_abilities import AdvancedAbilitiesManager
+from src.abilities_advanced_v5 import ALCHEMY_ADVANCED, BIOTICS_ADVANCED, PSYCHIC_ADVANCED
+from src.achievements_v5 import STORY_ACHIEVEMENTS, COMBAT_ACHIEVEMENTS
 from src.relationship_enhancements import RelationshipEnhancementManager
+from src.backstories_v5 import ALL_BACKSTORIES, get_backstory
+from src.entity_lore_v5 import ENTITY_HISTORY, get_lore_entry, get_available_lore
+from src.banters_v5 import BANTER_TYPES, LOCATION_BANTERS, get_banter_by_characters
 from src.system_check import check_python_version, check_terminal_support, find_available_port
 
 
@@ -110,8 +122,13 @@ class Game:
         print_art("eleia")
         print()
         print_header(f"* {GAME_TITLE} *", TEXT_WIDTH + 4)
-        print(f"\n  Версия: {VERSION}")
+        print(f"\n  Версия: {VERSION} v5.0 — Улучшенные диалоги и сюжетные линии")
         print("\n  Интерактивная текстовая RPG в космической тематике")
+        print("\n  ✨ НОВОЕ В ВЕРСИИ 5.0:")
+        print("    • Разветвлённые диалоги глав 1-5 с последствиями")
+        print("    • 15 романтических линий с женскими персонажами")
+        print("    • Способности уровней 50-100")
+        print("    • 49 достижений и 17 случайных событий")
         print()
         print_separator("-", TEXT_WIDTH + 4)
         print()
@@ -153,18 +170,15 @@ class Game:
 
         self.game_state.new_game()
 
-        # Инициализация диалогов первой главы
-        dialogues = create_chapter1_dialogues()
-        for dialogue in dialogues.values():
-            self.dialogue_manager.add_dialogue(dialogue)
-
-        # Инициализация диалогов второй главы
-        dialogues_ch2 = create_chapter2_dialogues()
-        for dialogue in dialogues_ch2.values():
-            self.dialogue_manager.add_dialogue(dialogue)
+        # === ИНТЕГРАЦИЯ НОВЫХ ДИАЛОГОВ ГЛАВ 1-5 (v5) ===
+        # Инициализация диалогов глав 1-5 с разветвлённой системой
+        for chapter_num in range(1, 6):
+            chapter_dialogues = get_chapter_dialogues(chapter_num)
+            for dialogue in chapter_dialogues.values():
+                self.dialogue_manager.add_dialogue(dialogue)
 
         # Инициализация диалогов глав 6-10
-        for chapter_func in [create_chapter6_dialogues, create_chapter7_dialogues, 
+        for chapter_func in [create_chapter6_dialogues, create_chapter7_dialogues,
                              create_chapter8_dialogues, create_chapter9_10_dialogues]:
             for dialogue in chapter_func().values():
                 self.dialogue_manager.add_dialogue(dialogue)
@@ -174,7 +188,7 @@ class Game:
             self.dialogue_manager.add_dialogue(dialogue)
         for dialogue in create_chapter12_dialogues().values():
             self.dialogue_manager.add_dialogue(dialogue)
-        
+
         # Инициализация диалогов главы 13
         for dialogue in create_chapter13_dialogues().values():
             self.dialogue_manager.add_dialogue(dialogue)
@@ -217,6 +231,9 @@ class Game:
         print("\n  Начало новой миссии...")
         print("\n  Вы — капитан Макс Велл, командир звездолёта «Элея».")
         print("  Вам предстоит доставить загадочный артефакт и раскрыть его тайны.")
+        print()
+        print("  ✨ Версия 5.0: Улучшенные диалоги и сюжетные линии")
+        print("  📖 Главы 1-5: Разветвлённая система выборов с последствиями")
         print()
 
         input("Нажмите Enter для начала главы 1...")
@@ -261,25 +278,47 @@ class Game:
         """Экран «Об игре»"""
         clear_screen()
         print_header("ОБ ИГРЕ", TEXT_WIDTH + 4)
-        
+
         about_text = """
   Star Courier — это интерактивная текстовая RPG в космической тематике.
-  
+
   Вы управляете капитаном Максом Веллом и его командой на борту
   звездолёта «Элея». Ваша задача — доставить загадочный артефакт,
   раскрывая тайны, сражаясь с врагами и развивая отношения.
-  
-  ОСОБЕННОСТИ:
-  
+
+  ВЕРСИЯ 5.0 — НОВЫЕ ВОЗМОЖНОСТИ:
+
+  ✨ УЛУЧШЕННЫЕ ДИАЛОГИ ГЛАВ 1-5:
+    • Разветвлённая система выборов с последствиями
+    • 300+ вариантов ответов в диалогах
+    • Уникальные сюжетные ветки для каждого выбора
+    • Три пути развития: Альянс / Наблюдатель / Независимость
+
+  💕 РАСШИРЕННАЯ СИСТЕМА РОМАНТИКИ:
+    • 15 женских персонажей с романтическими линиями
+    • 7 женских парных отношений (F×F)
+    • 12 групповых сцен (троики)
+    • Система полиамории
+
+  ⚔️ НОВЫЕ СИСТЕМЫ:
+    • Способности уровней 50-100 (Алхимия, Биотика, Психика)
+    • 49 достижений для отслеживания прогресса
+    • 17 случайных событий в космосе и на станциях
+    • Детальные предыстории персонажей
+    • Лор Сущности (500 млн лет истории)
+    • Бантеры — диалоги между членами экипажа
+
+  ОСНОВНЫЕ ОСОБЕННОСТИ:
+
   • Три ветви способностей: Алхимия, Биотика, Психика
   • Интерактивные диалоги с развилками сюжета
   • Развитие отношений с членами экипажа
   • Комбинированные способности в боях и диалогах
-  
+
   РАЗРАБОТЧИК: QuadDarv1ne
   ЛИЦЕНЗИЯ: MIT
         """
-        
+
         print(about_text)
         input("\n  Нажмите Enter для возврата в меню...")
 
@@ -331,47 +370,86 @@ class Game:
             print("\n  До встречи в космосе, капитан! o7")
     
     def play_chapter_1(self):
-        """Глава 1: Нежданная встреча"""
+        """Глава 1: Пробуждение (новая версия v5)"""
         clear_screen()
-        print_header("ГЛАВА 1: НЕЖДАННАЯ ВСТРЕЧА", TEXT_WIDTH + 4)
-        print_art("station")
-        print("\n  Станция Орбис-9. 2187 год.")
-        print("  Корабль «Элея» с ценным грузом на борту.")
+        print_header("ГЛАВА 1: ПРОБУЖДЕНИЕ", TEXT_WIDTH + 4)
+        print_art("cryo")
+        print("\n  Звездолёт «Элея». 2187 год.")
+        print("  Вы просыпаетесь после криосна...")
         input("\n  [Нажмите Enter для начала...]")
 
-        self.scene_morning()
-        if not self.running:
-            return
-
-        self.scene_bridge()
-        if not self.running:
-            return
-
-        self.scene_lab()
-        if not self.running:
-            return
-
-        self.scene_pirate_contact()
-        if not self.running:
-            return
-
-        self.scene_sabotage()
-        if not self.running:
-            return
-
-        self.scene_discovery()
-        if not self.running:
-            return
-
-        self.scene_combat()
-        if not self.running:
-            return
-
-        self.scene_artifact_examination()
-        if not self.running:
-            return
+        # === НОВАЯ СИСТЕМА ДИАЛОГОВ V5 ===
+        # Запуск диалога пробуждения
+        self._play_chapter1_new()
 
         self.chapter_end()
+
+    def _play_chapter1_new(self):
+        """Глава 1 через новую систему диалогов"""
+        # Стартовый диалог пробуждения
+        intro = get_dialogue_by_id(1, "intro_awakening")
+        if intro:
+            self.dialogue_manager.start_dialogue("intro_awakening")
+            self.run_dialogue()
+
+        # Проверяем выбор игрока и продолжаем ветку
+        if self.game_state.get_flag("chose_wake_crew", False):
+            self._scene_crew_awakening()
+        elif self.game_state.get_flag("chose_escape", False):
+            self._scene_escape_plan()
+        else:
+            self._scene_pirate_encounter()
+
+        # Продолжение сцены в зависимости от выборов
+        self._scene_consequences()
+
+    def _scene_crew_awakening(self):
+        """Сцена: Пробуждение экипажа"""
+        clear_screen()
+        print_header("ЭКИПАЖ ПРОСНУЛСЯ", TEXT_WIDTH + 4)
+        print("\n  Афина будит ключевых членов экипажа...")
+        print("  Рина, Алия и Надежда выходят из криосна.")
+        
+        # Диалог с командой
+        self.dialogue_manager.start_dialogue("ch1_crew_briefing")
+        self.run_dialogue()
+
+    def _scene_escape_plan(self):
+        """Сцена: План побега"""
+        clear_screen()
+        print_header("ПЛАН ПОБЕГА", TEXT_WIDTH + 4)
+        print("\n  Вы решаете избежать боя...")
+        
+        self.dialogue_manager.start_dialogue("ch1_plan_escape")
+        self.run_dialogue()
+
+    def _scene_pirate_encounter(self):
+        """Сцена: Встреча с пиратами"""
+        clear_screen()
+        print_header("ПИРАТЫ!", TEXT_WIDTH + 4)
+        print_alert("\n  ⚠ ТРЕВОГА! Пиратская эскадра обнаружена!")
+        
+        # Диалог с пиратами
+        self.dialogue_manager.start_dialogue("ch1_pirate_contact")
+        self.run_dialogue()
+
+    def _scene_consequences(self):
+        """Сцена: Последствия выбора"""
+        clear_screen()
+        print("\n  [Последствия вашего решения...]")
+        
+        # Применяем последствия выбора
+        if self.game_state.get_flag("pirate_battle_chosen"):
+            print("  Вы выбрали бой с пиратами.")
+            self.game_state.set_flag("selena_enemy", True)
+        elif self.game_state.get_flag("pirate_negotiation_chosen"):
+            print("  Вы договорились с пиратами.")
+            self.game_state.change_relationship("selena_ro", 10)
+        else:
+            print("  Вы сбежали через астероидное поле.")
+            self.game_state.change_trust("nadezhda", 15)
+        
+        input("\n  Нажмите Enter...")
     
     def scene_morning(self):
         """Сцена: Утро в каюте"""
@@ -940,12 +1018,12 @@ class Game:
                     break
                     
                 selected_choice = choices[idx]
-                
+
                 # Проверка что selected_choice это объект Choice с атрибутом id
-                if not hasattr(selected_choice, 'id'):
-                    logger.warning(f"Выбор не имеет атрибута id: {selected_choice}")
+                if not hasattr(selected_choice, 'id') or isinstance(selected_choice, dict):
+                    logger.warning(f"Выбор не является объектом Choice: {selected_choice} (тип: {type(selected_choice)})")
                     break
-                    
+
                 self.dialogue_manager.make_choice(selected_choice.id)
 
                 if selected_choice.effect_value and isinstance(selected_choice.effect_value, tuple):
