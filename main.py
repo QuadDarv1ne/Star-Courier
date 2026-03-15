@@ -41,6 +41,7 @@ from src.path_quests import create_alliance_path_quests, create_observer_path_qu
 from src.romance_scenes import create_romance_scenes, get_romance_characters
 from src.ending_scenes import create_ending_scenes, get_ending_by_type, EndingType, EndingVariation
 from src.mental_state import MentalStateSystem, get_condition_description, get_influence_description
+from src.random_events import RandomEventsManager
 
 
 class Game:
@@ -53,6 +54,7 @@ class Game:
         self.mental_state_system = MentalStateSystem()
         self.romance_scenes = create_romance_scenes()
         self.ending_scenes = create_ending_scenes()
+        self.random_events_system = RandomEventsManager()
         self.current_chapter = 1
         self.current_scene = "start"
         self.running = True
