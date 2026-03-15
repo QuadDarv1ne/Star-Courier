@@ -295,16 +295,22 @@ class MentalStateSystem:
             self.add_stress(20)
         else:
             self.add_stress(10)
-        
+
         if casualties > 0:
             self.change_mental_health(-20 * casualties)
             self.add_trauma("combat_trauma")
 
     def on_entity_encounter(self, intensity: int = 10):
         """Событие: контакт с Сущностью"""
+        # Проверка сопротивления перед применением влияния
+        if self.check_resistance(difficulty=intensity):
+            # Успешное сопротивление - влияние减半
+            intensity = intensity // 2
+            logger.info("Успешное сопротивление влиянию Сущности")
+        
         self.change_entity_influence(intensity)
         self.change_mental_health(-5)
-        
+
         if self.player_state.entity_influence >= 50:
             self.player_state.hears_entity = True
             self.player_state.sees_visions = True
@@ -319,7 +325,7 @@ class MentalStateSystem:
         """Событие: отдых"""
         health_recovery = 5 * quality
         stress_reduction = 10 * quality
-        
+
         self.change_mental_health(health_recovery)
         self.reduce_stress(stress_reduction)
 
@@ -327,9 +333,27 @@ class MentalStateSystem:
         """Событие: терапия (Мария или другой медик)"""
         health_recovery = 15 * effectiveness
         stress_reduction = 20 * effectiveness
-        
+
         self.change_mental_health(health_recovery)
         self.reduce_stress(stress_reduction)
+
+    def on_purification(self, strength: int = 1):
+        """Событие: очищение от влияния Сущности"""
+        influence_reduction = 10 * strength
+        health_recovery = 5 * strength
+        
+        self.change_entity_influence(-influence_reduction)
+        self.change_mental_health(health_recovery)
+        logger.info(f"Очищение: влияние -{influence_reduction}, здоровье +{health_recovery}")
+
+    def on_meditation(self, duration: int = 1):
+        """Событие: медитация (снижение стресса и влияния)"""
+        stress_reduction = 15 * duration
+        influence_reduction = 5 * duration
+        
+        self.reduce_stress(stress_reduction)
+        self.change_entity_influence(-influence_reduction)
+        logger.info(f"Медитация: стресс -{stress_reduction}, влияние -{influence_reduction}")
 
     # ==================== ПРОВЕРКИ ====================
 

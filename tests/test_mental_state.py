@@ -153,8 +153,13 @@ class TestMentalStateEvents(unittest.TestCase):
         self.assertEqual(self.system.player_state.health, 60)  # 100 - 20*2
 
     def test_on_entity_encounter(self):
+        """Контакт с Сущностью увеличивает влияние"""
+        initial_influence = self.system.player_state.entity_influence
         self.system.on_entity_encounter(intensity=20)
-        self.assertEqual(self.system.player_state.entity_influence, 20)
+        
+        # Влияние должно увеличиться (с учётом возможного сопротивления)
+        self.assertGreater(self.system.player_state.entity_influence, initial_influence)
+        self.assertLessEqual(self.system.player_state.entity_influence, 20)  # Максимум 20
         self.assertEqual(self.system.player_state.health, 95)  # -5
 
     def test_on_nightmare(self):
@@ -255,6 +260,99 @@ class TestSerialization(unittest.TestCase):
         self.assertEqual(system.player_state.stress, 30)
         self.assertTrue(system.player_state.has_nightmares)
         self.assertTrue(system.player_state.sees_visions)
+
+
+class TestResistanceMechanics(unittest.TestCase):
+    """Тесты механик сопротивления Сущности"""
+
+    def test_purification_reduces_influence(self):
+        """Очищение снижает влияние Сущности"""
+        system = MentalStateSystem()
+        system.player_state.entity_influence = 50
+        system.player_state.health = 80
+
+        system.on_purification(strength=2)
+
+        self.assertEqual(system.player_state.entity_influence, 30)  # 50 - 20
+        self.assertEqual(system.player_state.health, 90)  # 80 + 10
+
+    def test_meditation_reduces_stress_and_influence(self):
+        """Медитация снижает стресс и влияние"""
+        system = MentalStateSystem()
+        system.player_state.stress = 60
+        system.player_state.entity_influence = 40
+
+        system.on_meditation(duration=2)
+
+        self.assertEqual(system.player_state.stress, 30)  # 60 - 30
+        self.assertEqual(system.player_state.entity_influence, 30)  # 40 - 10
+
+    def test_resistance_check_with_high_health(self):
+        """Проверка сопротивления с высоким здоровьем"""
+        system = MentalStateSystem()
+        system.player_state.health = 90
+        system.player_state.entity_influence = 10
+
+        # При высоком здоровье шанс сопротивления высокий
+        successes = 0
+        for _ in range(100):
+            if system.check_resistance(difficulty=30):
+                successes += 1
+
+        # Должно быть больше 50% успехов
+        self.assertGreater(successes, 50)
+
+    def test_resistance_check_with_low_health(self):
+        """Проверка сопротивления с низким здоровьем"""
+        system = MentalStateSystem()
+        system.player_state.health = 30
+        system.player_state.entity_influence = 60
+
+        # При низком здоровье и высоком влиянии шанс низкий
+        successes = 0
+        for _ in range(100):
+            if system.check_resistance(difficulty=50):
+                successes += 1
+
+        # Должно быть меньше 50% успехов
+        self.assertLess(successes, 50)
+
+    def test_entity_encounter_with_resistance(self):
+        """Контакт с Сущностью с проверкой сопротивления"""
+        system = MentalStateSystem()
+        system.player_state.health = 90  # Высокое здоровье для лучшего сопротивления
+
+        initial_influence = system.player_state.entity_influence
+        system.on_entity_encounter(intensity=20)
+
+        # Влияние должно увеличиться, но возможно меньше из-за сопротивления
+        self.assertGreater(system.player_state.entity_influence, initial_influence)
+        self.assertLessEqual(
+            system.player_state.entity_influence - initial_influence,
+            20  # Не больше базовой интенсивности
+        )
+
+    def test_therapy_improves_mental_state(self):
+        """Терапия улучшает ментальное состояние"""
+        system = MentalStateSystem()
+        system.player_state.health = 50
+        system.player_state.stress = 80
+
+        system.on_therapy(effectiveness=2)
+
+        self.assertEqual(system.player_state.health, 80)  # 50 + 30
+        self.assertEqual(system.player_state.stress, 40)  # 80 - 40
+
+    def test_rest_recovers_health(self):
+        """Отдых восстанавливает здоровье"""
+        system = MentalStateSystem()
+        system.player_state.health = 60
+        system.player_state.stress = 50
+
+        system.on_rest(quality=3)
+
+        self.assertEqual(system.player_state.health, 75)  # 60 + 15
+        self.assertEqual(system.player_state.stress, 20)  # 50 - 30
 
 
 if __name__ == "__main__":

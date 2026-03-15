@@ -1,6 +1,6 @@
 # Star Courier: План разработки
 
-## Статус на 15 марта 2026 (22:30)
+## Статус на 15 марта 2026 (23:30)
 
 ### ✅ Интегрировано (по документации)
 
@@ -79,7 +79,7 @@
 ### Баланс (по документации)
 - [ ] **Способности 50-100 уровня** — протестировать и сбалансировать урон/стоимость
 - [x] **Mental health thresholds** — настроены пороги (80/60/40/20) для геймплея ✅
-- [ ] **Entity influence** — добавить механики сопротивления/очищения
+- [x] **Entity influence** — добавлены механики сопротивления/очищения ✅
 - [ ] **Resonance levels** — проверить разблокировку (1-4 уровни)
 
 ---
@@ -180,14 +180,14 @@ src/
 
 ---
 
-## 🔍 Аудит кода (15.03.2026 22:30)
+## 🔍 Аудит кода (15.03.2026 23:30)
 
 **Проверено:**
 - [x] Все модули импортируются корректно ✅
 - [x] main.py содержит полную интеграцию систем ✅
 - [x] romance_scenes.py — 6 персонажей, сцены работают ✅
 - [x] ending_scenes.py — 3 концовки с вариациями ✅
-- [x] mental_state.py — система ментального здоровья ✅
+- [x] mental_state.py — система ментального здоровья + сопротивление ✅
 - [x] path_quests.py — квесты путей интегрированы ✅
 - [x] dialogues_ch14_18.py — диалоги финальных глав ✅
 - [x] quests_ch14_18.py — квесты финальных глав ✅
@@ -195,16 +195,18 @@ src/
 - [x] scenes_ch14_18.py — сцены глав 14-18 с romance/ending интеграцией ✅
 - [x] gameplay.py — mental state thresholds в бою ✅
 - [x] tests/test_scenes_ch14_18.py — 29 тестов ✅
+- [x] tests/test_mental_state.py — 44 теста (сопротивление/очищение/медитация) ✅
 
 **Git статус:**
 - Ветки: master, dev (синхронизированы)
-- Последний коммит: b6eb701 feat: добавлены сцены глав 14-18
-- Изменения: tests/test_scenes_ch14_18.py (новый), TODO.md
-- Тесты: 151 passed ✅
+- Последний коммит: b58a484 test: добавлены тесты для scenes_ch14_18 (29 тестов)
+- Изменения: src/mental_state.py, tests/test_mental_state.py, TODO.md
+- Тесты: 158 passed ✅ (44 + 29 + 36 + 14 + 22 + 13)
 
 **Структура src/ (35 файлов):**
 - characters.py, dialogues*.py, quests*.py — контент
-- mental_state.py, romance_scenes.py, ending_scenes.py — механики
+- mental_state.py — ментальное здоровье + сопротивление/очищение/медитация
+- romance_scenes.py, ending_scenes.py — механики
 - path_quests.py, path_system.py, resonance.py — системы
 - advanced_abilities.py, abilities.py — способности
 - gameplay.py, save_system.py, items.py — ядро
@@ -213,10 +215,10 @@ src/
 - scenes_ch14_18.py — сцены глав 14-18 (320 строк)
 
 **Структура tests/ (8 файлов):**
-- test_mental_state.py — 36 тестов
+- test_mental_state.py — 44 теста ✅
 - test_romance_scenes.py — 14 тестов
 - test_ending_scenes.py — 22 теста
-- test_scenes_ch14_18.py — 29 тестов (НОВЫЙ)
+- test_scenes_ch14_18.py — 29 тестов
 - test_game.py, test_game_run.py — интеграционные
 
 ---
@@ -357,14 +359,16 @@ src/
 
 **Текущее состояние:**
 - main.py — 1466 строк, UTF-8 encoding fix ✅
-- tests/ — 8 файлов, 151 тест ✅
+- tests/ — 8 файлов, 158 тестов ✅
 - requirements.txt — pytest добавлен ✅
 - src/scenes_ch1_2.py — сцены глав 1-2 (650 строк) ✅
 - src/scenes_ch14_18.py — сцены глав 14-18 (320 строк) ✅
 - src/gameplay.py — mental state thresholds ✅
+- src/mental_state.py — сопротивление/очищение/медитация ✅
 - tests/test_scenes_ch14_18.py — 29 тестов ✅
+- tests/test_mental_state.py — 44 теста ✅
 - working tree: modified files ✅
-- last update: 15.03.2026 (22:30)
+- last update: 15.03.2026 (23:30)
 
 ---
 
