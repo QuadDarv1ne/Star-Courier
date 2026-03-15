@@ -1,6 +1,6 @@
 # Star Courier: План разработки
 
-## Статус на 15 марта 2026 (12:30)
+## Статус на 15 марта 2026 (13:00)
 
 ### ✅ Интегрировано (по документации)
 
@@ -179,7 +179,7 @@ src/
 
 ---
 
-## 🔍 Аудит кода (15.03.2026 12:00)
+## 🔍 Аудит кода (15.03.2026 13:00)
 
 **Проверено:**
 - [x] Все модули импортируются корректно ✅
@@ -193,9 +193,17 @@ src/
 
 **Git статус:**
 - Ветки: master, dev (синхронизированы)
-- Последний коммит: `0a75b9e sync: master → dev`
+- Последний коммит: `b86bf7d sync: master → dev`
 - Изменения: working tree clean ✅
 - Тесты: 122 passed ✅
+
+**Структура src/ (33 файла):**
+- characters.py, dialogues*.py, quests*.py — контент
+- mental_state.py, romance_scenes.py, ending_scenes.py — механики
+- path_quests.py, path_system.py, resonance.py — системы
+- advanced_abilities.py, abilities.py — способности
+- gameplay.py, save_system.py, items.py — ядро
+- utils.py, config.py, colors.py, ascii_art.py — утилиты
 
 ---
 
@@ -312,9 +320,13 @@ src/
 ## 🔄 Прогресс по веткам
 
 **dev → main:**
-- [x] Последняя синхронизация: `0a75b9e sync: master → dev` ✅
+- [x] Последняя синхронизация: `b86bf7d sync: master → dev` ✅
 - [x] Ветки синхронизированы ✅
 - [x] Все изменения отправлены на remote ✅
+
+**Коммиты:**
+- dev: b86bf7d sync: master → dev
+- master: 11eb0e4 merge dev: обновление TODO.md по документации
 
 ---
 
