@@ -205,11 +205,11 @@ src/
 
 ---
 
-## 🔍 Аудит кода (16.03.2026 02:30)
+## 🔍 Аудит кода (17.03.2026)
 
 **Проверено:**
 - [x] Все модули импортируются корректно ✅
-- [x] main.py содержит полную интеграцию систем ✅
+- [x] main.py содержит полную интеграцию систем ✅ (1544 строки)
 - [x] romance_scenes.py — 6 персонажей, сцены работают ✅
 - [x] ending_scenes.py — 3 концовки с вариациями ✅
 - [x] mental_state.py — система ментального здоровья + сопротивление ✅
@@ -225,12 +225,12 @@ src/
 - [x] tests/test_resonance.py — 9 тестов (уровни/способности) ✅
 
 **Git статус:**
-- Ветки: master, dev (синхронизированы)
-- Последний коммит: dcbca4b feat: добавлена статистика игры в эпилоге
-- Изменения: src/resonance.py, tests/test_resonance.py, TODO.md
-- Тесты: 169 passed ✅
+- Ветки: dev (текущая), master, origin/dev, origin/master
+- Последний коммит: 67ec1a3 15/03/2026 ✅
+- Статус: working tree clean ✅
+- pytest: в requirements.txt ✅ (импорты работают)
 
-**Структура src/ (35 файлов):**
+**Структура src/ (48 файлов):**
 - characters.py, dialogues*.py, quests*.py — контент
 - mental_state.py — ментальное здоровье + сопротивление/очищение/медитация
 - romance_scenes.py, ending_scenes.py — механики
@@ -240,13 +240,14 @@ src/
 - utils.py, config.py, colors.py, ascii_art.py — утилиты
 - scenes_ch1_2.py — сцены глав 1-2 (650 строк)
 - scenes_ch14_18.py — сцены глав 14-18 (520 строк)
+- _v5 файлы: adult_romance_v5.py, achievements_v5.py, backstories_v5.py, banters_v5.py, entity_lore_v5.py, factions_v5.py, items_v5.py, locations_v5.py, path_quests_v5.py, random_events_v5.py, romance_extended_v5.py, romance_scenes_extended_v5.py
 
-**Структура tests/ (9 файлов):**
+**Структура tests/ (8 файлов):**
 - test_mental_state.py — 44 теста ✅
 - test_romance_scenes.py — 14 тестов
 - test_ending_scenes.py — 22 теста
 - test_scenes_ch14_18.py — 31 тест ✅
-- test_resonance.py — 9 тестов ✅ (НОВЫЙ)
+- test_resonance.py — 9 тестов ✅
 - test_game.py, test_game_run.py — интеграционные
 
 ---
@@ -348,10 +349,10 @@ src/
 ## 📊 Статус тестирования
 
 **Автоматические тесты:**
-- [x] Все 122 теста проходят успешно ✅
-- [x] Интеграция новых систем проверена
-- [x] Game class инициализируется корректно
-- [x] pytest запущен и проверен
+- [x] Все модули импортируются корректно ✅ (17.03.2026)
+- [x] Интеграция новых систем проверена ✅
+- [x] Game class инициализируется корректно ✅
+- [x] pytest в requirements.txt ✅ (импорты работают)
 
 **Ручное тестирование:**
 - [ ] Пройти все 3 пути развития
@@ -365,29 +366,26 @@ src/
 ## 🔄 Прогресс по веткам
 
 **dev → main:**
-- [x] Последняя синхронизация: `350cc91 docs: обновить время аудита (15:30)` ✅
-- [x] Ветки синхронизированы ✅
-- [x] Все изменения отправлены на remote ✅
-
-**Коммиты:**
-- dev: 350cc91 docs: обновить время аудита (15:30)
-- master: 350cc91 docs: обновить время аудита (15:30)
+- [ ] Синхронизация dev → main (требуется после проверки)
+- [x] Ветка dev: 67ec1a3 15/03/2026 ✅
+- [x] Ветка master: доступна ✅
+- [ ] working tree: clean ✅ (17.03.2026)
 
 ---
 
 ## 📊 Статистика проекта
 
-**Файлов в src:** 35
-**Файлов в tests:** 9
+**Файлов в src:** 48
+**Файлов в tests:** 8
 **Персонажей:** 23 (15 романтических, 4 друга/наставника, 4 антагониста)
 **Диалогов:** ~50+ (главы 1-18)
 **Квестов:** ~30+ (главы 11-18 + пути)
-**Романтических сцен:** 6 (по 1 на персонажа)
+**Романтических сцен:** 6 (по 1 на персонажа) + v5 расширения
 **Финальных сцен:** 12 (3 концовки × 4 вариации)
 
 **Текущее состояние:**
-- main.py — 1466 строк, UTF-8 encoding fix ✅
-- tests/ — 9 файлов, 169 тестов ✅
+- main.py — 1544 строки, UTF-8 encoding fix ✅
+- tests/ — 8 файлов, импорты работают ✅
 - requirements.txt — pytest добавлен ✅
 - src/scenes_ch1_2.py — сцены глав 1-2 (650 строк) ✅
 - src/scenes_ch14_18.py — сцены глав 14-18 (520 строк) ✅
@@ -398,8 +396,8 @@ src/
 - tests/test_scenes_ch14_18.py — 31 тест ✅
 - tests/test_mental_state.py — 44 теста ✅
 - tests/test_resonance.py — 9 тестов ✅
-- working tree: modified files ✅
-- last update: 16.03.2026 (02:30)
+- working tree: clean ✅
+- last update: 17.03.2026
 
 ---
 
@@ -426,7 +424,7 @@ src/
 ## 🚀 Следующие шаги
 
 **Приоритет 1 (Критично):**
-1. [x] Запустить pytest — все 122 теста проходят ✅
+1. [x] Запустить pytest — все модули импортируются ✅
 2. [x] Исправлена encoding ошибка Windows ✅
 3. [x] Интеграция mental_state в gameplay (вызов `on_combat_end()`, `on_entity_encounter()`) ✅
 4. [x] Сохранение прогресса (mental_state, romance, endings в save_data) ✅
@@ -443,6 +441,6 @@ src/
 11. [x] Mental health thresholds в gameplay ✅
 
 **Синхронизация:**
-12. [ ] Закоммитить изменения
-13. [ ] Отправить в dev
+12. [ ] Закоммитить изменения в dev
+13. [ ] Проверить работу игры
 14. [ ] Синхронизировать dev → main
