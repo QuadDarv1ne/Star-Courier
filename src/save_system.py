@@ -32,6 +32,7 @@ try:
     from .mental_state import MentalStateSystem
     from .romance_scenes import RomanceSceneManager
     from .ending_scenes import EndingSceneManager
+    from .faction_manager import FactionManager
 except ImportError:
     from config import SAVE_DIR, DEFAULT_SAVE, GAME_TITLE, VERSION, MAX_INVENTORY_SLOTS
     from characters import CrewManager, Character, Role
@@ -44,6 +45,7 @@ except ImportError:
     from mental_state import MentalStateSystem
     from romance_scenes import RomanceSceneManager
     from ending_scenes import EndingSceneManager
+    from faction_manager import FactionManager
 
 
 @dataclass
@@ -245,6 +247,7 @@ class GameState:
         self.mental_state_system = MentalStateSystem()
         self.romance_manager = RomanceSceneManager()
         self.ending_manager = EndingSceneManager()
+        self.faction_manager = FactionManager()
 
     def new_game(self):
         """Новая игра"""
@@ -312,6 +315,7 @@ class GameState:
         }
         self.save_data.romance = self.romance_manager.to_dict()
         self.save_data.mental_state = self.mental_state_system.to_dict()
+        self.save_data.factions = self.faction_manager.to_dict()
     
     def _sync_from_save(self):
         """Синхронизировать данные сохранения с состоянием"""
@@ -370,6 +374,10 @@ class GameState:
 
         if self.save_data.mental_state:
             self.mental_state_system = MentalStateSystem.from_dict(self.save_data.mental_state)
+
+        if self.save_data.factions:
+            self.faction_manager = FactionManager()
+            self.faction_manager.from_dict(self.save_data.factions)
     
     def set_flag(self, flag: str, value: bool = True):
         """Установить флаг сюжета"""
