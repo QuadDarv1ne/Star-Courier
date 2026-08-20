@@ -363,6 +363,10 @@ class GameplaySystem:
                 if obj.type == ObjectiveType.EXPLORE and obj.target_id == location_id:
                     quest.update_objective(obj.id, 1)
 
+        # Регистрация посещённой локации для достижений
+        if self.game_state:
+            self.game_state.register_location_visited(location_id)
+
     def on_item_collected(self, item_id: str, quantity: int = 1):
         """Событие: предмет подобран"""
         self.add_item(item_id, quantity)
@@ -381,6 +385,10 @@ class GameplaySystem:
                 if obj.type == ObjectiveType.KILL:
                     if not obj.target_id or obj.target_id == enemy_id:
                         quest.update_objective(obj.id, 1)
+
+        # Регистрация победы для достижений
+        if self.game_state:
+            self.game_state.register_enemy_defeat()
 
     def on_dialogue_choice(self, choice_id: str, npc_id: str = ""):
         """Событие: выбор в диалоге"""

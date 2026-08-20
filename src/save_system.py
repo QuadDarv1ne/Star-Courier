@@ -10,14 +10,6 @@ from datetime import datetime
 from typing import Dict, Any, Optional, List
 from pathlib import Path
 
-# Настройка логгирования
-logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-    handlers=[
-        logging.FileHandler('game.log', encoding='utf-8', mode='a'),
-    ]
-)
 logger = logging.getLogger('save_system')
 
 try:
@@ -33,6 +25,7 @@ try:
     from .romance_scenes import RomanceSceneManager
     from .ending_scenes import EndingSceneManager
     from .faction_manager import FactionManager
+    from .advanced_abilities import AdvancedAbilitiesManager
 except ImportError:
     from config import SAVE_DIR, DEFAULT_SAVE, GAME_TITLE, VERSION, MAX_INVENTORY_SLOTS
     from characters import CrewManager, Character, Role
@@ -46,6 +39,7 @@ except ImportError:
     from romance_scenes import RomanceSceneManager
     from ending_scenes import EndingSceneManager
     from faction_manager import FactionManager
+    from advanced_abilities import AdvancedAbilitiesManager
 
 
 @dataclass
@@ -72,6 +66,8 @@ class SaveData:
     endings: Dict[str, Any] = field(default_factory=dict)  # Система Финалов
     romance: Dict[str, Any] = field(default_factory=dict)  # Романтические сцены
     mental_state: Dict[str, Any] = field(default_factory=dict)  # Ментальное состояние
+    factions: Dict[str, Any] = field(default_factory=dict)  # Репутация фракций
+    achievements: Dict[str, Any] = field(default_factory=dict)  # Достижения
 
     def to_dict(self) -> Dict[str, Any]:
         """Сериализовать в словарь"""
@@ -90,6 +86,8 @@ class SaveData:
             "endings": self.endings,
             "romance": self.romance,
             "mental_state": self.mental_state,
+            "factions": self.factions,
+            "achievements": self.achievements,
         }
 
     @classmethod
@@ -122,6 +120,8 @@ class SaveData:
         save.endings = data.get("endings", {})
         save.romance = data.get("romance", {})
         save.mental_state = data.get("mental_state", {})
+        save.factions = data.get("factions", {})
+        save.achievements = data.get("achievements", {})
 
         return save
 
@@ -248,6 +248,10 @@ class GameState:
         self.romance_manager = RomanceSceneManager()
         self.ending_manager = EndingSceneManager()
         self.faction_manager = FactionManager()
+        self.advanced_abilities_manager = AdvancedAbilitiesManager()
+
+        from .achievement_manager import AchievementManager
+        self.achievement_manager = AchievementManager()
 
     def new_game(self):
         """Новая игра"""
@@ -316,6 +320,7 @@ class GameState:
         self.save_data.romance = self.romance_manager.to_dict()
         self.save_data.mental_state = self.mental_state_system.to_dict()
         self.save_data.factions = self.faction_manager.to_dict()
+        self.save_data.achievements = self.achievement_manager.to_dict()
     
     def _sync_from_save(self):
         """Синхронизировать данные сохранения с состоянием"""
@@ -378,6 +383,11 @@ class GameState:
         if self.save_data.factions:
             self.faction_manager = FactionManager()
             self.faction_manager.from_dict(self.save_data.factions)
+
+        if self.save_data.achievements:
+            from .achievement_manager import AchievementManager
+            self.achievement_manager = AchievementManager()
+            self.achievement_manager.from_dict(self.save_data.achievements)
     
     def set_flag(self, flag: str, value: bool = True):
         """Установить флаг сюжета"""
@@ -505,14 +515,54 @@ class GameState:
     
     def check_ending_unlock(self, ending_type: EndingType) -> bool:
         """Проверить разблокировку Финала"""
-        psychic = self.abilities_manager.get_tier(AbilityType.PSYCHIC).value * 25  # Примерный расчёт
+        psychic = self.abilities_manager.get_tier(AbilityType.PSYCHIC).value * 25
         resonance_level = self.resonance_system.get_level_number()
-        abilities = []  # TODO: Получить список способностей
+        abilities = self._collect_ending_abilities()
         completed_quests = self.quest_manager.completed_quests
-        
+
+        # Рассчитываем эмпатию на основе отношений с экипажем
+        empathy = self._calculate_empathy()
+
         return self.ending_system.check_unlock(
-            ending_type, psychic, 0, resonance_level, abilities, completed_quests
+            ending_type, psychic, empathy, resonance_level, abilities, completed_quests
         )
+
+    def _calculate_empathy(self) -> int:
+        """Рассчитать уровень эмпатии на основе отношений с экипажем"""
+        if not self.save_data:
+            return 0
+
+        total_relationship = sum(self.save_data.relationships.values())
+        total_trust = sum(self.save_data.trust_values.values())
+        crew_count = max(len(self.crew_manager.get_all_crew()) - 1, 1)  # минус капитан
+
+        # Эмпатия = среднее отношений + среднее доверия
+        avg_relationship = total_relationship / crew_count
+        avg_trust = total_trust / crew_count
+        empathy = int((avg_relationship + avg_trust) / 2)
+
+        # Ограничиваем 0-100
+        return max(0, min(100, empathy))
+
+    def _collect_ending_abilities(self) -> List[str]:
+        """Собрать список способностей, открывающих Финалы"""
+        abilities = []
+        flags = self.save_data.flags if self.save_data else {}
+
+        if flags.get("exile_path_chosen") or flags.get("sacrifice_strike_unlocked"):
+            abilities.append("sacrifice_strike")
+        if flags.get("treaty_path_chosen") or flags.get("diplomatic_communion_unlocked"):
+            abilities.append("diplomatic_communion")
+        if flags.get("merge_path_chosen") or flags.get("entity_absorption_unlocked"):
+            abilities.append("entity_absorption")
+        if flags.get("transcendence_unlocked"):
+            abilities.append("transcendence")
+
+        for ability_id in self.advanced_abilities_manager.player_abilities:
+            if ability_id not in abilities:
+                abilities.append(ability_id)
+
+        return abilities
     
     def set_active_ending(self, ending_type: EndingType) -> bool:
         """Установить активный Финал"""
@@ -546,3 +596,51 @@ class GameState:
         psychic = self.abilities_manager.get_tier(AbilityType.PSYCHIC).value * 25
         completed_chapters = [self.save_data.chapter] if self.save_data else [1]
         return self.resonance_system.check_level_up(psychic, completed_chapters)
+
+    # === ДОСТИЖЕНИЯ ===
+
+    def get_achievement_manager(self) -> "AchievementManager":
+        """Получить менеджер достижений"""
+        return self.achievement_manager
+
+    def check_achievements(self) -> list:
+        """Проверить все достижения и вернуть новые разблокированные"""
+        return self.achievement_manager.check_all(self)
+
+    def register_enemy_defeat(self, count: int = 1):
+        """Зарегистрировать победу над врагом (для достижений)"""
+        self.achievement_manager.register_enemy_defeat(count)
+        self.check_achievements()
+
+    def register_dialogue_completed(self, dialogue_id: str):
+        """Зарегистрировать завершённый диалог (для достижений)"""
+        self.achievement_manager.register_dialogue(dialogue_id)
+        self.check_achievements()
+
+    def register_location_visited(self, location_id: str):
+        """Зарегистрировать посещённую локацию (для достижений)"""
+        self.achievement_manager.register_location(location_id)
+        self.check_achievements()
+
+    def register_romance_rejection(self):
+        """Зарегистрировать отказ в романтике (для достижений)"""
+        self.achievement_manager.register_rejection()
+        self.check_achievements()
+
+    # === ФРАКЦИИ ===
+
+    def get_faction_manager(self) -> FactionManager:
+        """Получить менеджер фракций"""
+        return self.faction_manager
+
+    def change_faction_reputation(self, faction_id: str, change: int, reason: str = ""):
+        """Изменить репутацию с фракцией"""
+        return self.faction_manager.change_reputation(faction_id, change, reason)
+
+    def apply_faction_action(self, action_id: str):
+        """Применить действие, влияющее на репутацию фракций"""
+        return self.faction_manager.apply_reputation_action(action_id)
+
+    def get_faction_standings(self) -> dict:
+        """Получить отношения со всеми фракциями"""
+        return self.faction_manager.get_all_standings()

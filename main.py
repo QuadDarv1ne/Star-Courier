@@ -10,6 +10,7 @@ import logging
 import socket
 import io
 from pathlib import Path
+from typing import Optional
 
 # Настройка логгирования
 logging.basicConfig(
@@ -51,6 +52,7 @@ from src.chapters_1_5 import (
     get_chapter_dialogues, get_dialogue_by_id, apply_choice_consequence
 )
 from src.gameplay import GameplaySystem
+from src.quests_ch6_10 import register_all_new_quests
 from src.quests_ch11_12 import create_all_chapter11_12_quests
 from src.quests_ch14_18 import create_all_chapter14_18_quests
 from src.path_quests import create_alliance_path_quests, create_observer_path_quests, create_independent_path_quests
@@ -63,6 +65,8 @@ from src.random_events_v5 import SPACE_EVENTS, STATION_EVENTS
 from src.advanced_abilities import AdvancedAbilitiesManager
 from src.abilities_advanced_v5 import ALCHEMY_ADVANCED, BIOTICS_ADVANCED, PSYCHIC_ADVANCED
 from src.achievements_v5 import STORY_ACHIEVEMENTS, COMBAT_ACHIEVEMENTS
+from src.banters_v5 import LOCATION_BANTERS, BANTER_TYPES, get_banter_by_characters
+from src.achievement_manager import format_achievement
 from src.relationship_enhancements import RelationshipEnhancementManager
 from src.backstories_v5 import ALL_BACKSTORIES, get_backstory
 from src.entity_lore_v5 import ENTITY_HISTORY, get_lore_entry, get_available_lore
@@ -142,7 +146,7 @@ class Game:
 
             saves = self.game_state.save_manager.list_saves()
 
-            options = ["Новая игра", "Загрузить игру", "Инвентарь", "Об игре", "Выход"]
+            options = ["Новая игра", "Загрузить игру", "Инвентарь", "Достижения", "Фракции", "Персонажи", "Кодекс", "Об игре", "Выход"]
 
             list_saves_menu(saves)
             print()
@@ -156,9 +160,19 @@ class Game:
             elif choice == 2:
                 self.inventory_screen()
             elif choice == 3:
-                self.about_screen()
+                self.achievements_screen()
             elif choice == 4:
+                self.factions_screen()
+            elif choice == 5:
+                self.backstories_screen()
+            elif choice == 6:
+                self.codex_screen()
+            elif choice == 7:
+                self.about_screen()
+            elif choice == 8:
                 self.quit_game()
+            elif choice == 9:
+                self.save_game_menu()
     
     def new_game(self):
         """Новая игра"""
@@ -207,6 +221,9 @@ class Game:
 
         # Выдача стартового квеста
         self.gameplay.accept_quest("main_001")
+
+        # Инициализация квестов глав 6-10
+        register_all_new_quests(self.gameplay.quest_manager)
 
         # Инициализация квестов глав 11-12
         for quest in create_all_chapter11_12_quests().values():
@@ -363,6 +380,309 @@ class Game:
         except ValueError:
             pass
 
+    def achievements_screen(self):
+        """Экран достижений"""
+        clear_screen()
+        print_header("ДОСТИЖЕНИЯ", TEXT_WIDTH + 4)
+
+        if not self.game_state.save_data:
+            print("\n  Начните игру, чтобы отслеживать достижения.")
+            input("\n  Нажмите Enter...")
+            return
+
+        # Проверяем достижения перед показом
+        newly = self.game_state.check_achievements()
+        if newly:
+            print("\n  ✨ Новые достижения:")
+            for ach in newly:
+                print(f"     {format_achievement(ach, True)}")
+            print()
+
+        progress = self.game_state.achievement_manager.get_progress()
+        print(f"  Прогресс: {progress['unlocked']}/{progress['total']} "
+              f"({progress['percentage']:.1f}%)")
+        print("  " + "-" * 60)
+
+        for category, cat_data in progress["by_category"].items():
+            name_map = {
+                "story": "Сюжетные", "ending": "Концовки", "romance": "Романтика",
+                "combat": "Боевые", "exploration": "Исследование",
+                "ability": "Способности", "path": "Пути",
+                "secret": "Секретные", "statistics": "Статистика"
+            }
+            label = name_map.get(category, category)
+            print(f"\n  {label}: {cat_data['unlocked']}/{cat_data['total']}")
+            for ach_id, ach in self.game_state.achievement_manager.get_visible().items():
+                if ach.get("_category") == category:
+                    unlocked = ach.get("unlocked", False)
+                    print(format_achievement(ach, unlocked))
+
+        input("\n  Нажмите Enter...")
+
+    def factions_screen(self):
+        """Экран отношений с фракциями"""
+        clear_screen()
+        print_header("ФРАКЦИИ", TEXT_WIDTH + 4)
+
+        if not self.game_state.save_data:
+            print("\n  Начните игру, чтобы отслеживать репутацию фракций.")
+            input("\n  Нажмите Enter...")
+            return
+
+        standings = self.game_state.get_faction_standings()
+        if not standings:
+            print("\n  Фракции ещё не обнаружены.")
+            input("\n  Нажмите Enter...")
+            return
+
+        print("  Репутация с фракциями:")
+        print("  " + "-" * 60)
+        for faction_id, data in standings.items():
+            tier = data["tier"]
+            tier_name = tier.get("name", "Нейтральный") if tier else "Нейтральный"
+            rep = data["reputation"]
+            hunted = "  ⚠ ОХОТА!" if data.get("hunted") else ""
+            print(f"  {data['name']}: {rep} ({tier_name}){hunted}")
+            bonuses = data.get("bonuses", {})
+            if bonuses:
+                bonus_names = []
+                if bonuses.get("shop_discount"):
+                    bonus_names.append(f"скидка {bonuses['shop_discount']}%")
+                if bonuses.get("safe_haven"):
+                    bonus_names.append("убежище")
+                if bonuses.get("fleet_support"):
+                    bonus_names.append("поддержка флота")
+                if bonus_names:
+                    print(f"     Бонусы: {', '.join(bonus_names)}")
+            penalties = data.get("penalties", {})
+            if penalties.get("hunted"):
+                print(f"     Штраф: {penalties.get('bounty', 'награда за голову')} кр.")
+            print()
+
+        input("\n  Нажмите Enter...")
+
+    def backstories_screen(self):
+        """Экран предысторий персонажей"""
+        from src.backstories_v5 import ALL_BACKSTORIES, get_backstory
+
+        clear_screen()
+        print_header("ПРЕДЫСТОРИИ ПЕРСОНАЖЕЙ", TEXT_WIDTH + 4)
+
+        char_names = {
+            "mia": "Мия Чен",
+            "maria": "Мария",
+            "anna": "Анна",
+            "veronica": "Вероника",
+            "zara": "Зара",
+            "kira": "Кира",
+        }
+
+        while True:
+            clear_screen()
+            print_header("ПРЕДЫСТОРИИ ПЕРСОНАЖЕЙ", TEXT_WIDTH + 4)
+            options = list(char_names.values()) + ["Назад"]
+            choice = print_menu("Выберите персонажа", options)
+
+            if choice == len(options) - 1:
+                return
+
+            char_id = list(char_names.keys())[choice]
+            backstory = get_backstory(char_id)
+            if not backstory:
+                continue
+
+            clear_screen()
+            basic = backstory.get("basic_info", {})
+            print_header(f"{char_names[char_id]}", TEXT_WIDTH + 4)
+            print(f"  Полное имя: {basic.get('full_name', '—')}")
+            print(f"  Возраст: {basic.get('age', '—')}")
+            print(f"  Происхождение: {basic.get('origin', '—')}")
+            print(f"  Профессия: {basic.get('former_occupation', '—')}")
+            print()
+            print_separator("-", TEXT_WIDTH + 4)
+
+            sections = [
+                ("childhood", "Детство"),
+                ("education", "Образование"),
+                ("fall_from_grace", "Падение"),
+                ("before_courier", "До встречи с Курьером"),
+            ]
+            for section_key, section_title in sections:
+                text = backstory.get(section_key, "").strip()
+                if text:
+                    print(f"\n  {section_title}:")
+                    for line in text.split("\n"):
+                        print(f"  {line}")
+                    print()
+
+            input("\n  Нажмите Enter...")
+
+    def codex_screen(self):
+        """Экран кодекса — лор Сущности и древней цивилизации"""
+        from src.entity_lore_v5 import get_lore_entry
+
+        clear_screen()
+        print_header("КОДЕКС", TEXT_WIDTH + 4)
+
+        if not self.game_state.save_data:
+            print("\n  Начните игру, чтобы открыть записи лора.")
+            input("\n  Нажмите Enter...")
+            return
+
+        chapter = self.game_state.save_data.chapter
+        categories = {
+            "entity": "Сущность",
+            "guardian": "Страж Ядра",
+            "artifact": "Артефакты",
+            "prophecy": "Пророчества",
+        }
+
+        lore_unlocks = {
+            1: [("entity", "origin")],
+            6: [("entity", "first_contact")],
+            11: [("entity", "the_bargain")],
+            12: [("entity", "corruption"), ("artifact", "time_crystal")],
+            14: [("entity", "the_catastrophe"), ("artifact", "anchor_station")],
+            15: [("entity", "awakening")],
+            17: [("guardian", "identity"), ("guardian", "before_guardianship")],
+            18: [("entity", "the_sacrifice"), ("guardian", "current_purpose")],
+        }
+
+        available = []
+        for unlock_chapter, entries in lore_unlocks.items():
+            if chapter >= unlock_chapter:
+                for category, entry_id in entries:
+                    entry = get_lore_entry(category, entry_id, None)
+                    if entry:
+                        available.append((category, entry))
+
+        if not available:
+            print("\n  Записи откроются по мере прохождения глав.")
+            input("\n  Нажмите Enter...")
+            return
+
+        while True:
+            clear_screen()
+            print_header("КОДЕКС", TEXT_WIDTH + 4)
+            print(f"  Доступно записей: {len(available)}")
+            print()
+            options = [f"{entry['name']} ({categories.get(cat, cat)})"
+                       for cat, entry in available] + ["Назад"]
+            choice = print_menu("Записи лора", options)
+
+            if choice == len(options) - 1:
+                return
+
+            entry = available[choice][1]
+            clear_screen()
+            print_header(entry["name"], TEXT_WIDTH + 4)
+            if entry.get("era"):
+                print(f"  Эпоха: {entry['era']}")
+            print()
+            print_separator("-", TEXT_WIDTH + 4)
+            for line in entry.get("description", "").strip().split("\n"):
+                print(f"  {line}")
+            print()
+            input("\n  Нажмите Enter...")
+
+    def path_choice_screen(self):
+        """Экран выбора Пути"""
+        from src.path_system import PathType
+        
+        clear_screen()
+        print_header("ВЫБОР ПУТИ", TEXT_WIDTH + 4)
+        
+        if not self.game_state.path_system.can_choose_path():
+            current = self.game_state.path_system.get_current_path()
+            if current:
+                path_name = getattr(current, 'name', 'Неизвестно')
+                path_desc = getattr(current, 'description', '')
+                print(f"\n  Вы уже выбрали Путь: {path_name}")
+                if path_desc:
+                    print(f"  Описание: {path_desc}")
+            else:
+                print("\n  Путь уже выбран ранее.")
+            input("\n  Нажмите Enter...")
+            return
+        
+        print("\n  Три силы предлагают поддержку в борьбе с Сущностью.")
+        print("  Ваш выбор определит судьбу галактики.\n")
+        
+        options = []
+        for path_type in PathType:
+            path = self.game_state.path_system.paths.get(path_type)
+            if path:
+                options.append(f"{path.name} — {path.description}")
+        
+        options.append("Отложить выбор")
+        
+        choice = print_menu("Выберите Путь", options)
+        
+        if choice == len(options) - 1:
+            return
+        
+        path_types = list(PathType)
+        if choice < len(path_types):
+            path_type = path_types[choice]
+            result = self.game_state.path_system.choose_path(path_type)
+            if result:
+                path = self.game_state.path_system.get_current_path()
+                if path:
+                    print(f"\n  ✓ Вы выбрали Путь: {getattr(path, 'name', 'Неизвестно')}")
+                    print(f"  {getattr(path, 'description', '')}")
+                
+                # Сохраняем флаг для достижений
+                path_flags = {
+                    PathType.ALLIANCE: "alliance_path_chosen",
+                    PathType.OBSERVER: "observer_path_chosen",
+                    PathType.INDEPENDENCE: "independence_path_chosen",
+                }
+                flag = path_flags.get(path_type)
+                if flag:
+                    self.game_state.set_flag(flag, True)
+            
+            input("\n  Нажмите Enter...")
+
+    def ending_preview_screen(self):
+        """Экран предпросмотра концовок"""
+        from src.ending_system import EndingType
+        
+        clear_screen()
+        print_header("КОНЦОВКИ", TEXT_WIDTH + 4)
+        
+        if not self.game_state.save_data:
+            print("\n  Начните игру, чтобы отслеживать доступные концовки.")
+            input("\n  Нажмите Enter...")
+            return
+        
+        psychic_tier = self.game_state.abilities_manager.get_tier(
+            __import__('src.abilities', fromlist=['AbilityType']).AbilityType.PSYCHIC
+        )
+        psychic_value = psychic_tier.value * 25
+        empathy = self.game_state._calculate_empathy()
+        resonance_level = self.game_state.resonance_system.get_level_number()
+        abilities = self.game_state._collect_ending_abilities()
+        completed_quests = self.game_state.quest_manager.completed_quests
+        
+        print(f"\n  Psychic: {psychic_value} | Эмпатия: {empathy} | Резонанс: {resonance_level}")
+        print(f"  Способности: {', '.join(abilities) if abilities else '—'}")
+        print(f"  Завершённые квесты: {len(completed_quests)}\n")
+        
+        ending_names = {
+            EndingType.EXILE: "Изгнание — Уничтожение якоря Сущности",
+            EndingType.TREATY: "Договор — Хранительство Границы",
+            EndingType.MERGE: "Слияние — Трансцендентная эволюция",
+        }
+        
+        for ending_type in EndingType:
+            unlocked = self.game_state.check_ending_unlock(ending_type)
+            status = "✓ Разблокирована" if unlocked else "✗ Не доступна"
+            name = ending_names.get(ending_type, ending_type.value)
+            print(f"  {name}: {status}")
+        
+        print()
+        input("  Нажмите Enter...")
+
     def quit_game(self):
         """Выход из игры"""
         if confirm("Выйти из игры?"):
@@ -442,12 +762,22 @@ class Game:
         if self.game_state.get_flag("pirate_battle_chosen"):
             print("  Вы выбрали бой с пиратами.")
             self.game_state.set_flag("selena_enemy", True)
+            # Репутация: война с пиратами повышает доверие Альянса
+            self.game_state.change_faction_reputation("alliance", 10, "борьба с пиратами")
+            self.game_state.change_faction_reputation("criminal_syndicate", -15, "атака на пиратов")
+            # Увеличиваем резонанс за конфликт
+            self.game_state.resonance_system.add_experience(3)
         elif self.game_state.get_flag("pirate_negotiation_chosen"):
             print("  Вы договорились с пиратами.")
             self.game_state.change_relationship("selena_ro", 10)
+            # Репутация: дипломатия с пиратами снижает доверие Альянса
+            self.game_state.change_faction_reputation("alliance", -5, "переговоры с пиратами")
+            self.game_state.change_faction_reputation("criminal_syndicate", 5, "мирные переговоры")
+            self.game_state.resonance_system.add_experience(2)
         else:
             print("  Вы сбежали через астероидное поле.")
             self.game_state.change_trust("nadezhda", 15)
+            self.game_state.resonance_system.add_experience(1)
         
         input("\n  Нажмите Enter...")
     
@@ -504,7 +834,8 @@ class Game:
         print()
 
         # Проверяем отношения с Ириной
-        irina_rel = self.game_state.crew_manager.get_character("irina_lebedeva").relationship
+        irina_char = self.game_state.crew_manager.get_character("irina_lebedeva")
+        irina_rel = irina_char.relationship if irina_char else 0
 
         if irina_rel >= 40:
             options = ["Что с артефактом?", "Есть опасность?", "Ты сегодня прекрасно выглядишь", "Нужна помощь?"]
@@ -596,7 +927,8 @@ class Game:
         # Взаимодействие с Риной
         print("\n  Рина повернулась:")
         
-        rina_rel = self.game_state.crew_manager.get_character("rina_mirai").relationship
+        rina_char = self.game_state.crew_manager.get_character("rina_mirai")
+        rina_rel = rina_char.relationship if rina_char else 0
         if rina_rel >= 30:
             rina_options = ["Доложи обстановку", "Есть проблемы?", "Ты сегодня особенно хороша", "Хорошая работа"]
         else:
@@ -665,19 +997,28 @@ class Game:
         
         # Влияние на команду
         print("\n  [Реакция экипажа:]")
-        rina_trust = self.game_state.crew_manager.get_character("rina_mirai").trust
+        rina_char2 = self.game_state.crew_manager.get_character("rina_mirai")
+        rina_trust = rina_char2.trust if rina_char2 else 0
         if rina_trust >= 50:
             print("  — Рина: «Капитан, я прикрою с любой стороны.»")
             self.game_state.change_trust("rina_mirai", 3)
         else:
             print("  — Рина выглядит напряжённой.")
         
-        nadezhda_trust = self.game_state.crew_manager.get_character("nadezhda").trust
+        nadezhda_char = self.game_state.crew_manager.get_character("nadezhda")
+        nadezhda_trust = nadezhda_char.trust if nadezhda_char else 0
         if nadezhda_trust >= 50:
             print("  — Надежда: «Оружие готово к бою.»")
             self.game_state.change_trust("nadezhda", 3)
         else:
             print("  — Надежда проверяет системы безопасности.")
+
+        # Влияние на репутацию фракций
+        if self.game_state.get_flag("pirate_battle_chosen"):
+            self.game_state.change_faction_reputation("alliance", 10, "бой с пиратами")
+            self.game_state.change_faction_reputation("criminal_syndicate", -15, "атака на пиратов")
+        elif self.game_state.get_flag("pirate_negotiation_chosen"):
+            self.game_state.change_faction_reputation("criminal_syndicate", 5, "переговоры с пиратами")
 
         input("\n  [Нажмите Enter...]")
     
@@ -706,7 +1047,8 @@ class Game:
         print()
 
         # Проверяем доверие к Алии
-        alia_trust = self.game_state.crew_manager.get_character("alia_naar").trust
+        alia_char = self.game_state.crew_manager.get_character("alia_naar")
+        alia_trust = alia_char.trust if alia_char else 0
         
         print("  [Ваша реакция:]")
         if alia_trust >= 60:
@@ -767,8 +1109,9 @@ class Game:
         print()
 
         # Проверяем отношения с Алией
-        alia_rel = self.game_state.crew_manager.get_character("alia_naar").relationship
-        alia_trust = self.game_state.crew_manager.get_character("alia_naar").trust
+        alia_char2 = self.game_state.crew_manager.get_character("alia_naar")
+        alia_rel = alia_char2.relationship if alia_char2 else 0
+        alia_trust = alia_char2.trust if alia_char2 else 0
 
         choice = get_choice(
             "Ваши действия?",
@@ -884,6 +1227,9 @@ class Game:
         # Завершаем бой
         self.gameplay.end_combat(victory=True)
 
+        # Регистрация победы для достижений
+        self.game_state.register_enemy_defeat()
+
         # Интеграция mental_state: последствия боя
         self.mental_state_system.on_combat_end(victory=True, casualties=0)
 
@@ -910,7 +1256,8 @@ class Game:
         print(text)
         print()
 
-        irina_rel = self.game_state.crew_manager.get_character("irina_lebedeva").relationship
+        irina_char3 = self.game_state.crew_manager.get_character("irina_lebedeva")
+        irina_rel = irina_char3.relationship if irina_char3 else 0
 
         if irina_rel >= 60:
             options = ["Осмотреть ближе", "Сканировать", "Позвать Ирину", "Пригласить Ирину"]
@@ -929,6 +1276,10 @@ class Game:
             
             # Интеграция mental_state: контакт с Сущностью
             self.mental_state_system.on_entity_encounter(intensity=15)
+            # Резонанс увеличивается при контакте с артефактом
+            self.game_state.resonance_system.add_experience(5)
+            # Сущность не одобряет близкий контакт без подготовки
+            self.game_state.change_faction_reputation("entity", -3, "близкий контакт с артефактом")
         elif choice == 1:
             print("\n  Сканирование показало аномалию:")
             print("  > Энергия: 847 ТэВ (норма: 150)")
@@ -1038,8 +1389,14 @@ class Game:
             except (IndexError, KeyError, TypeError) as e:
                 logger.debug(f"Ошибка диалога: {e}")
                 break
+
+        # Регистрация завершённого диалога для достижений
+        if self.dialogue_manager.current_dialogue:
+            self.game_state.register_dialogue_completed(
+                self.dialogue_manager.current_dialogue.id
+            )
     
-    def _find_char_id_by_name(self, name: str) -> str:
+    def _find_char_id_by_name(self, name: str) -> Optional[str]:
         """Найти ID персонажа по имени"""
         name_map = {
             "Афина": "athena",
@@ -1052,7 +1409,126 @@ class Game:
             "Селена Ро": "selena_ro",
         }
         return name_map.get(name)
-
+    
+    def trigger_crew_banter(self, location: str = "") -> bool:
+        """
+        Запустить случайный бантер между членами экипажа.
+        Возвращает True если бантер был запущен.
+        """
+        import random
+        
+        crew_ids = list(self.game_state.crew_manager.crew.keys())
+        crew_ids = [c for c in crew_ids if c != "max_well"]
+        
+        if len(crew_ids) < 2:
+            return False
+        
+        # Выбираем двух случайных персонажей
+        char1, char2 = random.sample(crew_ids, 2)
+        
+        # Проверяем что отношения позволяют бантер
+        rel1 = self.game_state.crew_manager.get_character(char1)
+        rel2 = self.game_state.crew_manager.get_character(char2)
+        
+        if not rel1 or not rel2:
+            return False
+        
+        min_rel = 20  # Минимальные отношения для бантера
+        
+        if rel1.relationship < min_rel or rel2.relationship < min_rel:
+            return False
+        
+        # Ищем бантер по персонажам
+        banter = get_banter_by_characters(char1, char2, self.game_state)
+        
+        if banter:
+            clear_screen()
+            print_header("ЭКИПАЖ", TEXT_WIDTH + 4)
+            print(f"\n  {banter['title']}")
+            print(f"\n  {banter['text']}")
+            print(f"\n  [{char1.replace('_', ' ').title()}] → [{char2.replace('_', ' ').title()}]")
+            input("\n  [Нажмите Enter...]")
+            return True
+        
+        return False
+    
+    def trigger_random_event(self) -> bool:
+        """
+        Запустить случайное событие.
+        Возвращает True если событие было запущено.
+        """
+        import random
+        
+        # Определяем текущее окружение
+        chapter = self.game_state.save_data.chapter if self.game_state.save_data else 1
+        
+        if chapter <= 5:
+            events = list(SPACE_EVENTS.values())
+        elif chapter <= 10:
+            events = list(STATION_EVENTS.values())
+        else:
+            events = list(SPACE_EVENTS.values()) + list(STATION_EVENTS.values())
+        
+        if not events:
+            return False
+        
+        # Шанс 30% на случайное событие
+        if random.random() > 0.3:
+            return False
+        
+        event = random.choice(events)
+        
+        # Нормализуем ключи событий
+        event_title = event.get("name", event.get("title", "Неизвестное событие"))
+        event_desc = event.get("description", "")
+        choices = event.get("choices", [])
+        
+        clear_screen()
+        print_header("СЛУЧАЙНОЕ СОБЫТИЕ", TEXT_WIDTH + 4)
+        print(f"\n  ⚡ {event_title}")
+        print(f"\n  {event_desc}")
+        
+        # Выбираем случайный вариант ответа
+        if choices:
+            choice = random.choice(choices)
+            choice_text = choice.get("text", "Продолжить")
+            event_effects = choice.get("effects", {})
+            
+            print(f"\n  > {choice_text}")
+            
+            # Применяем эффекты события
+            if event_effects:
+                print("\n  Эффекты:")
+                if "credits" in event_effects:
+                    self.game_state.add_credits(event_effects["credits"])
+                    print(f"    Кредиты: {'+' if event_effects['credits'] >= 0 else ''}{event_effects['credits']}")
+                if "relationship" in event_effects:
+                    for char_id, amount in event_effects["relationship"].items():
+                        self.game_state.change_relationship(char_id, amount)
+                        print(f"    Отношения с {char_id}: {'+' if amount >= 0 else ''}{amount}")
+                if "faction" in event_effects:
+                    for faction_id, amount in event_effects["faction"].items():
+                        self.game_state.change_faction_reputation(faction_id, amount, event_title)
+                        print(f"    Фракция {faction_id}: {'+' if amount >= 0 else ''}{amount}")
+                if "resonance_experience" in event_effects:
+                    self.game_state.resonance_system.add_experience(event_effects["resonance_experience"])
+                    print(f"    Резонанс: +{event_effects['resonance_experience']}")
+                if "mental_health" in event_effects:
+                    self.game_state.update_mental_state(health_change=event_effects["mental_health"])
+                    print(f"    Ментальное здоровье: {'+' if event_effects['mental_health'] >= 0 else ''}{event_effects['mental_health']}")
+                if "knowledge" in event_effects:
+                    print(f"    Знания: +{event_effects['knowledge']}")
+                if "rare_material" in event_effects:
+                    print(f"    Получен редкий материал!")
+                if "intel" in event_effects:
+                    print(f"    Разведданные: +{event_effects['intel']}")
+                if "determination" in event_effects:
+                    print(f"    Решимость: +{event_effects['determination']}")
+        
+        print()
+        input("  [Нажмите Enter для продолжения...]")
+        return True
+    
     def show_status(self):
         """Показать статус игрока"""
         clear_screen()
@@ -1211,16 +1687,38 @@ class Game:
             print("  💕 Романтик главы 1")
             print("     Экипаж особенно предан вам")
 
+        # Статус фракций
+        print("\n  ═══════════════════════════════════════")
+        print("  ФРАКЦИИ")
+        print("  ═══════════════════════════════════════")
+        standings = self.game_state.get_faction_standings()
+        for faction_id, data in standings.items():
+            if data["reputation"] != 0:
+                tier_name = data["tier"].get("name", "Нейтральный") if data["tier"] else "Нейтральный"
+                print(f"  {data['name']}: {data['reputation']} ({tier_name})")
+
+        # Статус Пути
+        current_path = self.game_state.path_system.get_current_path()
+        if current_path and current_path.chosen:
+            print(f"\n  Выбранный Путь: {current_path.name}")
+
+        # Проверка повышения уровня Резонанса
+        psychic_tier = self.game_state.abilities_manager.get_tier(
+            __import__('src.abilities', fromlist=['AbilityType']).AbilityType.PSYCHIC
+        )
+        resonance_level = self.game_state.check_resonance_level_up()
+        print(f"\n  Резонанс: {resonance_level.name}")
+
         print()
         self.game_state.save_game("autosave.json")
         print("  Игра автоматически сохранена.")
         print("\n  ═══════════════════════════════════════")
-        print("  ГЛАВА 2: СЛЕД В ПУСТОТЕ")
+        print("  ГЛАВА 3: ТЕНИ ПРОШЛОГО")
         print("  Доступно сейчас...")
         print("  ═══════════════════════════════════════")
         input("\n  Нажмите Enter для продолжения...")
         
-        self.play_chapter_2()
+        self.play_chapter_3()
 
     def play_chapter_2(self):
         """Глава 2: След в пустоте"""
@@ -1250,6 +1748,253 @@ class Game:
             return
 
         self.chapter_2_end()
+
+    def play_chapter_3(self):
+        """Глава 3: Тени прошлого"""
+        clear_screen()
+        print_header("ГЛАВА 3: ТЕНИ ПРОШЛОГО", TEXT_WIDTH + 4)
+        print("\n  «Элея» продолжает путь. 2187 год.")
+        print("  Корабль обнаруживает обломки древнего судна...")
+        input("\n  [Нажмите Enter для начала...]")
+
+        self.scene_ch3_discovery()
+        if not self.running:
+            return
+
+        self.scene_ch3_boarding()
+        if not self.running:
+            return
+
+        self.scene_ch3_mystery()
+        if not self.running:
+            return
+
+        self.scene_ch3_return()
+        if not self.running:
+            return
+
+        self.chapter_3_end()
+
+    def scene_ch3_discovery(self):
+        """Сцена: Обнаружение обломков"""
+        clear_screen()
+        print("\n  [ОБНАРУЖЕНИЕ]")
+        print_separator("-")
+        print()
+
+        text = """
+  Рина вызывает вас на мостик. На экране — массивные обломки,
+  вращающиеся вокруг тусклой звезды. Судно древнее, но технологии
+  unmistakably человеческие — или почти человеческие.
+
+  — Капитан, это... что-то не так. Сканеры показывают энергию.
+    Активная энергия.
+        """
+        print(text)
+        print()
+
+        choice = get_choice(
+            "Ваша реакция?",
+            ["Отправить шаттл", "Сканировать поближе", "Позвать Ирину"]
+        )
+
+        if choice == 0:
+            print("\n  — Готовим шаттл. Я пойду первый.")
+            self.game_state.set_flag("ch3_self_boarding", True)
+            self.game_state.change_trust("rina_mirai", 5)
+        elif choice == 1:
+            print("\n  — Рина, сканировать на максимальной мощности.")
+            print("  Данные показывают структуру... это не корабль.")
+            print("  Это станция. Маленькая, но живая.")
+            self.game_state.set_flag("ch3_station_found", True)
+            self.game_state.change_trust("rina_mirai", 3)
+        else:
+            print("\n  Ирина прибывает с портативным сканером.")
+            print("  — Это... я видела подобное в архивах. Очень давно.")
+            self.game_state.change_relationship("irina_lebedeva", 5)
+            self.game_state.set_flag("irina_ch3_involved", True)
+
+        input("\n  [Нажмите Enter...]")
+
+    def scene_ch3_boarding(self):
+        """Сцена: Посадка на обломки"""
+        clear_screen()
+        print("\n  [ПОСАДКА]")
+        print_separator("-")
+        print()
+
+        text = """
+  Шлюз открывается с тяжёлым стоном. Внутри — темнота и пыль
+  тысячелетней давности. Ваш фонарь выхватывает из мрака
+  обломки коридоров, покрытых странными символами.
+
+  Алия:
+  — Макс, атмосфера пригодна для дыхания. Но давление...
+    нестабильно. Лучше не снимать шлем.
+        """
+        print(text)
+        print()
+
+        choice = get_choice(
+            "Двигаться?",
+            ["Вперёд по коридору", "Осмотреть символы", "Проверить давление"]
+        )
+
+        if choice == 0:
+            print("\n  Вы продвигаетесь вперёд. Коридор ведёт к большому залу.")
+            self.game_state.set_flag("ch3_hall_discovered", True)
+        elif choice == 1:
+            print("\n  Символы... они знакомы. Это тот же язык, что на артефакте.")
+            self.game_state.set_flag("ch3_symbols_decoded", True)
+            self.game_state.change_trust("athena", 5)
+            self.game_state.set_flag("psychic_connection", True)
+        else:
+            print("\n  Алия проверяет датчики.")
+            print("  — Давление падает. У нас есть время, но не много.")
+            self.game_state.change_relationship("alia_naar", 3)
+
+        input("\n  [Нажмите Enter...]")
+
+    def scene_ch3_mystery(self):
+        """Сцена: Тайна в зале"""
+        clear_screen()
+        print("\n  [ЗАЛ]")
+        print_separator("-")
+        print()
+
+        text = """
+  Большой зал. В центре — кристаллическая структура, пульсирующая
+  слабым голубым светом. На стенах — изображения. Люди. Но...
+  не совсем люди.
+
+  Афина:
+  — Капитан, эта структура... она содержит данные.
+    Огромный объём данных. Я могу попытаться расшифровать.
+        """
+        print(text)
+        print()
+
+        # Проверяем психическую связь
+        psychic = self.game_state.get_flag("psychic_connection", False)
+
+        if psychic:
+            print("  [Вы чувствуете отклик. Артефакт на корабле пульсирует в унисон.]")
+            print()
+
+        choice = get_choice(
+            "Ваши действия?",
+            ["Позволить Афине расшифровать", "Прикоснуться к кристаллу", "Отойти и наблюдать"]
+        )
+
+        if choice == 0:
+            print("\n  Афина подключается. Данные начинают поступать...")
+            print("  Это — история. История цивилизации, которая существовала")
+            print("  задолго до человечества.")
+            self.game_state.set_flag("ch3_history_unlocked", True)
+            self.game_state.change_trust("athena", 10)
+            self.game_state.abilities_manager.add_xp("psychic", 15)
+        elif choice == 1:
+            print("\n  Вы протягиваете руку...")
+            print("  Вспышка. Видения. Миллионы лет истории проносятся")
+            print("  перед вашими глазами.")
+            print("\n  [Психическая связь усиливается]")
+            self.game_state.set_flag("ch3_vision", True)
+            self.game_state.set_flag("psychic_connection", True)
+            self.game_state.abilities_manager.add_xp("psychic", 25)
+            self.mental_state_system.on_entity_encounter(intensity=20)
+        else:
+            print("\n  Вы наблюдаете. Афина работает.")
+            print("  Данные поступают медленно, но steadily.")
+            self.game_state.set_flag("ch3_history_unlocked", True)
+            self.game_state.change_trust("athena", 5)
+            self.game_state.abilities_manager.add_xp("psychic", 10)
+
+        input("\n  [Нажмите Enter...]")
+
+    def scene_ch3_return(self):
+        """Сцена: Возвращение на «Элею»"""
+        clear_screen()
+        print("\n  [ВОЗВРАЩЕНИЕ]")
+        print_separator("-")
+        print()
+
+        text = """
+  Вы возвращаетесь на борт. Экипаж ждёт доклада.
+
+  Рина:
+  — Что вы нашли, капитан?
+
+  Алия:
+  — Макс, ты бледный. Тебя что-то... коснулось?
+        """
+        print(text)
+        print()
+
+        vision = self.game_state.get_flag("ch3_vision", False)
+        history = self.game_state.get_flag("ch3_history_unlocked", False)
+
+        if vision and history:
+            print("\n  — Я видел... их. Цивилизацию, которая создала артефакт.")
+            print("  Они не погибли. Они... трансформировались.")
+            self.game_state.set_flag("ch3_full_revelation", True)
+            self.game_state.change_trust("alia_naar", 10)
+            self.game_state.change_trust("rina_mirai", 10)
+        elif vision:
+            print("\n  — Мне показалось... или я увидел что-то невероятное.")
+            print("  Но я не готов это обсуждать.")
+            self.game_state.change_relationship("alia_naar", 5)
+        elif history:
+            print("\n  — Мы нашли историю. Древнюю, но важную для нас.")
+            print("  Ирине нужно это изучить.")
+            self.game_state.change_relationship("irina_lebedeva", 5)
+        else:
+            print("\n  — Ничего критичного. Просто старые обломки.")
+            print("  Но я хочу, чтобы Ирина изучила то, что мы нашли.")
+
+        input("\n  [Нажмите Enter...]")
+
+    def chapter_3_end(self):
+        """Конец третьей главы"""
+        clear_screen()
+        print_header("ГЛАВА 3 ЗАВЕРШЕНА", TEXT_WIDTH + 4)
+
+        print("\n  Вы завершили третью главу!")
+        print("\n  Статистика:")
+
+        # Отношения
+        print("    • Отношения с экипажем:")
+        for name, status in self.game_state.get_crew_relationships():
+            print(f"      — {name}: {status}")
+
+        # Найденные знания
+        knowledge = sum([
+            self.game_state.get_flag("ch3_symbols_decoded", False),
+            self.game_state.get_flag("ch3_history_unlocked", False),
+            self.game_state.get_flag("ch3_vision", False),
+            self.game_state.get_flag("ch3_full_revelation", False),
+        ])
+        print(f"\n    • Открыто тайн: {knowledge}/4")
+
+        # Психическая связь
+        if self.game_state.get_flag("psychic_connection", False):
+            print("    • Психическая связь: УСИЛЕНА")
+
+        # Романтическая линия
+        print("\n  Романтическая линия:")
+        top_char = self.game_state.get_top_relationship()
+        if top_char:
+            print(f"    • {top_char[0]}: {top_char[1]}")
+
+        print()
+        self.game_state.save_game("autosave_ch3.json")
+        print("  Игра автоматически сохранена.")
+        print("\n  ═══════════════════════════════════════")
+        print("  ГЛАВА 4: ВОЗМЕЗДИЕ")
+        print("  Доступно скоро...")
+        print("  ═══════════════════════════════════════")
+        input("\n  Нажмите Enter для возврата в меню...")
+        
+        self.main_menu()
 
     def scene_ch2_morning(self):
         """Сцена: Утро и выбор романтической линии"""
@@ -1458,7 +2203,13 @@ class Game:
         print()
         self.game_state.save_game("autosave_ch2.json")
         print("  Игра автоматически сохранена.")
-        input("\n  Нажмите Enter для возврата в меню...")
+        print("\n  ═══════════════════════════════════════")
+        print("  ГЛАВА 3: ТЕНИ ПРОШЛОГО")
+        print("  Доступно сейчас...")
+        print("  ═══════════════════════════════════════")
+        input("\n  Нажмите Enter для продолжения...")
+        
+        self.play_chapter_3()
     
     def save_game(self):
         """Сохранить игру"""

@@ -207,6 +207,27 @@ class AbilitiesManager:
         """Получить все способности типа"""
         return [a for a in self.abilities.values() 
                 if a.ability_type == ability_type and self.can_use_ability(a)]
+    
+    def add_xp(self, ability_type: str, amount: int) -> bool:
+        """Добавить опыт в тип способности и повысить уровень при необходимости"""
+        type_map = {
+            "alchemy": AbilityType.ALCHEMY,
+            "biotics": AbilityType.BIOTICS,
+            "psychic": AbilityType.PSYCHIC,
+        }
+        ability_type_enum = type_map.get(ability_type)
+        if not ability_type_enum:
+            return False
+        
+        current_tier = self.player_tiers[ability_type_enum]
+        new_tier_value = current_tier.value + (1 if amount >= 15 else 0)
+        new_tier_value = min(new_tier_value, AbilityTier.MASTER.value)
+        
+        if new_tier_value > current_tier.value:
+            self.player_tiers[ability_type_enum] = AbilityTier(new_tier_value)
+            logger.info(f"Способность {ability_type_enum.name} повышена до {self.player_tiers[ability_type_enum].name}")
+        
+        return True
 
 
 class CombatSystem:

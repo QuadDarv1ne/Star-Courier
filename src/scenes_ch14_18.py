@@ -144,7 +144,14 @@ class Chapter18Scenes:
         print()
 
         # Проверка доступных вариантов
-        has_team_loyalty = True  # TODO: проверить лояльность команды
+        # Лояльность команды вычисляется по среднему доверию экипажа (мин. 50)
+        crew_members = [c for c in self.game_state.crew_manager.get_all_crew()
+                        if c.role.name != "CAPTAIN"]
+        if crew_members:
+            avg_trust = sum(c.trust for c in crew_members) / len(crew_members)
+        else:
+            avg_trust = 0
+        has_team_loyalty = avg_trust >= 50
         has_romance = romance_partner and relationship >= 80
 
         # Получение имени партнёра
